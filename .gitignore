@@ -4,3 +4,9 @@
 *.o
 *.so
 oasis-core-rosetta-gateway
+tests/oasis-net-runner
+tests/oasis-node
+tests/oasis_core_release.tar.gz
+tests/oasis-core
+tests/rosetta-cli*
+tests/validator-data
