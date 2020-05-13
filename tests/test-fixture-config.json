@@ -1,0 +1,60 @@
+{
+    "tee": {
+        "hardware": 0,
+        "mr_signer": null
+    },
+    "network": {
+        "node_binary": "oasis-node",
+        "consensus_backend": "",
+        "consensus_timeout_commit": 1000000000,
+        "consensus_gas_costs_tx_byte": 0,
+        "halt_epoch": 18446744073709551615,
+        "epochtime_mock": true,
+        "epochtime_tendermint_interval": 0,
+        "deterministic_identities": false,
+        "staking_genesis": "test-staking-genesis.json"
+    },
+    "entities": [
+        {
+            "IsDebugTestEntity": true,
+            "Restore": false
+        },
+        {
+            "IsDebugTestEntity": false,
+            "Restore": false
+        }
+    ],
+    "runtimes": [
+    ],
+    "validators": [
+        {
+            "allow_early_termination": false,
+            "allow_error_termination": false,
+            "entity": 1,
+            "consensus": {
+                "min_gas_price": 0,
+                "submission_gas_price": 0,
+                "disable_check_tx": false,
+                "prune_num_kept": 0,
+                "tendermint_recover_corrupted_wal": false
+            }
+        }
+    ],
+    "keymanagers": [
+    ],
+    "storage_workers": [
+    ],
+    "compute_workers": [
+    ],
+    "clients": [
+        {
+            "consensus": {
+                "min_gas_price": 0,
+                "submission_gas_price": 0,
+                "disable_check_tx": false,
+                "prune_num_kept": 0,
+                "tendermint_recover_corrupted_wal": false
+            }
+        }
+    ]
+}
