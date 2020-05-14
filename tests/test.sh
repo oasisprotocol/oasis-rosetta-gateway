@@ -28,7 +28,7 @@ cleanup() {
 trap "cleanup" EXIT
 
 # The base directory for all the node and test env cruft.
-TEST_BASE_DIR=$(mktemp --directory --tmpdir oasis-rosetta-XXXXXXXXXX)
+TEST_BASE_DIR=$(mktemp -d -t oasis-rosetta-XXXXXXXXXX)
 
 # The oasis-node binary must be in the path for the oasis-net-runner to find it.
 export PATH="${PATH}:${ROOT}"
