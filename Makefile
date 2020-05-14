@@ -15,17 +15,11 @@ ifdef ISATTY
 MAGENTA = \e[35;1m
 CYAN = \e[36;1m
 OFF = \e[0m
-
-# Built-in echo doesn't support '-e'.
-ECHO = /bin/echo -e
 else
 # Don't use colors if not running interactively.
 MAGENTA = ""
 CYAN = ""
 OFF = ""
-
-# OK to use built-in echo.
-ECHO = echo
 endif
 
 # Check which tool to use for downloading.
@@ -46,48 +40,48 @@ ROOT := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 .PHONY: all build clean fmt lint nuke test
 
 all: build
-	@$(ECHO) "$(CYAN)*** Everything built successfully!$(OFF)"
+	@printf "$(CYAN)*** Everything built successfully!$(OFF)\n"
 
 build:
-	@$(ECHO) "$(CYAN)*** Building...$(OFF)"
+	@printf "$(CYAN)*** Building...$(OFF)\n"
 	@$(GO) build
 
 tests/oasis_core_release.tar.gz:
-	@$(ECHO) "$(MAGENTA)*** Downloading oasis-core release $(OASIS_RELEASE)...$(OFF)"
+	@printf "$(MAGENTA)*** Downloading oasis-core release $(OASIS_RELEASE)...$(OFF)\n"
 	@$(DOWNLOAD) $@ https://github.com/oasislabs/oasis-core/releases/download/v$(OASIS_RELEASE)/oasis_core_$(OASIS_RELEASE)_linux_amd64.tar.gz
 
 tests/oasis-net-runner: tests/oasis_core_release.tar.gz
-	@$(ECHO) "$(MAGENTA)*** Unpacking oasis-net-runner...$(OFF)"
+	@printf "$(MAGENTA)*** Unpacking oasis-net-runner...$(OFF)\n"
 	@tar -xf $< -C tests oasis-net-runner
 
 tests/oasis-node: tests/oasis_core_release.tar.gz
-	@$(ECHO) "$(MAGENTA)*** Unpacking oasis-node...$(OFF)"
+	@printf "$(MAGENTA)*** Unpacking oasis-node...$(OFF)\n"
 	@tar -xf $< -C tests oasis-node
 
 tests/rosetta-cli.tar.gz:
-	@$(ECHO) "$(MAGENTA)*** Downloading rosetta-cli release $(ROSETTA_CLI_RELEASE)...$(OFF)"
+	@printf "$(MAGENTA)*** Downloading rosetta-cli release $(ROSETTA_CLI_RELEASE)...$(OFF)\n"
 	@$(DOWNLOAD) $@ https://github.com/coinbase/rosetta-cli/archive/v$(ROSETTA_CLI_RELEASE).tar.gz
 
 tests/rosetta-cli: tests/rosetta-cli.tar.gz
-	@$(ECHO) "$(MAGENTA)*** Building rosetta-cli...$(OFF)"
+	@printf "$(MAGENTA)*** Building rosetta-cli...$(OFF)\n"
 	@tar -xf $< -C tests
 	@cd tests/rosetta-cli-$(ROSETTA_CLI_RELEASE) && go build
 	@cp tests/rosetta-cli-$(ROSETTA_CLI_RELEASE)/rosetta-cli tests/.
 
 test: build tests/oasis-net-runner tests/oasis-node tests/rosetta-cli
-	@$(ECHO) "$(CYAN)*** Running tests...$(OFF)"
+	@printf "$(CYAN)*** Running tests...$(OFF)\n"
 	@$(ROOT)/tests/test.sh
 
 fmt:
-	@$(ECHO) "$(CYAN)*** Formatting code...$(OFF)"
+	@printf "$(CYAN)*** Formatting code...$(OFF)\n"
 	@$(GO) fmt ./...
 
 lint:
-	@$(ECHO) "$(CYAN)*** Linting code...$(OFF)"
+	@printf "$(CYAN)*** Linting code...$(OFF)\n"
 	@$(GOLINT) run --timeout 1m
 
 clean:
-	@$(ECHO) "$(CYAN)*** Cleaning up...$(OFF)"
+	@printf "$(CYAN)*** Cleaning up...$(OFF)\n"
 	@$(GO) clean
 	@-rm -f tests/oasis_core_release.tar.gz tests/oasis-net-runner tests/oasis-node
 	@-rm -rf tests/oasis-core
@@ -95,5 +89,5 @@ clean:
 	@-rm -rf tests/rosetta-cli-$(ROSETTA_CLI_RELEASE) tests/validator-data
 
 nuke: clean
-	@$(ECHO) "$(CYAN)*** Cleaning up really well...$(OFF)"
+	@printf "$(CYAN)*** Cleaning up really well...$(OFF)\n"
 	@$(GO) clean -cache -testcache -modcache
