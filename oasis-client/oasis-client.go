@@ -16,6 +16,7 @@ import (
 	"github.com/oasislabs/oasis-core/go/common/logging"
 	consensus "github.com/oasislabs/oasis-core/go/consensus/api"
 	"github.com/oasislabs/oasis-core/go/consensus/api/transaction"
+	control "github.com/oasislabs/oasis-core/go/control/api"
 	staking "github.com/oasislabs/oasis-core/go/staking/api"
 )
 
@@ -60,6 +61,9 @@ type OasisClient interface {
 	// GetNextNonce returns the nonce that should be used when signing the
 	// next transaction for the given account ID at given height.
 	GetNextNonce(ctx context.Context, id signature.PublicKey, height int64) (uint64, error)
+
+	// GetStatus returns the status overview of the node.
+	GetStatus(ctx context.Context) (*control.Status, error)
 }
 
 // OasisBlock is a representation of the Oasis block metadata,
@@ -208,7 +212,30 @@ func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) (
 		return nil, err
 	}
 	client := staking.NewStakingClient(conn)
-	return client.GetEvents(ctx, height)
+	evts, err := client.GetEvents(ctx, height)
+	if err != nil {
+		return nil, err
+	}
+	// Change empty hashes to block hashes, as they belong to block events.
+	var gotBlkHash bool
+	var blkHash []byte
+	for i := range evts {
+		e := &evts[i]
+		if e.TxHash.IsEmpty() {
+			if !gotBlkHash {
+				// First time, need to fetch the block hash.
+				conClient := consensus.NewConsensusClient(conn)
+				blk, err := conClient.GetBlock(ctx, height)
+				if err != nil {
+					return nil, err
+				}
+				blkHash = blk.Hash
+				gotBlkHash = true
+			}
+			copy(e.TxHash[:], blkHash)
+		}
+	}
+	return evts, nil
 }
 
 func (oc *grpcOasisClient) SubmitTx(ctx context.Context, txRaw string) error {
@@ -235,6 +262,15 @@ func (oc *grpcOasisClient) GetNextNonce(ctx context.Context, id signature.Public
 		ID:     id,
 		Height: height,
 	})
+}
+
+func (oc *grpcOasisClient) GetStatus(ctx context.Context) (*control.Status, error) {
+	conn, err := oc.connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	client := control.NewNodeControllerClient(conn)
+	return client.GetStatus(ctx)
 }
 
 // New creates a new Oasis gRPC client.

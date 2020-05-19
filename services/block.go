@@ -9,15 +9,13 @@ import (
 
 	oc "github.com/oasislabs/oasis-core-rosetta-gateway/oasis-client"
 	"github.com/oasislabs/oasis-core/go/common/logging"
+	staking "github.com/oasislabs/oasis-core/go/staking/api"
 )
 
-// OpTransferFrom is the first part of the Oasis Transfer operation.
-const OpTransferFrom = "TransferFrom"
+// OpTransfer is the Transfer operation.
+const OpTransfer = "Transfer"
 
-// OpTransferTo is the second part of the Oasis Transfer operation.
-const OpTransferTo = "TransferTo"
-
-// OpBurn is the Oasis Burn operation.
+// OpBurn is the Burn operation.
 const OpBurn = "Burn"
 
 // OpStatusOK is the OK status.
@@ -34,6 +32,39 @@ func NewBlockAPIService(oasisClient oc.OasisClient) server.BlockAPIServicer {
 	return &blockAPIService{
 		oasisClient: oasisClient,
 	}
+}
+
+// Helper for making ops in a succinct way.
+func appendOp(ops []*types.Operation, kind string, acct string, subacct string, amt string) []*types.Operation {
+	opidx := int64(len(ops))
+	op := &types.Operation{
+		OperationIdentifier: &types.OperationIdentifier{
+			Index: opidx,
+		},
+		Type:   kind,
+		Status: OpStatusOK,
+		Account: &types.AccountIdentifier{
+			Address: acct,
+			SubAccount: &types.SubAccountIdentifier{
+				Address: subacct,
+			},
+		},
+		Amount: &types.Amount{
+			Value:    amt,
+			Currency: OasisCurrency,
+		},
+	}
+
+	// Add related operation if it exists.
+	if opidx >= 1 {
+		op.RelatedOperations = []*types.OperationIdentifier{
+			&types.OperationIdentifier{
+				Index: opidx - 1,
+			},
+		}
+	}
+
+	return append(ops, op)
 }
 
 // Block implements the /block endpoint.
@@ -76,209 +107,48 @@ func (s *blockAPIService) Block(
 		return nil, ErrUnableToGetTxns
 	}
 
+	// We group transactions by hash and number the operations within a
+	// transaction in the order as they appear.
 	txns := []*types.Transaction{}
+	txnmap := make(map[string]uint) // hash -> index into txns
 	for _, evt := range evts {
+		// Get index of existing transaction if it already exists or
+		// create a new one and return its index if it doesn't.
+		var txidx uint
+		txhash := evt.TxHash.String()
+		if idx, exists := txnmap[txhash]; exists {
+			txidx = idx
+		} else {
+			txidx = uint(len(txns))
+			txnmap[txhash] = txidx
+			txns = append(txns, &types.Transaction{
+				TransactionIdentifier: &types.TransactionIdentifier{
+					Hash: txhash,
+				},
+				Operations: []*types.Operation{},
+			})
+		}
+
 		switch {
 		case evt.TransferEvent != nil:
-			txns = append(txns, &types.Transaction{
-				TransactionIdentifier: &types.TransactionIdentifier{
-					Hash: evt.TxHash.String(),
-				},
-				Operations: []*types.Operation{
-					&types.Operation{
-						OperationIdentifier: &types.OperationIdentifier{
-							Index: 0,
-						},
-						Type:   OpTransferFrom,
-						Status: OpStatusOK,
-						Account: &types.AccountIdentifier{
-							Address: evt.TransferEvent.From.String(),
-							SubAccount: &types.SubAccountIdentifier{
-								Address: SubAccountGeneral,
-							},
-						},
-						Amount: &types.Amount{
-							Value:    "-" + evt.TransferEvent.Tokens.String(),
-							Currency: OasisCurrency,
-						},
-					},
-					&types.Operation{
-						OperationIdentifier: &types.OperationIdentifier{
-							Index: 1,
-						},
-						RelatedOperations: []*types.OperationIdentifier{
-							&types.OperationIdentifier{
-								Index: 0,
-							},
-						},
-						Type:   OpTransferTo,
-						Status: OpStatusOK,
-						Account: &types.AccountIdentifier{
-							Address: evt.TransferEvent.To.String(),
-							SubAccount: &types.SubAccountIdentifier{
-								Address: SubAccountGeneral,
-							},
-						},
-						Amount: &types.Amount{
-							Value:    evt.TransferEvent.Tokens.String(),
-							Currency: OasisCurrency,
-						},
-					},
-				},
-			})
+			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, evt.TransferEvent.From.String(), SubAccountGeneral, "-"+evt.TransferEvent.Tokens.String())
+			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, evt.TransferEvent.To.String(), SubAccountGeneral, evt.TransferEvent.Tokens.String())
 		case evt.BurnEvent != nil:
-			txns = append(txns, &types.Transaction{
-				TransactionIdentifier: &types.TransactionIdentifier{
-					Hash: evt.TxHash.String(),
-				},
-				Operations: []*types.Operation{
-					&types.Operation{
-						OperationIdentifier: &types.OperationIdentifier{
-							Index: 0,
-						},
-						Type:   OpBurn,
-						Status: OpStatusOK,
-						Account: &types.AccountIdentifier{
-							Address: evt.BurnEvent.Owner.String(),
-							SubAccount: &types.SubAccountIdentifier{
-								Address: SubAccountGeneral,
-							},
-						},
-						Amount: &types.Amount{
-							Value:    "-" + evt.BurnEvent.Tokens.String(),
-							Currency: OasisCurrency,
-						},
-					},
-				},
-			})
+			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpBurn, evt.BurnEvent.Owner.String(), SubAccountGeneral, "-"+evt.BurnEvent.Tokens.String())
 		case evt.EscrowEvent != nil:
 			ee := evt.EscrowEvent
-			// Note: These have been abstracted to use Transfer* and Burn
-			// instead of creating new operations just for escrow accounts.
-			// It should be evident based on the subaccount identifiers
-			// if an operation is escrow-related or not.
 			switch {
 			case ee.Add != nil:
 				// Owner's general account -> escrow account.
-				txns = append(txns, &types.Transaction{
-					TransactionIdentifier: &types.TransactionIdentifier{
-						Hash: evt.TxHash.String(),
-					},
-					Operations: []*types.Operation{
-						&types.Operation{
-							OperationIdentifier: &types.OperationIdentifier{
-								Index: 0,
-							},
-							Type:   OpTransferFrom,
-							Status: OpStatusOK,
-							Account: &types.AccountIdentifier{
-								Address: ee.Add.Owner.String(),
-								SubAccount: &types.SubAccountIdentifier{
-									Address: SubAccountGeneral,
-								},
-							},
-							Amount: &types.Amount{
-								Value:    "-" + ee.Add.Tokens.String(),
-								Currency: OasisCurrency,
-							},
-						},
-						&types.Operation{
-							OperationIdentifier: &types.OperationIdentifier{
-								Index: 1,
-							},
-							RelatedOperations: []*types.OperationIdentifier{
-								&types.OperationIdentifier{
-									Index: 0,
-								},
-							},
-							Type:   OpTransferTo,
-							Status: OpStatusOK,
-							Account: &types.AccountIdentifier{
-								Address: ee.Add.Escrow.String(),
-								SubAccount: &types.SubAccountIdentifier{
-									Address: SubAccountEscrow,
-								},
-							},
-							Amount: &types.Amount{
-								Value:    ee.Add.Tokens.String(),
-								Currency: OasisCurrency,
-							},
-						},
-					},
-				})
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Add.Owner.String(), SubAccountGeneral, "-"+ee.Add.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Add.Escrow.String(), SubAccountEscrow, ee.Add.Tokens.String())
 			case ee.Take != nil:
-				txns = append(txns, &types.Transaction{
-					TransactionIdentifier: &types.TransactionIdentifier{
-						Hash: evt.TxHash.String(),
-					},
-					Operations: []*types.Operation{
-						&types.Operation{
-							OperationIdentifier: &types.OperationIdentifier{
-								Index: 0,
-							},
-							Type:   OpBurn,
-							Status: OpStatusOK,
-							Account: &types.AccountIdentifier{
-								Address: ee.Take.Owner.String(),
-								SubAccount: &types.SubAccountIdentifier{
-									Address: SubAccountEscrow,
-								},
-							},
-							Amount: &types.Amount{
-								Value:    "-" + ee.Take.Tokens.String(),
-								Currency: OasisCurrency,
-							},
-						},
-					},
-				})
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Take.Owner.String(), SubAccountEscrow, "-"+ee.Take.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, staking.CommonPoolAccountID.String(), SubAccountGeneral, ee.Take.Tokens.String())
 			case ee.Reclaim != nil:
 				// Escrow account -> owner's general account.
-				txns = append(txns, &types.Transaction{
-					TransactionIdentifier: &types.TransactionIdentifier{
-						Hash: evt.TxHash.String(),
-					},
-					Operations: []*types.Operation{
-						&types.Operation{
-							OperationIdentifier: &types.OperationIdentifier{
-								Index: 0,
-							},
-							Type:   OpTransferFrom,
-							Status: OpStatusOK,
-							Account: &types.AccountIdentifier{
-								Address: ee.Reclaim.Escrow.String(),
-								SubAccount: &types.SubAccountIdentifier{
-									Address: SubAccountEscrow,
-								},
-							},
-							Amount: &types.Amount{
-								Value:    "-" + ee.Reclaim.Tokens.String(),
-								Currency: OasisCurrency,
-							},
-						},
-						&types.Operation{
-							OperationIdentifier: &types.OperationIdentifier{
-								Index: 1,
-							},
-							RelatedOperations: []*types.OperationIdentifier{
-								&types.OperationIdentifier{
-									Index: 0,
-								},
-							},
-							Type:   OpTransferTo,
-							Status: OpStatusOK,
-							Account: &types.AccountIdentifier{
-								Address: ee.Reclaim.Owner.String(),
-								SubAccount: &types.SubAccountIdentifier{
-									Address: SubAccountGeneral,
-								},
-							},
-							Amount: &types.Amount{
-								Value:    ee.Reclaim.Tokens.String(),
-								Currency: OasisCurrency,
-							},
-						},
-					},
-				})
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Reclaim.Escrow.String(), SubAccountEscrow, "-"+ee.Reclaim.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Reclaim.Owner.String(), SubAccountGeneral, ee.Reclaim.Tokens.String())
 			}
 		}
 	}

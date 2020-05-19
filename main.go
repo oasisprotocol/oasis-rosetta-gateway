@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/oasislabs/oasis-core/go/common/logging"
@@ -41,6 +43,22 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: Malformed %s environment variable: %v\n", GatewayPortEnvVar, err)
 		os.Exit(1)
+	}
+
+	// Wait for the node socket to appear.
+	addr := os.Getenv(oasis_client.GrpcAddrEnvVar)
+	if addr == "" {
+		fmt.Fprintf(os.Stderr, "ERROR: %s environment variable missing\n", oasis_client.GrpcAddrEnvVar)
+		os.Exit(1)
+	}
+	if strings.HasPrefix(addr, "unix:") {
+		sock := strings.Split(addr, ":")[1]
+		_, grr := os.Stat(sock)
+		for os.IsNotExist(grr) {
+			logger.Info("waiting for node socket to appear...", "socket_path", sock)
+			time.Sleep(1 * time.Second)
+			_, grr = os.Stat(sock)
+		}
 	}
 
 	// Prepare a new Oasis gRPC client.

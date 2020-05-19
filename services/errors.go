@@ -105,7 +105,13 @@ var (
 		Retriable: false,
 	}
 
-	ERROR_LIST = []*types.Error{
+	ErrUnableToGetNodeStatus = &types.Error{
+		Code:      18,
+		Message:   "unable to get node status",
+		Retriable: true,
+	}
+
+	ErrorList = []*types.Error{
 		ErrUnableToGetChainID,
 		ErrInvalidBlockchain,
 		ErrInvalidSubnetwork,
@@ -123,5 +129,6 @@ var (
 		ErrUnableToSubmitTx,
 		ErrUnableToGetNextNonce,
 		ErrMalformedValue,
+		ErrUnableToGetNodeStatus,
 	}
 )
