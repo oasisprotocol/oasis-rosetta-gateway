@@ -1,7 +1,7 @@
 #!/usr/bin/env gmake
 
-OASIS_RELEASE := 20.6
-ROSETTA_CLI_RELEASE := 0.2.0
+OASIS_RELEASE := 20.6.1
+ROSETTA_CLI_RELEASE := 0.2.3
 
 OASIS_GO ?= go
 GO := env -u GOPATH $(OASIS_GO)

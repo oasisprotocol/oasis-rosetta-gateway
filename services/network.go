@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
@@ -61,29 +62,30 @@ func (s *networkAPIService) NetworkStatus(
 		return nil, terr
 	}
 
-	blk, err := s.oasisClient.GetLatestBlock(ctx)
+	status, err := s.oasisClient.GetStatus(ctx)
 	if err != nil {
-		loggerNet.Error("NetworkStatus: unable to get latest block", "err", err)
-		return nil, ErrUnableToGetLatestBlk
+		loggerNet.Error("NetworkStatus: unable to get node status", "err", err)
+		return nil, ErrUnableToGetNodeStatus
 	}
 
-	genBlk, err := s.oasisClient.GetGenesisBlock(ctx)
-	if err != nil {
-		loggerNet.Error("NetworkStatus: unable to get genesis block", "err", err)
-		return nil, ErrUnableToGetGenesisBlk
+	peers := []*types.Peer{}
+	for _, p := range status.Consensus.NodePeers {
+		peers = append(peers, &types.Peer{
+			PeerID: p,
+		})
 	}
 
 	resp := &types.NetworkStatusResponse{
 		CurrentBlockIdentifier: &types.BlockIdentifier{
-			Index: blk.Height,
-			Hash:  blk.Hash,
+			Index: status.Consensus.LatestHeight,
+			Hash:  hex.EncodeToString(status.Consensus.LatestHash),
 		},
-		CurrentBlockTimestamp: blk.Timestamp,
+		CurrentBlockTimestamp: status.Consensus.LatestTime.UnixNano() / 1000000, // ms
 		GenesisBlockIdentifier: &types.BlockIdentifier{
-			Index: genBlk.Height,
-			Hash:  genBlk.Hash,
+			Index: status.Consensus.GenesisHeight,
+			Hash:  hex.EncodeToString(status.Consensus.GenesisHash),
 		},
-		Peers: []*types.Peer{}, // TODO
+		Peers: peers,
 	}
 
 	jr, _ := json.Marshal(resp)
@@ -103,10 +105,16 @@ func (s *networkAPIService) NetworkOptions(
 		return nil, terr
 	}
 
+	status, err := s.oasisClient.GetStatus(ctx)
+	if err != nil {
+		loggerNet.Error("NetworkStatus: unable to get node status", "err", err)
+		return nil, ErrUnableToGetNodeStatus
+	}
+
 	return &types.NetworkOptionsResponse{
 		Version: &types.Version{
 			RosettaVersion: "1.3.5",
-			NodeVersion:    "20.6",
+			NodeVersion:    status.SoftwareVersion,
 		},
 		Allow: &types.Allow{
 			OperationStatuses: []*types.OperationStatus{
@@ -116,11 +124,10 @@ func (s *networkAPIService) NetworkOptions(
 				},
 			},
 			OperationTypes: []string{
-				OpTransferFrom,
-				OpTransferTo,
+				OpTransfer,
 				OpBurn,
 			},
-			Errors: ERROR_LIST,
+			Errors: ErrorList,
 		},
 	}, nil
 }

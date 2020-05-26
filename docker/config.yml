@@ -1,0 +1,31 @@
+##
+# Oasis Node Configuration
+##
+
+datadir: /data
+
+log:
+  level:
+    # Per-module log levels. Longest prefix match will be taken. Fallback to
+    # "default", if no match.
+    default: debug
+    tendermint: debug
+    tendermint/context: error
+  format: JSON
+
+# Path to the genesis file for the current version of the network.
+genesis:
+  file: /data/etc/genesis.json
+
+# Tendermint backend configuration.
+tendermint:
+  abci:
+    prune:
+      strategy: none
+  core:
+    listen_address: tcp://0.0.0.0:26656
+  db:
+    backend: badger
+  p2p:
+    seed:
+      - "D14B9192C94F437E9FA92A755D3CC0341F2E87CF@34.82.86.53:26656"
