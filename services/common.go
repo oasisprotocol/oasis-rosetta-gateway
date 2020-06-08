@@ -5,7 +5,7 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	oc "github.com/oasislabs/oasis-core-rosetta-gateway/oasis-client"
+	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
 )
 
 // OasisBlockchainName is the name of the Oasis blockchain.

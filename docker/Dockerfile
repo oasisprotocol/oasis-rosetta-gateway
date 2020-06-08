@@ -8,16 +8,16 @@
 #
 # Build stage
 #
-FROM golang:1.13-alpine AS build
+FROM golang:1.14-alpine AS build
 
 # Install prerequisites.
 RUN rm -f /var/cache/apk/*; apk --no-cache add bash git make gcc g++ libressl-dev libseccomp-dev linux-headers
 
-ARG CORE_BRANCH="v20.6.2"
+ARG CORE_BRANCH="v20.7"
 ARG GATEWAY_BRANCH="master"
 
 # Fetch and build oasis-core.
-RUN git clone --single-branch --branch $CORE_BRANCH https://github.com/oasislabs/oasis-core /usr/local/build-core && \
+RUN git clone --single-branch --branch $CORE_BRANCH https://github.com/oasisprotocol/oasis-core /usr/local/build-core && \
 	cd /usr/local/build-core/go && \
 	make oasis-node && \
 	cp oasis-node/oasis-node /usr/bin/ && \
@@ -25,7 +25,7 @@ RUN git clone --single-branch --branch $CORE_BRANCH https://github.com/oasislabs
 	cd / && rm -rf /usr/local/build-core
 
 # Fetch and build oasis-core-rosetta-gateway.
-RUN git clone --single-branch --branch $GATEWAY_BRANCH https://github.com/oasislabs/oasis-core-rosetta-gateway /usr/local/build-gateway && \
+RUN git clone --single-branch --branch $GATEWAY_BRANCH https://github.com/oasisprotocol/oasis-core-rosetta-gateway /usr/local/build-gateway && \
 	 cd /usr/local/build-gateway && \
 	 make && \
 	 cp oasis-core-rosetta-gateway /usr/bin/ && \
