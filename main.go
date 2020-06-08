@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
-	"github.com/oasislabs/oasis-core/go/common/logging"
+	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
-	"github.com/oasislabs/oasis-core-rosetta-gateway/oasis-client"
-	"github.com/oasislabs/oasis-core-rosetta-gateway/services"
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
 )
 
 // GatewayPortEnvVar is the name of the environment variable that specifies

@@ -1,6 +1,6 @@
 #!/usr/bin/env gmake
 
-OASIS_RELEASE := 20.6.2
+OASIS_RELEASE := 20.7
 ROSETTA_CLI_RELEASE := 0.2.3
 
 OASIS_GO ?= go
@@ -48,7 +48,7 @@ build:
 
 tests/oasis_core_release.tar.gz:
 	@printf "$(MAGENTA)*** Downloading oasis-core release $(OASIS_RELEASE)...$(OFF)\n"
-	@$(DOWNLOAD) $@ https://github.com/oasislabs/oasis-core/releases/download/v$(OASIS_RELEASE)/oasis_core_$(OASIS_RELEASE)_linux_amd64.tar.gz
+	@$(DOWNLOAD) $@ https://github.com/oasisprotocol/oasis-core/releases/download/v$(OASIS_RELEASE)/oasis_core_$(OASIS_RELEASE)_linux_amd64.tar.gz
 
 tests/oasis-net-runner: tests/oasis_core_release.tar.gz
 	@printf "$(MAGENTA)*** Unpacking oasis-net-runner...$(OFF)\n"

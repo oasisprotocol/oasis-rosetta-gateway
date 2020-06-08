@@ -32,6 +32,6 @@ and exposes TCP ports 8080 (gateway) and 26656 (node).
 The final image is around 87MB in size.  You can remove the intermediary build
 image to save disk space.
 
-[0]: https://github.com/oasislabs/oasis-core
-[1]: https://github.com/oasislabs/oasis-core-rosetta-gateway
+[0]: https://github.com/oasisprotocol/oasis-core
+[1]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway
 [2]: https://djr6hkgq2tjcs.cloudfront.net/docs/NodeRequirements.html

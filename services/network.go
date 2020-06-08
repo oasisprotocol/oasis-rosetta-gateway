@@ -8,8 +8,8 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	oc "github.com/oasislabs/oasis-core-rosetta-gateway/oasis-client"
-	"github.com/oasislabs/oasis-core/go/common/logging"
+	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
+	"github.com/oasisprotocol/oasis-core/go/common/logging"
 )
 
 var loggerNet = logging.GetLogger("services/network")

@@ -7,9 +7,9 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	oc "github.com/oasislabs/oasis-core-rosetta-gateway/oasis-client"
-	"github.com/oasislabs/oasis-core/go/common/logging"
-	staking "github.com/oasislabs/oasis-core/go/staking/api"
+	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
+	"github.com/oasisprotocol/oasis-core/go/common/logging"
+	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 )
 
 // OpTransfer is the Transfer operation.
