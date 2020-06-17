@@ -17,7 +17,7 @@ OASIS_NODE="${ROOT}/oasis-node"
 FIXTURE_FILE="${ROOT}/test-fixture-config.json"
 
 # Destination address for test transfers.
-DST="XqUyj5Q+9vZtqu10yw6Zw7HEX3Ywe0JQA9vHyzY47TU="
+DST="oasis1qpkant39yhx59sagnzpc8v0sg8aerwa3jyqde3ge"
 
 # Kill all dangling processes on exit.
 cleanup() {

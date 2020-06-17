@@ -130,13 +130,13 @@ func (s *blockAPIService) Block(
 		}
 
 		switch {
-		case evt.TransferEvent != nil:
-			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, evt.TransferEvent.From.String(), SubAccountGeneral, "-"+evt.TransferEvent.Tokens.String())
-			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, evt.TransferEvent.To.String(), SubAccountGeneral, evt.TransferEvent.Tokens.String())
-		case evt.BurnEvent != nil:
-			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpBurn, evt.BurnEvent.Owner.String(), SubAccountGeneral, "-"+evt.BurnEvent.Tokens.String())
-		case evt.EscrowEvent != nil:
-			ee := evt.EscrowEvent
+		case evt.Transfer != nil:
+			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, evt.Transfer.From.String(), SubAccountGeneral, "-"+evt.Transfer.Tokens.String())
+			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, evt.Transfer.To.String(), SubAccountGeneral, evt.Transfer.Tokens.String())
+		case evt.Burn != nil:
+			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpBurn, evt.Burn.Owner.String(), SubAccountGeneral, "-"+evt.Burn.Tokens.String())
+		case evt.Escrow != nil:
+			ee := evt.Escrow
 			switch {
 			case ee.Add != nil:
 				// Owner's general account -> escrow account.
@@ -144,7 +144,7 @@ func (s *blockAPIService) Block(
 				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Add.Escrow.String(), SubAccountEscrow, ee.Add.Tokens.String())
 			case ee.Take != nil:
 				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Take.Owner.String(), SubAccountEscrow, "-"+ee.Take.Tokens.String())
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, staking.CommonPoolAccountID.String(), SubAccountGeneral, ee.Take.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, staking.CommonPoolAddress.String(), SubAccountGeneral, ee.Take.Tokens.String())
 			case ee.Reclaim != nil:
 				// Escrow account -> owner's general account.
 				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Reclaim.Escrow.String(), SubAccountEscrow, "-"+ee.Reclaim.Tokens.String())

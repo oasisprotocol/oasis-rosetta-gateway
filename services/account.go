@@ -8,8 +8,8 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
-	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
+	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 )
 
 // SubAccountGeneral specifies the name of the general subaccount.
@@ -58,7 +58,7 @@ func (s *accountAPIService) AccountBalance(
 		return nil, ErrInvalidAccountAddress
 	}
 
-	var owner signature.PublicKey
+	var owner staking.Address
 	err := owner.UnmarshalText([]byte(request.AccountIdentifier.Address))
 	if err != nil {
 		loggerAcct.Error("AccountBalance: invalid account address", "err", err)

@@ -9,8 +9,8 @@ import (
 
 	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
-	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
+	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 )
 
 // OptionsIDKey is the name of the key in the Options map inside a
@@ -62,7 +62,7 @@ func (s *constructionAPIService) ConstructionMetadata(
 	}
 
 	// Convert the byte value of the ID to account address.
-	var owner signature.PublicKey
+	var owner staking.Address
 	err := owner.UnmarshalText([]byte(idString))
 	if err != nil {
 		loggerCons.Error("ConstructionMetadata: invalid account ID", "err", err)

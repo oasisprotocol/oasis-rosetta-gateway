@@ -11,7 +11,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 
-	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	cmnGrpc "github.com/oasisprotocol/oasis-core/go/common/grpc"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
@@ -48,9 +47,9 @@ type OasisClient interface {
 	// GetGenesisBlock returns the Oasis genesis block.
 	GetGenesisBlock(ctx context.Context) (*OasisBlock, error)
 
-	// GetAccount returns the Oasis staking account for given owner
+	// GetAccount returns the Oasis staking account for given owner address
 	// at given height.
-	GetAccount(ctx context.Context, height int64, owner signature.PublicKey) (*staking.Account, error)
+	GetAccount(ctx context.Context, height int64, owner staking.Address) (*staking.Account, error)
 
 	// GetStakingEvents returns Oasis staking events at given height.
 	GetStakingEvents(ctx context.Context, height int64) ([]staking.Event, error)
@@ -59,8 +58,8 @@ type OasisClient interface {
 	SubmitTx(ctx context.Context, txRaw string) error
 
 	// GetNextNonce returns the nonce that should be used when signing the
-	// next transaction for the given account ID at given height.
-	GetNextNonce(ctx context.Context, id signature.PublicKey, height int64) (uint64, error)
+	// next transaction for the given account address at given height.
+	GetNextNonce(ctx context.Context, addr staking.Address, height int64) (uint64, error)
 
 	// GetStatus returns the status overview of the node.
 	GetStatus(ctx context.Context) (*control.Status, error)
@@ -194,13 +193,13 @@ func (oc *grpcOasisClient) GetGenesisBlock(ctx context.Context) (*OasisBlock, er
 	return oc.GetBlock(ctx, GenesisHeight)
 }
 
-func (oc *grpcOasisClient) GetAccount(ctx context.Context, height int64, owner signature.PublicKey) (*staking.Account, error) {
+func (oc *grpcOasisClient) GetAccount(ctx context.Context, height int64, owner staking.Address) (*staking.Account, error) {
 	conn, err := oc.connect(ctx)
 	if err != nil {
 		return nil, err
 	}
 	client := staking.NewStakingClient(conn)
-	return client.AccountInfo(ctx, &staking.OwnerQuery{
+	return client.Account(ctx, &staking.OwnerQuery{
 		Height: height,
 		Owner:  owner,
 	})
@@ -252,15 +251,15 @@ func (oc *grpcOasisClient) SubmitTx(ctx context.Context, txRaw string) error {
 	return client.SubmitTx(ctx, tx)
 }
 
-func (oc *grpcOasisClient) GetNextNonce(ctx context.Context, id signature.PublicKey, height int64) (uint64, error) {
+func (oc *grpcOasisClient) GetNextNonce(ctx context.Context, addr staking.Address, height int64) (uint64, error) {
 	conn, err := oc.connect(ctx)
 	if err != nil {
 		return 0, err
 	}
 	client := consensus.NewConsensusClient(conn)
 	return client.GetSignerNonce(ctx, &consensus.GetSignerNonceRequest{
-		ID:     id,
-		Height: height,
+		AccountAddress: addr,
+		Height:         height,
 	})
 }
 
