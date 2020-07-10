@@ -1,6 +1,6 @@
 #!/usr/bin/env gmake
 
-OASIS_RELEASE := 20.8
+OASIS_RELEASE := 20.8.2
 ROSETTA_CLI_RELEASE := 0.2.4
 
 OASIS_GO ?= go
