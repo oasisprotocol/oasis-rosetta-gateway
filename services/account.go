@@ -134,7 +134,7 @@ func (s *accountAPIService) AccountBalance(
 				Currency: OasisCurrency,
 			},
 		},
-		Metadata: &md,
+		Metadata: md,
 	}
 
 	jr, _ := json.Marshal(resp)

@@ -21,6 +21,12 @@ const OpBurn = "Burn"
 // OpStatusOK is the OK status.
 const OpStatusOK = "OK"
 
+// SupportedOperationTypes is a list of the supported operations.
+var SupportedOperationTypes = []string{
+	OpTransfer,
+	OpBurn,
+}
+
 var loggerBlk = logging.GetLogger("services/block")
 
 type blockAPIService struct {

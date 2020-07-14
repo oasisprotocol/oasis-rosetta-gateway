@@ -9,7 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/coinbase/rosetta-sdk-go/asserter"
 	"github.com/coinbase/rosetta-sdk-go/server"
+	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
@@ -24,13 +26,30 @@ var logger = logging.GetLogger("oasis-rosetta-gateway")
 
 // NewBlockchainRouter returns a Mux http.Handler from a collection of
 // Rosetta service controllers.
-func NewBlockchainRouter(oasisClient oasis_client.OasisClient) http.Handler {
-	networkAPIController := server.NewNetworkAPIController(services.NewNetworkAPIService(oasisClient))
-	accountAPIController := server.NewAccountAPIController(services.NewAccountAPIService(oasisClient))
-	blockAPIController := server.NewBlockAPIController(services.NewBlockAPIService(oasisClient))
-	constructionAPIController := server.NewConstructionAPIController(services.NewConstructionAPIService(oasisClient))
+func NewBlockchainRouter(oasisClient oasis_client.OasisClient) (http.Handler, error) {
+	chainID, err := oasisClient.GetChainID(context.Background())
+	if err != nil {
+		return nil, err
+	}
 
-	return server.NewRouter(networkAPIController, accountAPIController, blockAPIController, constructionAPIController)
+	asserter, err := asserter.NewServer(
+		[]*types.NetworkIdentifier{
+			&types.NetworkIdentifier{
+				Blockchain: services.OasisBlockchainName,
+				Network:    chainID,
+			},
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	networkAPIController := server.NewNetworkAPIController(services.NewNetworkAPIService(oasisClient), asserter)
+	accountAPIController := server.NewAccountAPIController(services.NewAccountAPIService(oasisClient), asserter)
+	blockAPIController := server.NewBlockAPIController(services.NewBlockAPIService(oasisClient), asserter)
+	constructionAPIController := server.NewConstructionAPIController(services.NewConstructionAPIService(oasisClient), asserter)
+
+	return server.NewRouter(networkAPIController, accountAPIController, blockAPIController, constructionAPIController), nil
 }
 
 func main() {
@@ -82,10 +101,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Info("Connected to Oasis node", "chain_context", cid)
+	logger.Info("connected to Oasis node", "chain_context", cid)
 
 	// Start the server.
-	router := NewBlockchainRouter(oasisClient)
+	router, err := NewBlockchainRouter(oasisClient)
+	if err != nil {
+		logger.Error("unable to create Rosetta blockchain router", "err", err)
+		os.Exit(1)
+	}
 	logger.Info("Oasis Rosetta Gateway listening", "port", nPort)
 	err = http.ListenAndServe(fmt.Sprintf(":%d", nPort), router)
 	if err != nil {

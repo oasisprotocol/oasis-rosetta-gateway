@@ -123,11 +123,8 @@ func (s *networkAPIService) NetworkOptions(
 					Successful: true,
 				},
 			},
-			OperationTypes: []string{
-				OpTransfer,
-				OpBurn,
-			},
-			Errors: ErrorList,
+			OperationTypes: SupportedOperationTypes,
+			Errors:         ErrorList,
 		},
 	}, nil
 }
