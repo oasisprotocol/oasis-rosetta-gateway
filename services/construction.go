@@ -50,7 +50,7 @@ func (s *constructionAPIService) ConstructionMetadata(
 		loggerCons.Error("ConstructionMetadata: missing options")
 		return nil, ErrInvalidAccountAddress
 	}
-	idRaw, ok := (*request.Options)[OptionsIDKey]
+	idRaw, ok := request.Options[OptionsIDKey]
 	if !ok {
 		loggerCons.Error("ConstructionMetadata: account ID field not given")
 		return nil, ErrInvalidAccountAddress
@@ -83,7 +83,7 @@ func (s *constructionAPIService) ConstructionMetadata(
 	md[NonceKey] = nonce
 
 	resp := &types.ConstructionMetadataResponse{
-		Metadata: &md,
+		Metadata: md,
 	}
 
 	jr, _ := json.Marshal(resp)
