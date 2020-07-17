@@ -1,3 +1,4 @@
+// https://djr6hkgq2tjcs.cloudfront.net/docs/construction_api_introduction.html
 package services
 
 import (
@@ -109,6 +110,7 @@ func (s *constructionAPIService) ConstructionSubmit(
 	}
 
 	// TODO: Does this match the hashes we actually use in consensus?
+	// FIXME: Looks like it doesn't -- should be hash of tendermint/types.Tx.
 	var h hash.Hash
 	h.From(request.SignedTransaction)
 	txID := h.String()
@@ -123,4 +125,178 @@ func (s *constructionAPIService) ConstructionSubmit(
 	loggerCons.Debug("ConstructionSubmit OK", "response", jr)
 
 	return resp, nil
+}
+
+// ConstructionHash implements the /construction/hash endpoint.
+func (s *constructionAPIService) ConstructionHash(
+	ctx context.Context,
+	request *types.ConstructionHashRequest,
+) (*types.ConstructionHashResponse, *types.Error) {
+	terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
+	if terr != nil {
+		loggerCons.Error("ConstructionHash: network validation failed", "err", terr.Message)
+		return nil, terr
+	}
+
+	// TODO: Does this match the hashes we actually use in consensus?
+	// FIXME: Looks like it doesn't -- should be hash of tendermint/types.Tx.
+	var h hash.Hash
+	h.From(request.SignedTransaction)
+	txID := h.String()
+
+	resp := &types.ConstructionHashResponse{
+		TransactionHash: txID,
+	}
+
+	jr, _ := json.Marshal(resp)
+	loggerCons.Debug("ConstructionHash OK", "response", jr)
+
+	return resp, nil
+}
+
+// ConstructionDerive implements the /construction/derive endpoint.
+func (s *constructionAPIService) ConstructionDerive(
+	ctx context.Context,
+	request *types.ConstructionDeriveRequest,
+) (*types.ConstructionDeriveResponse, *types.Error) {
+	terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
+	if terr != nil {
+		loggerCons.Error("ConstructionDerive: network validation failed", "err", terr.Message)
+		return nil, terr
+	}
+
+	// According to the Rosetta spec:
+	//     Blockchains that require an on-chain action to create an account
+	//     should not implement this method.
+	return nil, ErrNotImplemented
+}
+
+// ConstructionCombine implements the /construction/combine endpoint.
+func (s *constructionAPIService) ConstructionCombine(
+	ctx context.Context,
+	request *types.ConstructionCombineRequest,
+) (*types.ConstructionCombineResponse, *types.Error) {
+	terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
+	if terr != nil {
+		loggerCons.Error("ConstructionCombine: network validation failed", "err", terr.Message)
+		return nil, terr
+	}
+
+	// Combine creates a network-specific transaction from an unsigned
+	// transaction and an array of provided signatures. The signed
+	// transaction returned from this method will be sent to the
+	// `/construction/submit` endpoint by the caller.
+
+	/*resp := &types.ConstructionCombineResponse{
+		SignedTransaction: // TODO
+	}
+
+	jr, _ := json.Marshal(resp)
+	loggerCons.Debug("ConstructionCombine OK", "response", jr)
+
+	return resp, nil*/
+
+	return nil, ErrNotImplemented
+}
+
+// ConstructionParse implements the /construction/parse endpoint.
+func (s *constructionAPIService) ConstructionParse(
+	ctx context.Context,
+	request *types.ConstructionParseRequest,
+) (*types.ConstructionParseResponse, *types.Error) {
+	terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
+	if terr != nil {
+		loggerCons.Error("ConstructionParse: network validation failed", "err", terr.Message)
+		return nil, terr
+	}
+
+	// Parse is called on both unsigned and signed transactions to understand
+	// the intent of the formulated transaction. This is run as a sanity check
+	// before signing (after `/construction/payloads`) and before broadcast
+	// (after `/construction/combine`).
+
+	// TODO: Write helpers that generate types.Operations from a staking
+	// transaction (also, `appendOp` from `services/block.go` should be made
+	// public and the code probably needs a refactor).
+
+	/*resp := &types.ConstructionParseResponse{
+		Operations: // TODO
+		Signers:    // TODO
+	}
+
+	jr, _ := json.Marshal(resp)
+	loggerCons.Debug("ConstructionParse OK", "response", jr)
+
+	return resp, nil*/
+
+	return nil, ErrNotImplemented
+}
+
+// ConstructionPreprocess implements the /construction/preprocess endpoint.
+func (s *constructionAPIService) ConstructionPreprocess(
+	ctx context.Context,
+	request *types.ConstructionPreprocessRequest,
+) (*types.ConstructionPreprocessResponse, *types.Error) {
+	terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
+	if terr != nil {
+		loggerCons.Error("ConstructionPreprocess: network validation failed", "err", terr.Message)
+		return nil, terr
+	}
+
+	// Preprocess is called prior to `/construction/payloads` to construct a
+	// request for any metadata that is needed for transaction construction
+	// given (i.e. account nonce). The request returned from this method will
+	// be used by the caller (in a different execution environment) to call
+	// the `/construction/metadata` endpoint.
+
+	// TODO: Parse request.Operations and create the Options map for the
+	// ConstructionMetadataRequest with OptionsIDKey in the map set to the
+	// address of the account that's making the transaction.
+
+	/*resp := &types.ConstructionPreprocessResponse{
+		Options: // TODO
+	}
+
+	jr, _ := json.Marshal(resp)
+	loggerCons.Debug("ConstructionPreprocess OK", "response", jr)
+
+	return resp, nil*/
+
+	return nil, ErrNotImplemented
+}
+
+// ConstructionPayloads implements the /construction/payloads endpoint.
+func (s *constructionAPIService) ConstructionPayloads(
+	ctx context.Context,
+	request *types.ConstructionPayloadsRequest,
+) (*types.ConstructionPayloadsResponse, *types.Error) {
+	terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
+	if terr != nil {
+		loggerCons.Error("ConstructionPayloads: network validation failed", "err", terr.Message)
+		return nil, terr
+	}
+
+	// Payloads is called with an array of operations and the response from
+	// `/construction/metadata`. It returns an unsigned transaction blob and
+	// a collection of payloads that must be signed by particular addresses
+	// using a certain SignatureType. The array of operations provided in
+	// transaction construction often times can not specify all "effects" of
+	// a transaction (consider invoked transactions in Ethereum). However,
+	// they can deterministically specify the "intent" of the transaction,
+	// which is sufficient for construction. For this reason, parsing the
+	// corresponding transaction in the Data API (when it lands on chain)
+	// will contain a superset of whatever operations were provided during
+	// construction.
+
+	/*resp := &types.ConstructionPayloadsResponse{
+		UnsignedTransaction: // TODO
+		Payloads:            // TODO
+	}
+
+	jr, _ := json.Marshal(resp)
+	loggerCons.Debug("ConstructionPayloads OK", "response", jr)
+
+	return resp, nil*/
+
+	return nil, ErrNotImplemented
 }

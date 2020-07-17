@@ -33,6 +33,8 @@ func NewBlockchainRouter(oasisClient oasis_client.OasisClient) (http.Handler, er
 	}
 
 	asserter, err := asserter.NewServer(
+		services.SupportedOperationTypes,
+		true,
 		[]*types.NetworkIdentifier{
 			&types.NetworkIdentifier{
 				Blockchain: services.OasisBlockchainName,
