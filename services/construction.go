@@ -109,10 +109,12 @@ func (s *constructionAPIService) ConstructionSubmit(
 		return nil, ErrUnableToSubmitTx
 	}
 
-	// TODO: Does this match the hashes we actually use in consensus?
-	// FIXME: Looks like it doesn't -- should be hash of tendermint/types.Tx.
 	var h hash.Hash
-	h.From(request.SignedTransaction)
+	var st transaction.SignedTransaction
+	if err := json.Unmarshal([]byte(request.SignedTransaction), &st); err != nil {
+		panic(err)
+	}
+	h.From(st)
 	txID := h.String()
 
 	resp := &types.ConstructionSubmitResponse{
@@ -138,10 +140,12 @@ func (s *constructionAPIService) ConstructionHash(
 		return nil, terr
 	}
 
-	// TODO: Does this match the hashes we actually use in consensus?
-	// FIXME: Looks like it doesn't -- should be hash of tendermint/types.Tx.
 	var h hash.Hash
-	h.From(request.SignedTransaction)
+	var st transaction.SignedTransaction
+	if err := json.Unmarshal([]byte(request.SignedTransaction), &st); err != nil {
+		panic(err)
+	}
+	h.From(st)
 	txID := h.String()
 
 	resp := &types.ConstructionHashResponse{
