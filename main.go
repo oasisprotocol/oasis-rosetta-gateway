@@ -12,6 +12,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/asserter"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
@@ -95,6 +96,9 @@ func main() {
 		fmt.Fprintf(os.Stderr, "ERROR: Node connectivity error: %v\n", err)
 		os.Exit(1)
 	}
+
+	// Set the chain context for preparing signing payloads.
+	signature.SetChainContext(cid)
 
 	// Initialize logging.
 	err = logging.Initialize(os.Stdout, logging.FmtLogfmt, logging.LevelDebug, nil)

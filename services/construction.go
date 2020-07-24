@@ -3,14 +3,18 @@ package services
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
+	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
+	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
+	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 )
 
@@ -21,6 +25,11 @@ const OptionsIDKey = "id"
 // NonceKey is the name of the key in the Metadata map inside a
 // ConstructionMetadataResponse that specifies the next valid nonce.
 const NonceKey = "nonce"
+
+// LiteralKey is the name of the key in the Metadata map inside a
+// OpDummyLiteral operation that specifies the hex-encoded CBOR-encoded
+// Oasis consensus transaction.
+const LiteralKey = "literal"
 
 var loggerCons = logging.GetLogger("services/construction")
 
@@ -191,16 +200,44 @@ func (s *constructionAPIService) ConstructionCombine(
 	// transaction returned from this method will be sent to the
 	// `/construction/submit` endpoint by the caller.
 
-	/*resp := &types.ConstructionCombineResponse{
-		SignedTransaction: // TODO
+	txBuf, err := hex.DecodeString(request.UnsignedTransaction)
+	if err != nil {
+		panic(err)
+	}
+	if len(request.Signatures) != 1 {
+		panic("len(request.Signatures)")
+	}
+	sig := request.Signatures[0]
+	var pk signature.PublicKey
+	if err := pk.UnmarshalBinary(sig.PublicKey.Bytes); err != nil {
+		panic(err)
+	}
+	var rs signature.RawSignature
+	if err := rs.UnmarshalBinary(sig.Bytes); err != nil {
+		panic(err)
+	}
+	st := transaction.SignedTransaction{
+		Signed: signature.Signed{
+			Blob: txBuf,
+			Signature: signature.Signature{
+				PublicKey: pk,
+				Signature: rs,
+			},
+		},
+	}
+	stJSON, err := json.Marshal(st)
+	if err != nil {
+		panic(err)
+	}
+
+	resp := &types.ConstructionCombineResponse{
+		SignedTransaction: string(stJSON),
 	}
 
 	jr, _ := json.Marshal(resp)
 	loggerCons.Debug("ConstructionCombine OK", "response", jr)
 
-	return resp, nil*/
-
-	return nil, ErrNotImplemented
+	return resp, nil
 }
 
 // ConstructionParse implements the /construction/parse endpoint.
@@ -253,20 +290,23 @@ func (s *constructionAPIService) ConstructionPreprocess(
 	// be used by the caller (in a different execution environment) to call
 	// the `/construction/metadata` endpoint.
 
-	// TODO: Parse request.Operations and create the Options map for the
-	// ConstructionMetadataRequest with OptionsIDKey in the map set to the
-	// address of the account that's making the transaction.
+	// TODO: Figure out transaction from proper ops.
+	if len(request.Operations) != 1 {
+		panic("len(request.Operations)")
+		return nil, ErrNotImplemented
+	}
+	op := request.Operations[0]
 
-	/*resp := &types.ConstructionPreprocessResponse{
-		Options: // TODO
+	resp := &types.ConstructionPreprocessResponse{
+		Options: map[string]interface{}{
+			OptionsIDKey: op.Account.Address,
+		},
 	}
 
 	jr, _ := json.Marshal(resp)
 	loggerCons.Debug("ConstructionPreprocess OK", "response", jr)
 
-	return resp, nil*/
-
-	return nil, ErrNotImplemented
+	return resp, nil
 }
 
 // ConstructionPayloads implements the /construction/payloads endpoint.
@@ -292,15 +332,59 @@ func (s *constructionAPIService) ConstructionPayloads(
 	// will contain a superset of whatever operations were provided during
 	// construction.
 
-	/*resp := &types.ConstructionPayloadsResponse{
-		UnsignedTransaction: // TODO
-		Payloads:            // TODO
+	// TODO: Figure out transaction from proper ops.
+	if len(request.Operations) != 1 {
+		panic("len(request.Operations)")
+		return nil, ErrNotImplemented
+	}
+	op := request.Operations[0]
+	if op.Type != OpDummyLiteral {
+		panic("op.Type")
+		return nil, ErrNotImplemented
+	}
+
+	signWithAddr := op.Account.Address
+
+	islandRaw, ok := op.Metadata[LiteralKey]
+	if !ok {
+		panic("op.Metadata[LiteralKey]")
+		return nil, ErrMalformedValue
+	}
+	islandHex, ok := islandRaw.(string)
+	if !ok {
+		panic("islandRaw.(string)")
+		return nil, ErrMalformedValue
+	}
+	island, err := hex.DecodeString(islandHex)
+	if err != nil {
+		panic(err)
+		return nil, ErrMalformedValue
+	}
+	tx := new(transaction.Transaction)
+	if err = cbor.Unmarshal(island, tx); err != nil {
+		panic(err)
+		return nil, ErrMalformedValue
+	}
+
+	txCBOR := cbor.Marshal(tx)
+	txHex := hex.EncodeToString(txCBOR)
+	txMessage, err := signature.PrepareSignerMessage(transaction.SignatureContext, txCBOR)
+	if err != nil {
+		panic(err)
+	}
+	resp := &types.ConstructionPayloadsResponse{
+		UnsignedTransaction: string(txHex),
+		Payloads: []*types.SigningPayload{
+			{
+				Address:       signWithAddr,
+				Bytes:         txMessage,
+				SignatureType: types.Ed25519,
+			},
+		},
 	}
 
 	jr, _ := json.Marshal(resp)
 	loggerCons.Debug("ConstructionPayloads OK", "response", jr)
 
-	return resp, nil*/
-
-	return nil, ErrNotImplemented
+	return resp, nil
 }

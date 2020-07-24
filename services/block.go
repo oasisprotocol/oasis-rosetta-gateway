@@ -18,6 +18,9 @@ const OpTransfer = "Transfer"
 // OpBurn is the Burn operation.
 const OpBurn = "Burn"
 
+// OpDummyLiteral is a transaction structure.
+const OpDummyLiteral = "dummy_literal"
+
 // OpStatusOK is the OK status.
 const OpStatusOK = "OK"
 
@@ -25,6 +28,7 @@ const OpStatusOK = "OK"
 var SupportedOperationTypes = []string{
 	OpTransfer,
 	OpBurn,
+	OpDummyLiteral,
 }
 
 var loggerBlk = logging.GetLogger("services/block")
