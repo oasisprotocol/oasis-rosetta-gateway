@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"math/big"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -14,6 +16,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
+	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 )
@@ -30,6 +33,9 @@ const NonceKey = "nonce"
 // OpDummyLiteral operation that specifies the hex-encoded CBOR-encoded
 // Oasis consensus transaction.
 const LiteralKey = "literal"
+
+// DefaultGas is the gas limit used in creating a transaction.
+const DefaultGas = 10000
 
 var loggerCons = logging.GetLogger("services/construction")
 
@@ -290,16 +296,15 @@ func (s *constructionAPIService) ConstructionPreprocess(
 	// be used by the caller (in a different execution environment) to call
 	// the `/construction/metadata` endpoint.
 
-	// TODO: Figure out transaction from proper ops.
-	if len(request.Operations) != 1 {
-		panic("len(request.Operations)")
-		return nil, ErrNotImplemented
+	if len(request.Operations) < 1 {
+		loggerCons.Error("ConstructionPreprocess: missing fee operation")
+		return nil, ErrMalformedValue
 	}
-	op := request.Operations[0]
+	feeOp := request.Operations[0]
 
 	resp := &types.ConstructionPreprocessResponse{
 		Options: map[string]interface{}{
-			OptionsIDKey: op.Account.Address,
+			OptionsIDKey: feeOp.Account.Address,
 		},
 	}
 
@@ -307,6 +312,33 @@ func (s *constructionAPIService) ConstructionPreprocess(
 	loggerCons.Debug("ConstructionPreprocess OK", "response", jr)
 
 	return resp, nil
+}
+
+func readCurrency(amount *types.Amount, currency *types.Currency, negative bool) (*quantity.Quantity, error) {
+	// TODO: Is it up to us to check other fields?
+	if amount.Currency.Symbol != currency.Symbol {
+		return nil, fmt.Errorf("wrong currency")
+	}
+	bi := new(big.Int)
+	if err := bi.UnmarshalText([]byte(amount.Value)); err != nil {
+		return nil, fmt.Errorf("bi UnmarshalText Value: %w", err)
+	}
+	if negative {
+		bi.Neg(bi)
+	}
+	q := quantity.NewQuantity()
+	if err := q.FromBigInt(bi); err != nil {
+		return nil, fmt.Errorf("q FromBigInt bi: %w", err)
+	}
+	return q, nil
+}
+
+func readOasisCurrency(amount *types.Amount) (*quantity.Quantity, error) {
+	return readCurrency(amount, OasisCurrency, false)
+}
+
+func readOasisCurrencyNeg(amount *types.Amount) (*quantity.Quantity, error) {
+	return readCurrency(amount, OasisCurrency, true)
 }
 
 // ConstructionPayloads implements the /construction/payloads endpoint.
@@ -332,48 +364,136 @@ func (s *constructionAPIService) ConstructionPayloads(
 	// will contain a superset of whatever operations were provided during
 	// construction.
 
-	// TODO: Figure out transaction from proper ops.
-	if len(request.Operations) != 1 {
-		panic("len(request.Operations)")
-		return nil, ErrNotImplemented
-	}
-	op := request.Operations[0]
-	if op.Type != OpDummyLiteral {
-		panic("op.Type")
-		return nil, ErrNotImplemented
-	}
-
-	signWithAddr := op.Account.Address
-
-	islandRaw, ok := op.Metadata[LiteralKey]
+	nonceRaw, ok := request.Metadata[NonceKey]
 	if !ok {
-		panic("op.Metadata[LiteralKey]")
+		loggerCons.Error("ConstructionPayloads: nonce metadata not given")
 		return nil, ErrMalformedValue
 	}
-	islandHex, ok := islandRaw.(string)
+	nonceF64, ok := nonceRaw.(float64)
 	if !ok {
-		panic("islandRaw.(string)")
+		loggerCons.Error("ConstructionPayloads: malformed nonce metadata")
 		return nil, ErrMalformedValue
 	}
-	island, err := hex.DecodeString(islandHex)
+	nonce := uint64(nonceF64)
+
+	if len(request.Operations) < 2 {
+		loggerCons.Error("ConstructionPayloads: missing fee operation")
+		return nil, ErrMalformedValue
+	}
+	feeOp := request.Operations[0]
+	if feeOp.Type != OpTransfer {
+		loggerCons.Error("ConstructionPayloads: fee operation wrong type",
+			"type", feeOp.Type,
+			"expected_type", OpTransfer,
+		)
+		return nil, ErrMalformedValue
+	}
+	if feeOp.Account.SubAccount == nil {
+		loggerCons.Error("ConstructionPayloads: missing fee operation subaccount")
+		return nil, ErrMalformedValue
+	}
+	if feeOp.Account.SubAccount.Address != SubAccountGeneral {
+		loggerCons.Error("ConstructionPayloads: fee operation wrong subaccount address",
+			"subaccount", feeOp.Account.SubAccount.Address,
+			"expected_subaccount", SubAccountGeneral,
+		)
+		return nil, ErrMalformedValue
+	}
+	signWithAddr := feeOp.Account.Address
+	feeAmount, err := readOasisCurrencyNeg(feeOp.Amount)
 	if err != nil {
-		panic(err)
+		loggerCons.Error("ConstructionPayloads: readOasisCurrency feeOp.Amount",
+			"amount", feeOp.Amount,
+			"err", err,
+		)
 		return nil, ErrMalformedValue
 	}
-	tx := new(transaction.Transaction)
-	if err = cbor.Unmarshal(island, tx); err != nil {
-		panic(err)
-		return nil, ErrMalformedValue
+
+	var method transaction.MethodName
+	var body cbor.RawMessage
+	if len(request.Operations) == 3 &&
+		request.Operations[1].Type == OpTransfer &&
+		request.Operations[1].Account.SubAccount != nil &&
+		request.Operations[1].Account.SubAccount.Address == SubAccountGeneral &&
+		request.Operations[2].Type == OpTransfer &&
+		request.Operations[2].Account.SubAccount != nil &&
+		request.Operations[2].Account.SubAccount.Address == SubAccountGeneral {
+		loggerCons.Debug("ConstructionPayloads: matched transfer")
+		method = staking.MethodTransfer
+
+		if request.Operations[1].Account.Address != signWithAddr {
+			loggerCons.Error("ConstructionPayloads: transfer from doesn't match signer",
+				"from", request.Operations[1].Account.Address,
+				"signer", signWithAddr,
+			)
+			return nil, ErrMalformedValue
+		}
+		amount, err := readOasisCurrencyNeg(request.Operations[1].Amount)
+		if err != nil {
+			loggerCons.Error("ConstructionPayloads: transfer from amount",
+				"amount", request.Operations[1].Amount,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+
+		var to staking.Address
+		if err = to.UnmarshalText([]byte(request.Operations[2].Account.Address)); err != nil {
+			loggerCons.Error("ConstructionPayloads: to UnmarshalText",
+				"addr", request.Operations[2].Account.Address,
+				"err", err,
+			)
+		}
+		amount2, err := readOasisCurrency(request.Operations[2].Amount)
+		if err != nil {
+			loggerCons.Error("ConstructionPayloads: transfer to amount",
+				"amount", request.Operations[2].Amount,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+		if amount.Cmp(amount2) != 0 {
+			loggerCons.Error("ConstructionPayloads: transfer amounts differ",
+				"amount_from", amount,
+				"amount_to", amount2,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+		body = cbor.Marshal(staking.Transfer{
+			To:     to,
+			Tokens: *amount,
+		})
+	} else {
+		loggerCons.Error("ConstructionPayloads: unmatched operations list",
+			"operations", request.Operations,
+		)
+		return nil, ErrNotImplemented
+	}
+
+	tx := transaction.Transaction{
+		Nonce: nonce,
+		Fee: &transaction.Fee{
+			Amount: *feeAmount,
+			Gas:    DefaultGas,
+		},
+		Method: method,
+		Body:   body,
 	}
 
 	txCBOR := cbor.Marshal(tx)
 	txHex := hex.EncodeToString(txCBOR)
 	txMessage, err := signature.PrepareSignerMessage(transaction.SignatureContext, txCBOR)
 	if err != nil {
-		panic(err)
+		loggerCons.Error("ConstructionPayloads: PrepareSignerMessage",
+			"signature_context", transaction.SignatureContext,
+			"tx_hex", txHex,
+			"err", err,
+		)
+		return nil, ErrMalformedValue
 	}
 	resp := &types.ConstructionPayloadsResponse{
-		UnsignedTransaction: string(txHex),
+		UnsignedTransaction: txHex,
 		Payloads: []*types.SigningPayload{
 			{
 				Address:       signWithAddr,

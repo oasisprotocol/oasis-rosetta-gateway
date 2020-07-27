@@ -14,6 +14,8 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/staking/api"
 )
 
+const dstAddress = "oasis1qpkant39yhx59sagnzpc8v0sg8aerwa3jyqde3ge"
+
 func main() {
 	_, signer, err := entity.TestEntity()
 	if err != nil {
@@ -46,12 +48,48 @@ func main() {
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: 0,
 			},
-			Type: services.OpDummyLiteral,
+			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
 				Address: testEntityAddress,
+				SubAccount: &types.SubAccountIdentifier{
+					Address: services.SubAccountGeneral,
+				},
 			},
-			Metadata: map[string]interface{}{
-				services.LiteralKey: "a463666565a26367617319271066616d6f756e744064626f6479a267786665725f746f55006dd9ae2525cd42c3a8988383b1f041fb91bbb1916b786665725f746f6b656e734203e8656e6f6e636500666d6574686f64707374616b696e672e5472616e73666572",
+			Amount: &types.Amount{
+				Value:    "0",
+				Currency: services.OasisCurrency,
+			},
+		},
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 1,
+			},
+			Type: services.OpTransfer,
+			Account: &types.AccountIdentifier{
+				Address: testEntityAddress,
+				SubAccount: &types.SubAccountIdentifier{
+					Address: services.SubAccountGeneral,
+				},
+			},
+			Amount: &types.Amount{
+				Value:    "-1000",
+				Currency: services.OasisCurrency,
+			},
+		},
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 2,
+			},
+			Type: services.OpTransfer,
+			Account: &types.AccountIdentifier{
+				Address: dstAddress,
+				SubAccount: &types.SubAccountIdentifier{
+					Address: services.SubAccountGeneral,
+				},
+			},
+			Amount: &types.Amount{
+				Value:    "1000",
+				Currency: services.OasisCurrency,
 			},
 		},
 	}
@@ -99,6 +137,7 @@ func main() {
 	r4, re, err := rc.ConstructionAPI.ConstructionPayloads(context.Background(), &types.ConstructionPayloadsRequest{
 		NetworkIdentifier: ni,
 		Operations:        ops,
+		Metadata:          r3.Metadata,
 	})
 	if err != nil {
 		panic(err)
