@@ -439,7 +439,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 
 		var to staking.Address
 		if err = to.UnmarshalText([]byte(request.Operations[2].Account.Address)); err != nil {
-			loggerCons.Error("ConstructionPayloads: to UnmarshalText",
+			loggerCons.Error("ConstructionPayloads: transfer to UnmarshalText",
 				"addr", request.Operations[2].Account.Address,
 				"err", err,
 			)
@@ -490,6 +490,60 @@ func (s *constructionAPIService) ConstructionPayloads(
 
 		body = cbor.Marshal(staking.Burn{
 			Tokens: *amount,
+		})
+	} else if len(request.Operations) == 3 &&
+		request.Operations[1].Type == OpTransfer &&
+		request.Operations[1].Account.SubAccount != nil &&
+		request.Operations[1].Account.SubAccount.Address == SubAccountGeneral &&
+		request.Operations[2].Type == OpTransfer &&
+		request.Operations[2].Account.SubAccount != nil &&
+		request.Operations[2].Account.SubAccount.Address == SubAccountEscrow {
+		loggerCons.Debug("ConstructionPayloads: matched add escrow")
+		method = staking.MethodAddEscrow
+
+		if request.Operations[1].Account.Address != signWithAddr {
+			loggerCons.Error("ConstructionPayloads: add escrow from doesn't match signer",
+				"from", request.Operations[1].Account.Address,
+				"signer", signWithAddr,
+			)
+			return nil, ErrMalformedValue
+		}
+		amount, err := readOasisCurrencyNeg(request.Operations[1].Amount)
+		if err != nil {
+			loggerCons.Error("ConstructionPayloads: add escrow from amount",
+				"amount", request.Operations[1].Amount,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+
+		var escrowAccount staking.Address
+		if err = escrowAccount.UnmarshalText([]byte(request.Operations[2].Account.Address)); err != nil {
+			loggerCons.Error("ConstructionPayloads: add escrow account UnmarshalText",
+				"addr", request.Operations[2].Account.Address,
+				"err", err,
+			)
+		}
+		amount2, err := readOasisCurrency(request.Operations[2].Amount)
+		if err != nil {
+			loggerCons.Error("ConstructionPayloads: add escrow account amount",
+				"amount", request.Operations[2].Amount,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+		if amount.Cmp(amount2) != 0 {
+			loggerCons.Error("ConstructionPayloads: add escrow amounts differ",
+				"amount_from", amount,
+				"amount_to", amount2,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+
+		body = cbor.Marshal(staking.Escrow{
+			Account: escrowAccount,
+			Tokens:  *amount,
 		})
 	} else {
 		loggerCons.Error("ConstructionPayloads: unmatched operations list",
