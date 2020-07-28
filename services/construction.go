@@ -460,8 +460,35 @@ func (s *constructionAPIService) ConstructionPayloads(
 			)
 			return nil, ErrMalformedValue
 		}
+
 		body = cbor.Marshal(staking.Transfer{
 			To:     to,
+			Tokens: *amount,
+		})
+	} else if len(request.Operations) == 2 &&
+		request.Operations[1].Type == OpBurn &&
+		request.Operations[1].Account.SubAccount != nil &&
+		request.Operations[1].Account.SubAccount.Address == SubAccountGeneral {
+		loggerCons.Debug("ConstructionPayloads: matched burn")
+		method = staking.MethodBurn
+
+		if request.Operations[1].Account.Address != signWithAddr {
+			loggerCons.Error("ConstructionPayloads: burn from doesn't match signer",
+				"from", request.Operations[1].Account.Address,
+				"signer", signWithAddr,
+			)
+			return nil, ErrMalformedValue
+		}
+		amount, err := readOasisCurrencyNeg(request.Operations[1].Amount)
+		if err != nil {
+			loggerCons.Error("ConstructionPayloads: burn from amount",
+				"amount", request.Operations[1].Amount,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+
+		body = cbor.Marshal(staking.Burn{
 			Tokens: *amount,
 		})
 	} else {

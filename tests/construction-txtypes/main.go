@@ -93,6 +93,33 @@ func main() {
 			Tokens: *quantity.NewFromUint64(1000),
 		}),
 	}
+	opsBurn := []*types.Operation{
+		fee100Op,
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 1,
+			},
+			Type: services.OpBurn,
+			Account: &types.AccountIdentifier{
+				Address: testEntityAddress,
+				SubAccount: &types.SubAccountIdentifier{
+					Address: services.SubAccountGeneral,
+				},
+			},
+			Amount: &types.Amount{
+				Value:    "-1000",
+				Currency: services.OasisCurrency,
+			},
+		},
+	}
+	txBurn := &transaction.Transaction{
+		Nonce:  dummyNonce,
+		Fee:    fee100,
+		Method: api.MethodBurn,
+		Body: cbor.Marshal(api.Burn{
+			Tokens: *quantity.NewFromUint64(1000),
+		}),
+	}
 
 	rc := client.NewAPIClient(client.NewConfiguration("http://localhost:8080", "rosetta-sdk-go", nil))
 
@@ -115,6 +142,7 @@ func main() {
 		reference *transaction.Transaction
 	}{
 		{"transfer", opsTransfer, txTransfer},
+		{"burn", opsBurn, txBurn},
 	} {
 		r2, re, err := rc.ConstructionAPI.ConstructionPayloads(context.Background(), &types.ConstructionPayloadsRequest{
 			NetworkIdentifier: ni,
