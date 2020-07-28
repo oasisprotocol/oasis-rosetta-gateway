@@ -120,7 +120,7 @@ func main() {
 			Tokens: *quantity.NewFromUint64(1000),
 		}),
 	}
-	opsEscrow := []*types.Operation{
+	opsAddEscrow := []*types.Operation{
 		fee100Op,
 		{
 			OperationIdentifier: &types.OperationIdentifier{
@@ -155,13 +155,41 @@ func main() {
 			},
 		},
 	}
-	txEscrow := &transaction.Transaction{
+	txAddEscrow := &transaction.Transaction{
 		Nonce:  dummyNonce,
 		Fee:    fee100,
 		Method: api.MethodAddEscrow,
 		Body: cbor.Marshal(api.Escrow{
 			Account: dstAddr,
 			Tokens:  *quantity.NewFromUint64(1000),
+		}),
+	}
+	opsReclaimEscrow := []*types.Operation{
+		fee100Op,
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 1,
+			},
+			Type: services.OpTransfer,
+			Account: &types.AccountIdentifier{
+				Address: dstAddress,
+				SubAccount: &types.SubAccountIdentifier{
+					Address: services.SubAccountEscrow,
+				},
+			},
+			Amount: &types.Amount{
+				Value:    "-1000",
+				Currency: services.PoolShare,
+			},
+		},
+	}
+	txReclaimEscrow := &transaction.Transaction{
+		Nonce:  dummyNonce,
+		Fee:    fee100,
+		Method: api.MethodReclaimEscrow,
+		Body: cbor.Marshal(api.ReclaimEscrow{
+			Account: dstAddr,
+			Shares:  *quantity.NewFromUint64(1000),
 		}),
 	}
 
@@ -187,7 +215,8 @@ func main() {
 	}{
 		{"transfer", opsTransfer, txTransfer},
 		{"burn", opsBurn, txBurn},
-		{"add escrow", opsEscrow, txEscrow},
+		{"add escrow", opsAddEscrow, txAddEscrow},
+		{"reclaim escrow", opsReclaimEscrow, txReclaimEscrow},
 	} {
 		r2, re, err := rc.ConstructionAPI.ConstructionPayloads(context.Background(), &types.ConstructionPayloadsRequest{
 			NetworkIdentifier: ni,

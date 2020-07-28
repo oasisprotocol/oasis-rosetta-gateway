@@ -17,6 +17,11 @@ var OasisCurrency = &types.Currency{
 	Decimals: 9,
 }
 
+// PoolShare is the currency used for debonding.
+var PoolShare = &types.Currency{
+	Symbol: "(pool share)",
+}
+
 // GetChainID returns the chain ID.
 func GetChainID(ctx context.Context, oc oc.OasisClient) (string, *types.Error) {
 	chainID, err := oc.GetChainID(ctx)
