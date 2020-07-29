@@ -37,6 +37,9 @@ const LiteralKey = "literal"
 // DefaultGas is the gas limit used in creating a transaction.
 const DefaultGas = 10000
 
+// FromPlaceholder represents the signer address in an unsigned transaction.
+const FromPlaceholder = "(from)"
+
 var loggerCons = logging.GetLogger("services/construction")
 
 type constructionAPIService struct {
@@ -206,6 +209,7 @@ func (s *constructionAPIService) ConstructionCombine(
 	// transaction returned from this method will be sent to the
 	// `/construction/submit` endpoint by the caller.
 
+	// TODO: Unpanic.
 	txBuf, err := hex.DecodeString(request.UnsignedTransaction)
 	if err != nil {
 		panic(err)
@@ -262,21 +266,228 @@ func (s *constructionAPIService) ConstructionParse(
 	// before signing (after `/construction/payloads`) and before broadcast
 	// (after `/construction/combine`).
 
-	// TODO: Write helpers that generate types.Operations from a staking
-	// transaction (also, `appendOp` from `services/block.go` should be made
-	// public and the code probably needs a refactor).
+	// TODO: Unify some of this verboseness with block.go. If you prefer.
 
-	/*resp := &types.ConstructionParseResponse{
-		Operations: // TODO
-		Signers:    // TODO
+	src, err := hex.DecodeString(request.Transaction)
+	if err != nil {
+		loggerCons.Error("ConstructionParse: transaction hex decode",
+			"transaction", request.Transaction,
+			"err", err,
+		)
+		return nil, ErrMalformedValue
+	}
+
+	var tx transaction.Transaction
+	var from string
+	var signers []string
+	if request.Signed {
+		var st transaction.SignedTransaction
+		if err := cbor.Unmarshal(src, &st); err != nil {
+			loggerCons.Error("ConstructionParse: signed transaction unmarshal",
+				"src", request.Transaction,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+		if err := st.Open(&tx); err != nil {
+			loggerCons.Error("ConstructionParse: signed transaction open",
+				"signed_transaction", st,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+		from = staking.NewAddress(st.Signature.PublicKey).String()
+		signers = []string{from}
+	} else {
+		if err := cbor.Unmarshal(src, &tx); err != nil {
+			loggerCons.Error("ConstructionParse: unsigned transaction unmarshal",
+				"src", request.Transaction,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+		from = FromPlaceholder
+	}
+
+	ops := []*types.Operation{
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 0,
+			},
+			Type: OpTransfer,
+			Account: &types.AccountIdentifier{
+				Address: from,
+				SubAccount: &types.SubAccountIdentifier{
+					Address: SubAccountGeneral,
+				},
+			},
+			Amount: &types.Amount{
+				Value:    "-" + tx.Fee.Amount.String(),
+				Currency: OasisCurrency,
+			},
+		},
+	}
+	switch tx.Method {
+	case staking.MethodTransfer:
+		var body staking.Transfer
+		if err := cbor.Unmarshal(tx.Body, &body); err != nil {
+			loggerCons.Error("ConstructionParse: transfer unmarshal",
+				"body", tx.Body,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+		ops = append(ops,
+			&types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: 1,
+				},
+				Type: OpTransfer,
+				Account: &types.AccountIdentifier{
+					Address: from,
+					SubAccount: &types.SubAccountIdentifier{
+						Address: SubAccountGeneral,
+					},
+				},
+				Amount: &types.Amount{
+					Value:    "-" + body.Tokens.String(),
+					Currency: OasisCurrency,
+				},
+			},
+			&types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: 2,
+				},
+				Type: OpTransfer,
+				Account: &types.AccountIdentifier{
+					Address: body.To.String(),
+					SubAccount: &types.SubAccountIdentifier{
+						Address: SubAccountGeneral,
+					},
+				},
+				Amount: &types.Amount{
+					Value:    body.Tokens.String(),
+					Currency: OasisCurrency,
+				},
+			},
+		)
+	case staking.MethodBurn:
+		var body staking.Burn
+		if err := cbor.Unmarshal(tx.Body, &body); err != nil {
+			loggerCons.Error("ConstructionParse: burn unmarshal",
+				"body", tx.Body,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+		ops = append(ops,
+			&types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: 1,
+				},
+				Type: OpBurn,
+				Account: &types.AccountIdentifier{
+					Address: from,
+					SubAccount: &types.SubAccountIdentifier{
+						Address: SubAccountGeneral,
+					},
+				},
+				Amount: &types.Amount{
+					Value:    "-" + body.Tokens.String(),
+					Currency: OasisCurrency,
+				},
+			},
+		)
+	case staking.MethodAddEscrow:
+		var body staking.Escrow
+		if err := cbor.Unmarshal(tx.Body, &body); err != nil {
+			loggerCons.Error("ConstructionParse: add escrow unmarshal",
+				"body", tx.Body,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+		ops = append(ops,
+			&types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: 1,
+				},
+				Type: OpTransfer,
+				Account: &types.AccountIdentifier{
+					Address: from,
+					SubAccount: &types.SubAccountIdentifier{
+						Address: SubAccountGeneral,
+					},
+				},
+				Amount: &types.Amount{
+					Value:    "-" + body.Tokens.String(),
+					Currency: OasisCurrency,
+				},
+			},
+			&types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: 2,
+				},
+				Type: OpTransfer,
+				Account: &types.AccountIdentifier{
+					Address: body.Account.String(),
+					SubAccount: &types.SubAccountIdentifier{
+						Address: SubAccountEscrow,
+					},
+				},
+				Amount: &types.Amount{
+					Value:    body.Tokens.String(),
+					Currency: OasisCurrency,
+				},
+			},
+		)
+	case staking.MethodReclaimEscrow:
+		var body staking.ReclaimEscrow
+		if err := cbor.Unmarshal(tx.Body, &body); err != nil {
+			loggerCons.Error("ConstructionParse: reclaim escrow unmarshal",
+				"body", tx.Body,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+		ops = append(ops,
+			&types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: 1,
+				},
+				Type: OpTransfer,
+				Account: &types.AccountIdentifier{
+					Address: body.Account.String(),
+					SubAccount: &types.SubAccountIdentifier{
+						Address: SubAccountEscrow,
+					},
+				},
+				Amount: &types.Amount{
+					Value:    "-" + body.Shares.String(),
+					Currency: PoolShare,
+				},
+			},
+		)
+	default:
+		loggerCons.Error("ConstructionParse: unmatched method",
+			"method", tx.Method,
+			"err", err,
+		)
+		return nil, ErrNotImplemented
+	}
+
+	resp := &types.ConstructionParseResponse{
+		Operations: ops,
+		Signers:    signers,
+		Metadata: map[string]interface{}{
+			NonceKey: tx.Nonce,
+		},
 	}
 
 	jr, _ := json.Marshal(resp)
 	loggerCons.Debug("ConstructionParse OK", "response", jr)
 
-	return resp, nil*/
-
-	return nil, ErrNotImplemented
+	return resp, nil
 }
 
 // ConstructionPreprocess implements the /construction/preprocess endpoint.

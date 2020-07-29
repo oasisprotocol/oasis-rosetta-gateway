@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"github.com/coinbase/rosetta-sdk-go/client"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -13,6 +14,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	"github.com/oasisprotocol/oasis-core/go/staking/api"
+	"reflect"
 )
 
 const dstAddress = "oasis1qpkant39yhx59sagnzpc8v0sg8aerwa3jyqde3ge"
@@ -226,10 +228,10 @@ func main() {
 			},
 		})
 		if err != nil {
-			panic(fmt.Errorf("%s: %w", tt.name, err))
+			panic(fmt.Errorf("%s payloads: %w", tt.name, err))
 		}
 		if re != nil {
-			panic(fmt.Errorf("%s: %v", tt.name, re))
+			panic(fmt.Errorf("%s payloads: %v", tt.name, re))
 		}
 		fmt.Println(tt.name, "unsigned transaction", r2.UnsignedTransaction)
 		fmt.Println(tt.name, "signing payloads", r2.Payloads)
@@ -243,6 +245,50 @@ func main() {
 			refHex := hex.EncodeToString(refBuf)
 			fmt.Println(tt.name, "reference transaction", refHex)
 			panic(fmt.Errorf("%s: transaction mismatch", tt.name))
+		}
+
+		r3, re, err := rc.ConstructionAPI.ConstructionParse(context.Background(), &types.ConstructionParseRequest{
+			NetworkIdentifier: ni,
+			Signed:            false,
+			Transaction:       r2.UnsignedTransaction,
+		})
+		if err != nil {
+			panic(fmt.Errorf("%s parse: %w", tt.name, err))
+		}
+		if re != nil {
+			panic(fmt.Errorf("%s parse: %v", tt.name, re))
+		}
+		fmt.Println(tt.name, "operations", r3.Operations)
+		fmt.Println(tt.name, "operations", r3.Operations)
+		fmt.Println(tt.name, "signers", r3.Signers)
+		fmt.Println(tt.name, "metadata", r3.Metadata)
+
+		var parsedOpsResolved []*types.Operation
+		for _, op := range r3.Operations {
+			if op.Account.Address == services.FromPlaceholder {
+				op = &*op
+				op.Account = &*op.Account
+				op.Account.Address = testEntityAddress
+			}
+			parsedOpsResolved = append(parsedOpsResolved, op)
+		}
+		if !reflect.DeepEqual(parsedOpsResolved, tt.ops) {
+			parsedOpsJSON, err := json.Marshal(r3.Operations)
+			if err != nil {
+				panic(fmt.Errorf("%s marshal parsed operations: %w", tt.name, err))
+			}
+			fmt.Println(tt.name, "parsed operations", string(parsedOpsJSON))
+			parsedOpsResolvedJSON, err := json.Marshal(parsedOpsResolved)
+			if err != nil {
+				panic(fmt.Errorf("%s marshal parsed operations resolved: %w", tt.name, err))
+			}
+			fmt.Println(tt.name, "parsed operations resolved", string(parsedOpsResolvedJSON))
+			referenceOpsJSON, err := json.Marshal(tt.ops)
+			if err != nil {
+				panic(fmt.Errorf("%s marshal reference operations: %w", tt.name, err))
+			}
+			fmt.Println(tt.name, "reference operations", referenceOpsJSON)
+			panic(fmt.Errorf("%s: operations mismatch", tt.name))
 		}
 	}
 }
