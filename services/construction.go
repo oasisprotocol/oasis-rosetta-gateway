@@ -29,11 +29,6 @@ const OptionsIDKey = "id"
 // ConstructionMetadataResponse that specifies the next valid nonce.
 const NonceKey = "nonce"
 
-// LiteralKey is the name of the key in the Metadata map inside a
-// OpDummyLiteral operation that specifies the hex-encoded CBOR-encoded
-// Oasis consensus transaction.
-const LiteralKey = "literal"
-
 // DefaultGas is the gas limit used in creating a transaction.
 const DefaultGas = 10000
 
