@@ -210,10 +210,11 @@ func (s *constructionAPIService) ConstructionCombine(
 	// `/construction/submit` endpoint by the caller.
 
 	// TODO: Unpanic.
-	txBuf, err := hex.DecodeString(request.UnsignedTransaction)
-	if err != nil {
+	var tx transaction.Transaction
+	if err := json.Unmarshal([]byte(request.UnsignedTransaction), &tx); err != nil {
 		panic(err)
 	}
+	txBuf := cbor.Marshal(tx)
 	if len(request.Signatures) != 1 {
 		panic("len(request.Signatures)")
 	}
@@ -268,21 +269,12 @@ func (s *constructionAPIService) ConstructionParse(
 
 	// TODO: Unify some of this verboseness with block.go. If you prefer.
 
-	src, err := hex.DecodeString(request.Transaction)
-	if err != nil {
-		loggerCons.Error("ConstructionParse: transaction hex decode",
-			"transaction", request.Transaction,
-			"err", err,
-		)
-		return nil, ErrMalformedValue
-	}
-
 	var tx transaction.Transaction
 	var from string
 	var signers []string
 	if request.Signed {
 		var st transaction.SignedTransaction
-		if err := cbor.Unmarshal(src, &st); err != nil {
+		if err := json.Unmarshal([]byte(request.Transaction), &st); err != nil {
 			loggerCons.Error("ConstructionParse: signed transaction unmarshal",
 				"src", request.Transaction,
 				"err", err,
@@ -299,7 +291,7 @@ func (s *constructionAPIService) ConstructionParse(
 		from = staking.NewAddress(st.Signature.PublicKey).String()
 		signers = []string{from}
 	} else {
-		if err := cbor.Unmarshal(src, &tx); err != nil {
+		if err := json.Unmarshal([]byte(request.Transaction), &tx); err != nil {
 			loggerCons.Error("ConstructionParse: unsigned transaction unmarshal",
 				"src", request.Transaction,
 				"err", err,
@@ -309,6 +301,10 @@ func (s *constructionAPIService) ConstructionParse(
 		from = FromPlaceholder
 	}
 
+	feeAmountStr := "-0"
+	if tx.Fee != nil {
+		feeAmountStr = "-" + tx.Fee.Amount.String()
+	}
 	ops := []*types.Operation{
 		{
 			OperationIdentifier: &types.OperationIdentifier{
@@ -322,7 +318,7 @@ func (s *constructionAPIService) ConstructionParse(
 				},
 			},
 			Amount: &types.Amount{
-				Value:    "-" + tx.Fee.Amount.String(),
+				Value:    feeAmountStr,
 				Currency: OasisCurrency,
 			},
 		},
@@ -471,7 +467,6 @@ func (s *constructionAPIService) ConstructionParse(
 	default:
 		loggerCons.Error("ConstructionParse: unmatched method",
 			"method", tx.Method,
-			"err", err,
 		)
 		return nil, ErrNotImplemented
 	}
@@ -804,6 +799,14 @@ func (s *constructionAPIService) ConstructionPayloads(
 		Body:   body,
 	}
 
+	txJSON, err := json.Marshal(tx)
+	if err != nil {
+		loggerCons.Error("ConstructionPayloads: marshal transaction",
+			"tx", tx,
+			"err", err,
+		)
+		return nil, ErrMalformedValue
+	}
 	txCBOR := cbor.Marshal(tx)
 	txHex := hex.EncodeToString(txCBOR)
 	txMessage, err := signature.PrepareSignerMessage(transaction.SignatureContext, txCBOR)
@@ -816,7 +819,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 		return nil, ErrMalformedValue
 	}
 	resp := &types.ConstructionPayloadsResponse{
-		UnsignedTransaction: txHex,
+		UnsignedTransaction: string(txJSON),
 		Payloads: []*types.SigningPayload{
 			{
 				Address:       signWithAddr,

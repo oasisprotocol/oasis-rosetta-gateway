@@ -18,6 +18,14 @@ import (
 
 const dstAddress = "oasis1qpkant39yhx59sagnzpc8v0sg8aerwa3jyqde3ge"
 
+func dumpJSON(v interface{}) string {
+	result, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return string(result)
+}
+
 func main() {
 	_, signer, err := entity.TestEntity()
 	if err != nil {
@@ -95,7 +103,7 @@ func main() {
 			},
 		},
 	}
-	fmt.Println("operations", ops)
+	fmt.Println("operations", dumpJSON(ops))
 
 	rc := client.NewAPIClient(client.NewConfiguration("http://localhost:8080", "rosetta-sdk-go", nil))
 
@@ -109,7 +117,7 @@ func main() {
 	if len(r1.NetworkIdentifiers) != 1 {
 		panic("len(r1.NetworkIdentifiers)")
 	}
-	fmt.Println("network identifiers", r1.NetworkIdentifiers)
+	fmt.Println("network identifiers", dumpJSON(r1.NetworkIdentifiers))
 	ni := r1.NetworkIdentifiers[0]
 
 	r2, re, err := rc.ConstructionAPI.ConstructionPreprocess(context.Background(), &types.ConstructionPreprocessRequest{
@@ -122,7 +130,7 @@ func main() {
 	if re != nil {
 		panic(re)
 	}
-	fmt.Println("metadata options", r2.Options)
+	fmt.Println("metadata options", dumpJSON(r2.Options))
 
 	r3, re, err := rc.ConstructionAPI.ConstructionMetadata(context.Background(), &types.ConstructionMetadataRequest{
 		NetworkIdentifier: ni,
@@ -134,7 +142,7 @@ func main() {
 	if re != nil {
 		panic(re)
 	}
-	fmt.Println("metadata", r3.Metadata)
+	fmt.Println("metadata", dumpJSON(r3.Metadata))
 
 	r4, re, err := rc.ConstructionAPI.ConstructionPayloads(context.Background(), &types.ConstructionPayloadsRequest{
 		NetworkIdentifier: ni,
@@ -148,7 +156,7 @@ func main() {
 		panic(re)
 	}
 	fmt.Println("unsigned transaction", r4.UnsignedTransaction)
-	fmt.Println("signing payloads", r4.Payloads)
+	fmt.Println("signing payloads", dumpJSON(r4.Payloads))
 
 	r4p, re, err := rc.ConstructionAPI.ConstructionParse(context.Background(), &types.ConstructionParseRequest{
 		NetworkIdentifier: ni,
@@ -161,10 +169,10 @@ func main() {
 	if re != nil {
 		panic(re)
 	}
-	fmt.Println("unsigned operations", r4p.Operations)
-	fmt.Println("unsigned signers", r4p.Signers)
-	fmt.Println("unsigned metadata", r4p.Metadata)
-	reference := &types.ConstructionParseResponse{
+	fmt.Println("unsigned operations", dumpJSON(r4p.Operations))
+	fmt.Println("unsigned signers", dumpJSON(r4p.Signers))
+	fmt.Println("unsigned metadata", dumpJSON(r4p.Metadata))
+	r4pRef := &types.ConstructionParseResponse{
 		Operations: []*types.Operation{
 			{
 				OperationIdentifier: &types.OperationIdentifier{
@@ -217,18 +225,10 @@ func main() {
 		},
 		Metadata: r3.Metadata,
 	}
-	if !reflect.DeepEqual(r4p, reference) {
-		respJSON, err := json.Marshal(r4p)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("unsigned transaction parsed", string(respJSON))
-		refJSON, err := json.Marshal(reference)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("reference", string(refJSON))
-		panic(fmt.Errorf("unsigned transaction parsed wrong (good luck)"))
+	if !reflect.DeepEqual(r4p, r4pRef) {
+		fmt.Println("unsigned transaction parsed", dumpJSON(r4p))
+		fmt.Println("reference", dumpJSON(r4pRef))
+		panic(fmt.Errorf("unsigned transaction parsed wrong"))
 	}
 
 	var sigs []*types.Signature
@@ -258,7 +258,7 @@ func main() {
 
 	r5p, re, err := rc.ConstructionAPI.ConstructionParse(context.Background(), &types.ConstructionParseRequest{
 		NetworkIdentifier: ni,
-		Signed:            false,
+		Signed:            true,
 		Transaction:       r5.SignedTransaction,
 	})
 	if err != nil {
@@ -267,15 +267,18 @@ func main() {
 	if re != nil {
 		panic(re)
 	}
-	fmt.Println("signed operations", r5p.Operations)
-	fmt.Println("signed signers", r5p.Signers)
-	fmt.Println("signed metadata", r5p.Metadata)
-	if !reflect.DeepEqual(r4p, &types.ConstructionParseResponse{
+	fmt.Println("signed operations", dumpJSON(r5p.Operations))
+	fmt.Println("signed signers", dumpJSON(r5p.Signers))
+	fmt.Println("signed metadata", dumpJSON(r5p.Metadata))
+	r5pRef := &types.ConstructionParseResponse{
 		Operations: ops,
-		Signers: []string{testEntityAddress},
-		Metadata: r3.Metadata,
-	}) {
-		panic(fmt.Errorf("signed transaction parsed wrong (good luck)"))
+		Signers:    []string{testEntityAddress},
+		Metadata:   r3.Metadata,
+	}
+	if !reflect.DeepEqual(r5p, r5pRef) {
+		fmt.Println("signed transaction parsed", dumpJSON(r5p))
+		fmt.Println("reference", dumpJSON(r5pRef))
+		panic(fmt.Errorf("signed transaction parsed wrong"))
 	}
 
 	r6, re, err := rc.ConstructionAPI.ConstructionSubmit(context.Background(), &types.ConstructionSubmitRequest{
@@ -289,5 +292,5 @@ func main() {
 		panic(re)
 	}
 	fmt.Println("transaction hash", r6.TransactionIdentifier.Hash)
-	fmt.Println("transaction metadata", r6.Metadata)
+	fmt.Println("transaction metadata", dumpJSON(r6.Metadata))
 }
