@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/sha512"
+	"encoding/json"
 	"fmt"
 	"github.com/coinbase/rosetta-sdk-go/client"
 	"github.com/coinbase/rosetta-sdk-go/keys"
@@ -12,6 +13,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/entity"
 	"github.com/oasisprotocol/oasis-core/go/staking/api"
+	"reflect"
 )
 
 const dstAddress = "oasis1qpkant39yhx59sagnzpc8v0sg8aerwa3jyqde3ge"
@@ -56,7 +58,7 @@ func main() {
 				},
 			},
 			Amount: &types.Amount{
-				Value:    "0",
+				Value:    "-0",
 				Currency: services.OasisCurrency,
 			},
 		},
@@ -148,6 +150,87 @@ func main() {
 	fmt.Println("unsigned transaction", r4.UnsignedTransaction)
 	fmt.Println("signing payloads", r4.Payloads)
 
+	r4p, re, err := rc.ConstructionAPI.ConstructionParse(context.Background(), &types.ConstructionParseRequest{
+		NetworkIdentifier: ni,
+		Signed:            false,
+		Transaction:       r4.UnsignedTransaction,
+	})
+	if err != nil {
+		panic(err)
+	}
+	if re != nil {
+		panic(re)
+	}
+	fmt.Println("unsigned operations", r4p.Operations)
+	fmt.Println("unsigned signers", r4p.Signers)
+	fmt.Println("unsigned metadata", r4p.Metadata)
+	reference := &types.ConstructionParseResponse{
+		Operations: []*types.Operation{
+			{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: 0,
+				},
+				Type: services.OpTransfer,
+				Account: &types.AccountIdentifier{
+					Address: services.FromPlaceholder,
+					SubAccount: &types.SubAccountIdentifier{
+						Address: services.SubAccountGeneral,
+					},
+				},
+				Amount: &types.Amount{
+					Value:    "-0",
+					Currency: services.OasisCurrency,
+				},
+			},
+			{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: 1,
+				},
+				Type: services.OpTransfer,
+				Account: &types.AccountIdentifier{
+					Address: services.FromPlaceholder,
+					SubAccount: &types.SubAccountIdentifier{
+						Address: services.SubAccountGeneral,
+					},
+				},
+				Amount: &types.Amount{
+					Value:    "-1000",
+					Currency: services.OasisCurrency,
+				},
+			},
+			{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: 2,
+				},
+				Type: services.OpTransfer,
+				Account: &types.AccountIdentifier{
+					Address: dstAddress,
+					SubAccount: &types.SubAccountIdentifier{
+						Address: services.SubAccountGeneral,
+					},
+				},
+				Amount: &types.Amount{
+					Value:    "1000",
+					Currency: services.OasisCurrency,
+				},
+			},
+		},
+		Metadata: r3.Metadata,
+	}
+	if !reflect.DeepEqual(r4p, reference) {
+		respJSON, err := json.Marshal(r4p)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("unsigned transaction parsed", string(respJSON))
+		refJSON, err := json.Marshal(reference)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("reference", string(refJSON))
+		panic(fmt.Errorf("unsigned transaction parsed wrong (good luck)"))
+	}
+
 	var sigs []*types.Signature
 	for i, sp := range r4.Payloads {
 		if sp.Address != testEntityAddress {
@@ -172,6 +255,28 @@ func main() {
 		panic(re)
 	}
 	fmt.Println("signed transaction", r5.SignedTransaction)
+
+	r5p, re, err := rc.ConstructionAPI.ConstructionParse(context.Background(), &types.ConstructionParseRequest{
+		NetworkIdentifier: ni,
+		Signed:            false,
+		Transaction:       r5.SignedTransaction,
+	})
+	if err != nil {
+		panic(err)
+	}
+	if re != nil {
+		panic(re)
+	}
+	fmt.Println("signed operations", r5p.Operations)
+	fmt.Println("signed signers", r5p.Signers)
+	fmt.Println("signed metadata", r5p.Metadata)
+	if !reflect.DeepEqual(r4p, &types.ConstructionParseResponse{
+		Operations: ops,
+		Signers: []string{testEntityAddress},
+		Metadata: r3.Metadata,
+	}) {
+		panic(fmt.Errorf("signed transaction parsed wrong (good luck)"))
+	}
 
 	r6, re, err := rc.ConstructionAPI.ConstructionSubmit(context.Background(), &types.ConstructionSubmitRequest{
 		NetworkIdentifier: ni,
