@@ -160,6 +160,12 @@ printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
 ./rosetta-cli check --end 42
 rm -rf "${ROOT}/validator-data" /tmp/rosetta-cli*
 
+printf "${GRN}### Testing construction signing workflow...${OFF}\n"
+go run ./construction-signing
+
+printf "${GRN}### Testing construction transaction types...${OFF}\n"
+go run ./construction-txtypes
+
 # Clean up after a successful run.
 rm -rf "${TEST_BASE_DIR}"
 
