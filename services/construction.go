@@ -130,7 +130,11 @@ func (s *constructionAPIService) ConstructionSubmit(
 	var h hash.Hash
 	var st transaction.SignedTransaction
 	if err := json.Unmarshal([]byte(request.SignedTransaction), &st); err != nil {
-		panic(err)
+		loggerCons.Error("ConstructionSubmit: unmarshal unsigned transaction",
+			"unsigned_transaction", request.SignedTransaction,
+			"err", err,
+		)
+		return nil, ErrMalformedValue
 	}
 	h.From(st)
 	txID := h.String()
@@ -161,7 +165,11 @@ func (s *constructionAPIService) ConstructionHash(
 	var h hash.Hash
 	var st transaction.SignedTransaction
 	if err := json.Unmarshal([]byte(request.SignedTransaction), &st); err != nil {
-		panic(err)
+		loggerCons.Error("ConstructionHash: unmarshal unsigned transaction",
+			"unsigned_transaction", request.SignedTransaction,
+			"err", err,
+		)
+		return nil, ErrMalformedValue
 	}
 	h.From(st)
 	txID := h.String()
@@ -209,23 +217,37 @@ func (s *constructionAPIService) ConstructionCombine(
 	// transaction returned from this method will be sent to the
 	// `/construction/submit` endpoint by the caller.
 
-	// TODO: Unpanic.
 	var tx transaction.Transaction
 	if err := json.Unmarshal([]byte(request.UnsignedTransaction), &tx); err != nil {
-		panic(err)
+		loggerCons.Error("ConstructionCombine: unmarshal unsigned transaction",
+			"unsigned_transaction", request.UnsignedTransaction,
+			"err", err,
+		)
+		return nil, ErrMalformedValue
 	}
 	txBuf := cbor.Marshal(tx)
 	if len(request.Signatures) != 1 {
-		panic("len(request.Signatures)")
+		loggerCons.Error("ConstructionCombine: need exactly one signature",
+			"len_signatures", len(request.Signatures),
+		)
+		return nil, ErrMalformedValue
 	}
 	sig := request.Signatures[0]
 	var pk signature.PublicKey
 	if err := pk.UnmarshalBinary(sig.PublicKey.Bytes); err != nil {
-		panic(err)
+		loggerCons.Error("ConstructionCombine: malformed signature public key",
+			"public_key_hex_bytes", hex.EncodeToString(sig.PublicKey.Bytes),
+			"err", err,
+		)
+		return nil, ErrMalformedValue
 	}
 	var rs signature.RawSignature
 	if err := rs.UnmarshalBinary(sig.Bytes); err != nil {
-		panic(err)
+		loggerCons.Error("ConstructionCombine: malformed signature",
+			"signature_hex_bytes", hex.EncodeToString(sig.Bytes),
+			"err", err,
+		)
+		return nil, ErrMalformedValue
 	}
 	st := transaction.SignedTransaction{
 		Signed: signature.Signed{
@@ -238,7 +260,11 @@ func (s *constructionAPIService) ConstructionCombine(
 	}
 	stJSON, err := json.Marshal(st)
 	if err != nil {
-		panic(err)
+		loggerCons.Error("ConstructionCombine: marshal signed transaction",
+			"signed_transaction", st,
+			"err", err,
+		)
+		return nil, ErrMalformedValue
 	}
 
 	resp := &types.ConstructionCombineResponse{
