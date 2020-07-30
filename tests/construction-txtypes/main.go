@@ -269,8 +269,10 @@ func main() {
 		var parsedOpsResolved []*types.Operation
 		for _, op := range r3.Operations {
 			if op.Account.Address == services.FromPlaceholder {
-				op = &*op
-				op.Account = &*op.Account
+				opCopy := *op
+				op = &opCopy
+				accountCopy := *op.Account
+				op.Account = &accountCopy
 				op.Account.Address = testEntityAddress
 			}
 			parsedOpsResolved = append(parsedOpsResolved, op)
