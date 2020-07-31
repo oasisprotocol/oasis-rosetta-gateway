@@ -642,13 +642,14 @@ func (s *constructionAPIService) ConstructionPayloads(
 
 	var method transaction.MethodName
 	var body cbor.RawMessage
-	if len(request.Operations) == 3 &&
+	switch {
+	case len(request.Operations) == 3 &&
 		request.Operations[1].Type == OpTransfer &&
 		request.Operations[1].Account.SubAccount != nil &&
 		request.Operations[1].Account.SubAccount.Address == SubAccountGeneral &&
 		request.Operations[2].Type == OpTransfer &&
 		request.Operations[2].Account.SubAccount != nil &&
-		request.Operations[2].Account.SubAccount.Address == SubAccountGeneral {
+		request.Operations[2].Account.SubAccount.Address == SubAccountGeneral:
 		loggerCons.Debug("ConstructionPayloads: matched transfer")
 		method = staking.MethodTransfer
 
@@ -696,10 +697,10 @@ func (s *constructionAPIService) ConstructionPayloads(
 			To:     to,
 			Tokens: *amount,
 		})
-	} else if len(request.Operations) == 2 &&
+	case len(request.Operations) == 2 &&
 		request.Operations[1].Type == OpBurn &&
 		request.Operations[1].Account.SubAccount != nil &&
-		request.Operations[1].Account.SubAccount.Address == SubAccountGeneral {
+		request.Operations[1].Account.SubAccount.Address == SubAccountGeneral:
 		loggerCons.Debug("ConstructionPayloads: matched burn")
 		method = staking.MethodBurn
 
@@ -722,13 +723,13 @@ func (s *constructionAPIService) ConstructionPayloads(
 		body = cbor.Marshal(staking.Burn{
 			Tokens: *amount,
 		})
-	} else if len(request.Operations) == 3 &&
+	case len(request.Operations) == 3 &&
 		request.Operations[1].Type == OpTransfer &&
 		request.Operations[1].Account.SubAccount != nil &&
 		request.Operations[1].Account.SubAccount.Address == SubAccountGeneral &&
 		request.Operations[2].Type == OpTransfer &&
 		request.Operations[2].Account.SubAccount != nil &&
-		request.Operations[2].Account.SubAccount.Address == SubAccountEscrow {
+		request.Operations[2].Account.SubAccount.Address == SubAccountEscrow:
 		loggerCons.Debug("ConstructionPayloads: matched add escrow")
 		method = staking.MethodAddEscrow
 
@@ -776,10 +777,10 @@ func (s *constructionAPIService) ConstructionPayloads(
 			Account: escrowAccount,
 			Tokens:  *amount,
 		})
-	} else if len(request.Operations) == 2 &&
+	case len(request.Operations) == 2 &&
 		request.Operations[1].Type == OpTransfer &&
 		request.Operations[1].Account.SubAccount != nil &&
-		request.Operations[1].Account.SubAccount.Address == SubAccountEscrow {
+		request.Operations[1].Account.SubAccount.Address == SubAccountEscrow:
 		loggerCons.Debug("ConstructionPayloads: matched reclaim escrow")
 		method = staking.MethodReclaimEscrow
 
@@ -803,7 +804,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 			Account: escrowAccount,
 			Shares:  *amount,
 		})
-	} else {
+	default:
 		loggerCons.Error("ConstructionPayloads: unmatched operations list",
 			"operations", request.Operations,
 		)
