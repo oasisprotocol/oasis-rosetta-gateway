@@ -10,8 +10,6 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
-
-	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
@@ -19,6 +17,8 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
+
+	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
 )
 
 // OptionsIDKey is the name of the key in the Options map inside a
