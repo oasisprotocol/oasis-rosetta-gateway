@@ -157,7 +157,7 @@ ${OASIS_ROSETTA_GW} &
 sleep 3
 
 printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
-./rosetta-cli check --end 42
+./rosetta-cli check:data --end 42
 rm -rf "${ROOT}/validator-data" /tmp/rosetta-cli*
 
 printf "${GRN}### Testing construction signing workflow...${OFF}\n"
