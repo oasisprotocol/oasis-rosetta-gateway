@@ -195,10 +195,23 @@ func (s *constructionAPIService) ConstructionDerive(
 		return nil, terr
 	}
 
-	// According to the Rosetta spec:
-	//     Blockchains that require an on-chain action to create an account
-	//     should not implement this method.
-	return nil, ErrNotImplemented
+	var pk signature.PublicKey
+	if err := pk.UnmarshalBinary(request.PublicKey.Bytes); err != nil {
+		loggerCons.Error("ConstructionDerive: malformed public key",
+			"public_key_hex_bytes", hex.EncodeToString(request.PublicKey.Bytes),
+			"err", err,
+		)
+		return nil, ErrMalformedValue
+	}
+
+	resp := &types.ConstructionDeriveResponse{
+		Address: staking.NewAddress(pk).String(),
+	}
+
+	jr, _ := json.Marshal(resp)
+	loggerCons.Debug("ConstructionDerive OK", "response", jr)
+
+	return resp, nil
 }
 
 // ConstructionCombine implements the /construction/combine endpoint.
