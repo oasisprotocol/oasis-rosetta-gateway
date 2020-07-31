@@ -52,10 +52,13 @@ func main() {
 			Value:    "-100",
 			Currency: services.OasisCurrency,
 		},
+		Metadata: map[string]interface{}{
+			services.FeeGasKey: 10001.,
+		},
 	}
 	fee100 := &transaction.Fee{
 		Amount: *quantity.NewFromUint64(100),
-		Gas:    services.DefaultGas,
+		Gas:    10001,
 	}
 	opsTransfer := []*types.Operation{
 		fee100Op,

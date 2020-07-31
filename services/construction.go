@@ -29,8 +29,13 @@ const OptionsIDKey = "id"
 // ConstructionMetadataResponse that specifies the next valid nonce.
 const NonceKey = "nonce"
 
+// FeeGasKey is the name of the key in the Metadata map inside a fee
+// operation that specifies the gas value in the transaction fee.
+// This is optional, and we use DefaultGas if it's absent.
+const FeeGasKey = "fee_gas"
+
 // DefaultGas is the gas limit used in creating a transaction.
-const DefaultGas = 10000
+const DefaultGas transaction.Gas = 10000
 
 // FromPlaceholder represents the signer address in an unsigned transaction.
 const FromPlaceholder = "(from)"
@@ -323,8 +328,10 @@ func (s *constructionAPIService) ConstructionParse(
 	}
 
 	feeAmountStr := "-0"
+	feeGas := transaction.Gas(0)
 	if tx.Fee != nil {
 		feeAmountStr = "-" + tx.Fee.Amount.String()
+		feeGas = tx.Fee.Gas
 	}
 	ops := []*types.Operation{
 		{
@@ -341,6 +348,9 @@ func (s *constructionAPIService) ConstructionParse(
 			Amount: &types.Amount{
 				Value:    feeAmountStr,
 				Currency: OasisCurrency,
+			},
+			Metadata: map[string]interface{}{
+				FeeGasKey: feeGas,
 			},
 		},
 	}
@@ -639,6 +649,15 @@ func (s *constructionAPIService) ConstructionPayloads(
 		)
 		return nil, ErrMalformedValue
 	}
+	feeGas := DefaultGas
+	if feeGasRaw, ok := feeOp.Metadata[FeeGasKey]; ok {
+		feeGasF64, ok := feeGasRaw.(float64)
+		if !ok {
+			loggerCons.Error("ConstructionPayloads: malformed fee gas metadata")
+			return nil, ErrMalformedValue
+		}
+		feeGas = transaction.Gas(feeGasF64)
+	}
 
 	var method transaction.MethodName
 	var body cbor.RawMessage
@@ -815,7 +834,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 		Nonce: nonce,
 		Fee: &transaction.Fee{
 			Amount: *feeAmount,
-			Gas:    DefaultGas,
+			Gas:    feeGas,
 		},
 		Method: method,
 		Body:   body,

@@ -175,53 +175,27 @@ func main() {
 	r4pRef := &types.ConstructionParseResponse{
 		Operations: []*types.Operation{
 			{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: 0,
-				},
-				Type: services.OpTransfer,
+				OperationIdentifier: ops[0].OperationIdentifier,
+				Type:                ops[0].Type,
 				Account: &types.AccountIdentifier{
-					Address: services.FromPlaceholder,
-					SubAccount: &types.SubAccountIdentifier{
-						Address: services.SubAccountGeneral,
-					},
+					Address:    services.FromPlaceholder,
+					SubAccount: ops[0].Account.SubAccount,
 				},
-				Amount: &types.Amount{
-					Value:    "-0",
-					Currency: services.OasisCurrency,
+				Amount: ops[0].Amount,
+				Metadata: map[string]interface{}{
+					services.FeeGasKey: float64(services.DefaultGas),
 				},
 			},
 			{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: 1,
-				},
-				Type: services.OpTransfer,
+				OperationIdentifier: ops[1].OperationIdentifier,
+				Type:                ops[1].Type,
 				Account: &types.AccountIdentifier{
-					Address: services.FromPlaceholder,
-					SubAccount: &types.SubAccountIdentifier{
-						Address: services.SubAccountGeneral,
-					},
+					Address:    services.FromPlaceholder,
+					SubAccount: ops[1].Account.SubAccount,
 				},
-				Amount: &types.Amount{
-					Value:    "-1000",
-					Currency: services.OasisCurrency,
-				},
+				Amount: ops[1].Amount,
 			},
-			{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: 2,
-				},
-				Type: services.OpTransfer,
-				Account: &types.AccountIdentifier{
-					Address: dstAddress,
-					SubAccount: &types.SubAccountIdentifier{
-						Address: services.SubAccountGeneral,
-					},
-				},
-				Amount: &types.Amount{
-					Value:    "1000",
-					Currency: services.OasisCurrency,
-				},
-			},
+			ops[2],
 		},
 		Metadata: r3.Metadata,
 	}
@@ -271,9 +245,21 @@ func main() {
 	fmt.Println("signed signers", dumpJSON(r5p.Signers))
 	fmt.Println("signed metadata", dumpJSON(r5p.Metadata))
 	r5pRef := &types.ConstructionParseResponse{
-		Operations: ops,
-		Signers:    []string{testEntityAddress},
-		Metadata:   r3.Metadata,
+		Operations: []*types.Operation{
+			{
+				OperationIdentifier: ops[0].OperationIdentifier,
+				Type:                ops[0].Type,
+				Account:             ops[0].Account,
+				Amount:              ops[0].Amount,
+				Metadata: map[string]interface{}{
+					services.FeeGasKey: float64(services.DefaultGas),
+				},
+			},
+			ops[1],
+			ops[2],
+		},
+		Signers:  []string{testEntityAddress},
+		Metadata: r3.Metadata,
 	}
 	if !reflect.DeepEqual(r5p, r5pRef) {
 		fmt.Println("signed transaction parsed", dumpJSON(r5p))
