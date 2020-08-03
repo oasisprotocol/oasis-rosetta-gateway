@@ -15,18 +15,10 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/staking/api"
 
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/tests/common"
 )
 
-const dstAddress = "oasis1qpkant39yhx59sagnzpc8v0sg8aerwa3jyqde3ge"
 const dummyNonce = 3
-
-func dumpJSON(v interface{}) string {
-	result, err := json.Marshal(v)
-	if err != nil {
-		panic(err)
-	}
-	return string(result)
-}
 
 func main() {
 	_, signer, err := entity.TestEntity()
@@ -36,7 +28,7 @@ func main() {
 	testEntityAddress := api.NewAddress(signer.Public()).String()
 
 	var dstAddr api.Address
-	if err := dstAddr.UnmarshalText([]byte(dstAddress)); err != nil {
+	if err := dstAddr.UnmarshalText([]byte(common.DstAddress)); err != nil {
 		panic(err)
 	}
 	fee100Op := &types.Operation{
@@ -86,7 +78,7 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: dstAddress,
+				Address: common.DstAddress,
 				SubAccount: &types.SubAccountIdentifier{
 					Address: services.SubAccountGeneral,
 				},
@@ -157,7 +149,7 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: dstAddress,
+				Address: common.DstAddress,
 				SubAccount: &types.SubAccountIdentifier{
 					Address: services.SubAccountEscrow,
 				},
@@ -185,7 +177,7 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: dstAddress,
+				Address: common.DstAddress,
 				SubAccount: &types.SubAccountIdentifier{
 					Address: services.SubAccountEscrow,
 				},
@@ -218,7 +210,7 @@ func main() {
 	if len(r1.NetworkIdentifiers) != 1 {
 		panic("len(r1.NetworkIdentifiers)")
 	}
-	fmt.Println("network identifiers", dumpJSON(r1.NetworkIdentifiers))
+	fmt.Println("network identifiers", common.DumpJSON(r1.NetworkIdentifiers))
 	ni := r1.NetworkIdentifiers[0]
 
 	for _, tt := range []struct {
@@ -245,14 +237,14 @@ func main() {
 			panic(fmt.Errorf("%s payloads: %v", tt.name, re))
 		}
 		fmt.Println(tt.name, "unsigned transaction", r2.UnsignedTransaction)
-		fmt.Println(tt.name, "signing payloads", dumpJSON(r2.Payloads))
+		fmt.Println(tt.name, "signing payloads", common.DumpJSON(r2.Payloads))
 
 		var tx transaction.Transaction
 		if err := json.Unmarshal([]byte(r2.UnsignedTransaction), &tx); err != nil {
 			panic(err)
 		}
 		if !reflect.DeepEqual(&tx, tt.reference) {
-			fmt.Println(tt.name, "reference transaction", dumpJSON(tt.reference))
+			fmt.Println(tt.name, "reference transaction", common.DumpJSON(tt.reference))
 			panic(fmt.Errorf("%s: transaction mismatch", tt.name))
 		}
 
@@ -267,9 +259,9 @@ func main() {
 		if re != nil {
 			panic(fmt.Errorf("%s parse: %v", tt.name, re))
 		}
-		fmt.Println(tt.name, "parsed operations", dumpJSON(r3.Operations))
-		fmt.Println(tt.name, "parsed signers", dumpJSON(r3.Signers))
-		fmt.Println(tt.name, "parsed metadata", dumpJSON(r3.Metadata))
+		fmt.Println(tt.name, "parsed operations", common.DumpJSON(r3.Operations))
+		fmt.Println(tt.name, "parsed signers", common.DumpJSON(r3.Signers))
+		fmt.Println(tt.name, "parsed metadata", common.DumpJSON(r3.Metadata))
 
 		var parsedOpsResolved []*types.Operation
 		for _, op := range r3.Operations {
@@ -283,8 +275,8 @@ func main() {
 			parsedOpsResolved = append(parsedOpsResolved, op)
 		}
 		if !reflect.DeepEqual(parsedOpsResolved, tt.ops) {
-			fmt.Println(tt.name, "parsed operations resolved", dumpJSON(parsedOpsResolved))
-			fmt.Println(tt.name, "reference operations", dumpJSON(tt.ops))
+			fmt.Println(tt.name, "parsed operations resolved", common.DumpJSON(parsedOpsResolved))
+			fmt.Println(tt.name, "reference operations", common.DumpJSON(tt.ops))
 			panic(fmt.Errorf("%s: operations mismatch", tt.name))
 		}
 	}
