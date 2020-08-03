@@ -115,7 +115,7 @@ func (s *constructionAPIService) ConstructionMetadata(
 func (s *constructionAPIService) ConstructionSubmit(
 	ctx context.Context,
 	request *types.ConstructionSubmitRequest,
-) (*types.ConstructionSubmitResponse, *types.Error) {
+) (*types.TransactionIdentifierResponse, *types.Error) {
 	terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
 	if terr != nil {
 		loggerCons.Error("ConstructionSubmit: network validation failed", "err", terr.Message)
@@ -139,7 +139,7 @@ func (s *constructionAPIService) ConstructionSubmit(
 	h.From(st)
 	txID := h.String()
 
-	resp := &types.ConstructionSubmitResponse{
+	resp := &types.TransactionIdentifierResponse{
 		TransactionIdentifier: &types.TransactionIdentifier{
 			Hash: txID,
 		},
@@ -155,7 +155,7 @@ func (s *constructionAPIService) ConstructionSubmit(
 func (s *constructionAPIService) ConstructionHash(
 	ctx context.Context,
 	request *types.ConstructionHashRequest,
-) (*types.ConstructionHashResponse, *types.Error) {
+) (*types.TransactionIdentifierResponse, *types.Error) {
 	terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
 	if terr != nil {
 		loggerCons.Error("ConstructionHash: network validation failed", "err", terr.Message)
@@ -174,8 +174,10 @@ func (s *constructionAPIService) ConstructionHash(
 	h.From(st)
 	txID := h.String()
 
-	resp := &types.ConstructionHashResponse{
-		TransactionHash: txID,
+	resp := &types.TransactionIdentifierResponse{
+		TransactionIdentifier: &types.TransactionIdentifier{
+			Hash: txID,
+		},
 	}
 
 	jr, _ := json.Marshal(resp)
