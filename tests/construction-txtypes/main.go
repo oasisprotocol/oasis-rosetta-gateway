@@ -38,9 +38,6 @@ func main() {
 		Type: services.OpTransfer,
 		Account: &types.AccountIdentifier{
 			Address: testEntityAddress,
-			SubAccount: &types.SubAccountIdentifier{
-				Address: services.SubAccountGeneral,
-			},
 		},
 		Amount: &types.Amount{
 			Value:    "-100",
@@ -63,9 +60,6 @@ func main() {
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
 				Address: testEntityAddress,
-				SubAccount: &types.SubAccountIdentifier{
-					Address: services.SubAccountGeneral,
-				},
 			},
 			Amount: &types.Amount{
 				Value:    "-1000",
@@ -79,9 +73,6 @@ func main() {
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
 				Address: common.DstAddress,
-				SubAccount: &types.SubAccountIdentifier{
-					Address: services.SubAccountGeneral,
-				},
 			},
 			Amount: &types.Amount{
 				Value:    "1000",
@@ -107,9 +98,6 @@ func main() {
 			Type: services.OpBurn,
 			Account: &types.AccountIdentifier{
 				Address: testEntityAddress,
-				SubAccount: &types.SubAccountIdentifier{
-					Address: services.SubAccountGeneral,
-				},
 			},
 			Amount: &types.Amount{
 				Value:    "-1000",
@@ -134,9 +122,6 @@ func main() {
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
 				Address: testEntityAddress,
-				SubAccount: &types.SubAccountIdentifier{
-					Address: services.SubAccountGeneral,
-				},
 			},
 			Amount: &types.Amount{
 				Value:    "-1000",

@@ -41,7 +41,7 @@ func NewBlockAPIService(oasisClient oc.OasisClient) server.BlockAPIServicer {
 }
 
 // Helper for making ops in a succinct way.
-func appendOp(ops []*types.Operation, kind string, acct string, subacct string, amt string) []*types.Operation {
+func appendOp(ops []*types.Operation, kind string, acct string, subacct *types.SubAccountIdentifier, amt string) []*types.Operation {
 	opidx := int64(len(ops))
 	op := &types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
@@ -50,10 +50,8 @@ func appendOp(ops []*types.Operation, kind string, acct string, subacct string, 
 		Type:   kind,
 		Status: OpStatusOK,
 		Account: &types.AccountIdentifier{
-			Address: acct,
-			SubAccount: &types.SubAccountIdentifier{
-				Address: subacct,
-			},
+			Address:    acct,
+			SubAccount: subacct,
 		},
 		Amount: &types.Amount{
 			Value:    amt,
@@ -137,24 +135,24 @@ func (s *blockAPIService) Block(
 
 		switch {
 		case evt.Transfer != nil:
-			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, evt.Transfer.From.String(), SubAccountGeneral, "-"+evt.Transfer.Tokens.String())
-			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, evt.Transfer.To.String(), SubAccountGeneral, evt.Transfer.Tokens.String())
+			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, evt.Transfer.From.String(), nil, "-"+evt.Transfer.Tokens.String())
+			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, evt.Transfer.To.String(), nil, evt.Transfer.Tokens.String())
 		case evt.Burn != nil:
-			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpBurn, evt.Burn.Owner.String(), SubAccountGeneral, "-"+evt.Burn.Tokens.String())
+			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpBurn, evt.Burn.Owner.String(), nil, "-"+evt.Burn.Tokens.String())
 		case evt.Escrow != nil:
 			ee := evt.Escrow
 			switch {
 			case ee.Add != nil:
 				// Owner's general account -> escrow account.
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Add.Owner.String(), SubAccountGeneral, "-"+ee.Add.Tokens.String())
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Add.Escrow.String(), SubAccountEscrow, ee.Add.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Add.Owner.String(), nil, "-"+ee.Add.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Add.Escrow.String(), &types.SubAccountIdentifier{Address: SubAccountEscrow}, ee.Add.Tokens.String())
 			case ee.Take != nil:
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Take.Owner.String(), SubAccountEscrow, "-"+ee.Take.Tokens.String())
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, staking.CommonPoolAddress.String(), SubAccountGeneral, ee.Take.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Take.Owner.String(), &types.SubAccountIdentifier{Address: SubAccountEscrow}, "-"+ee.Take.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, staking.CommonPoolAddress.String(), nil, ee.Take.Tokens.String())
 			case ee.Reclaim != nil:
 				// Escrow account -> owner's general account.
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Reclaim.Escrow.String(), SubAccountEscrow, "-"+ee.Reclaim.Tokens.String())
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Reclaim.Owner.String(), SubAccountGeneral, ee.Reclaim.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Reclaim.Escrow.String(), &types.SubAccountIdentifier{Address: SubAccountEscrow}, "-"+ee.Reclaim.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, ee.Reclaim.Owner.String(), nil, ee.Reclaim.Tokens.String())
 			}
 		}
 	}

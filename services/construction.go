@@ -356,9 +356,6 @@ func (s *constructionAPIService) ConstructionParse(
 			Type: OpTransfer,
 			Account: &types.AccountIdentifier{
 				Address: from,
-				SubAccount: &types.SubAccountIdentifier{
-					Address: SubAccountGeneral,
-				},
 			},
 			Amount: &types.Amount{
 				Value:    feeAmountStr,
@@ -387,9 +384,6 @@ func (s *constructionAPIService) ConstructionParse(
 				Type: OpTransfer,
 				Account: &types.AccountIdentifier{
 					Address: from,
-					SubAccount: &types.SubAccountIdentifier{
-						Address: SubAccountGeneral,
-					},
 				},
 				Amount: &types.Amount{
 					Value:    "-" + body.Tokens.String(),
@@ -403,9 +397,6 @@ func (s *constructionAPIService) ConstructionParse(
 				Type: OpTransfer,
 				Account: &types.AccountIdentifier{
 					Address: body.To.String(),
-					SubAccount: &types.SubAccountIdentifier{
-						Address: SubAccountGeneral,
-					},
 				},
 				Amount: &types.Amount{
 					Value:    body.Tokens.String(),
@@ -430,9 +421,6 @@ func (s *constructionAPIService) ConstructionParse(
 				Type: OpBurn,
 				Account: &types.AccountIdentifier{
 					Address: from,
-					SubAccount: &types.SubAccountIdentifier{
-						Address: SubAccountGeneral,
-					},
 				},
 				Amount: &types.Amount{
 					Value:    "-" + body.Tokens.String(),
@@ -457,9 +445,6 @@ func (s *constructionAPIService) ConstructionParse(
 				Type: OpTransfer,
 				Account: &types.AccountIdentifier{
 					Address: from,
-					SubAccount: &types.SubAccountIdentifier{
-						Address: SubAccountGeneral,
-					},
 				},
 				Amount: &types.Amount{
 					Value:    "-" + body.Tokens.String(),
@@ -644,14 +629,10 @@ func (s *constructionAPIService) ConstructionPayloads(
 		)
 		return nil, ErrMalformedValue
 	}
-	if feeOp.Account.SubAccount == nil {
-		loggerCons.Error("ConstructionPayloads: missing fee operation subaccount")
-		return nil, ErrMalformedValue
-	}
-	if feeOp.Account.SubAccount.Address != SubAccountGeneral {
-		loggerCons.Error("ConstructionPayloads: fee operation wrong subaccount address",
-			"subaccount", feeOp.Account.SubAccount.Address,
-			"expected_subaccount", SubAccountGeneral,
+	if feeOp.Account.SubAccount != nil {
+		loggerCons.Error("ConstructionPayloads: fee operation wrong subaccount",
+			"sub_account", feeOp.Account.SubAccount,
+			"expected_sub_account", nil,
 		)
 		return nil, ErrMalformedValue
 	}
@@ -679,11 +660,9 @@ func (s *constructionAPIService) ConstructionPayloads(
 	switch {
 	case len(request.Operations) == 3 &&
 		request.Operations[1].Type == OpTransfer &&
-		request.Operations[1].Account.SubAccount != nil &&
-		request.Operations[1].Account.SubAccount.Address == SubAccountGeneral &&
+		request.Operations[1].Account.SubAccount == nil &&
 		request.Operations[2].Type == OpTransfer &&
-		request.Operations[2].Account.SubAccount != nil &&
-		request.Operations[2].Account.SubAccount.Address == SubAccountGeneral:
+		request.Operations[2].Account.SubAccount == nil:
 		loggerCons.Debug("ConstructionPayloads: matched transfer")
 		method = staking.MethodTransfer
 
@@ -733,8 +712,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 		})
 	case len(request.Operations) == 2 &&
 		request.Operations[1].Type == OpBurn &&
-		request.Operations[1].Account.SubAccount != nil &&
-		request.Operations[1].Account.SubAccount.Address == SubAccountGeneral:
+		request.Operations[1].Account.SubAccount == nil:
 		loggerCons.Debug("ConstructionPayloads: matched burn")
 		method = staking.MethodBurn
 
@@ -759,8 +737,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 		})
 	case len(request.Operations) == 3 &&
 		request.Operations[1].Type == OpTransfer &&
-		request.Operations[1].Account.SubAccount != nil &&
-		request.Operations[1].Account.SubAccount.Address == SubAccountGeneral &&
+		request.Operations[1].Account.SubAccount == nil &&
 		request.Operations[2].Type == OpTransfer &&
 		request.Operations[2].Account.SubAccount != nil &&
 		request.Operations[2].Account.SubAccount.Address == SubAccountEscrow:
