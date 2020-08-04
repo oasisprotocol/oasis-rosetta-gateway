@@ -849,12 +849,11 @@ func (s *constructionAPIService) ConstructionPayloads(
 		return nil, ErrMalformedValue
 	}
 	txCBOR := cbor.Marshal(tx)
-	txHex := hex.EncodeToString(txCBOR)
 	txMessage, err := signature.PrepareSignerMessage(transaction.SignatureContext, txCBOR)
 	if err != nil {
 		loggerCons.Error("ConstructionPayloads: PrepareSignerMessage",
 			"signature_context", transaction.SignatureContext,
-			"tx_hex", txHex,
+			"tx_hex", hex.EncodeToString(txCBOR),
 			"err", err,
 		)
 		return nil, ErrMalformedValue
