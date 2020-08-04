@@ -52,7 +52,49 @@ func main() {
 	config.DataDirectory = "/tmp/rosetta-cli-oasistests"
 
 	config.Construction.Currency = services.OasisCurrency
+	config.Construction.MaximumFee = "0"
 	config.Construction.CurveType = types.Edwards25519
+	config.Construction.Scenario = []*types.Operation{
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 0,
+			},
+			Type: services.OpTransfer,
+			Account: &types.AccountIdentifier{
+				Address: "{{ SENDER }}",
+			},
+			Amount: &types.Amount{
+				Value:    "-0",
+				Currency: services.OasisCurrency,
+			},
+		},
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 1,
+			},
+			Type: services.OpTransfer,
+			Account: &types.AccountIdentifier{
+				Address: "{{ SENDER }}",
+			},
+			Amount: &types.Amount{
+				Value:    "{{ SENDER_VALUE }}",
+				Currency: services.OasisCurrency,
+			},
+		},
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 2,
+			},
+			Type: services.OpTransfer,
+			Account: &types.AccountIdentifier{
+				Address: "{{ RECIPIENT }}",
+			},
+			Amount: &types.Amount{
+				Value:    "{{ RECIPIENT_VALUE }}",
+				Currency: services.OasisCurrency,
+			},
+		},
+	}
 
 	if err := ioutil.WriteFile("rosetta-cli-config.json", []byte(common.DumpJSON(config)), 0o666); err != nil {
 		panic(err)
