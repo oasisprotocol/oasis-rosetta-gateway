@@ -19,6 +19,18 @@ import (
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/tests/common"
 )
 
+func storageEncode(v interface{}) []byte {
+	var buf bytes.Buffer
+	enc := msgpack.GetEncoder()
+	enc.Reset(&buf)
+	enc.UseJSONTag(true)
+	if err := enc.Encode(v); err != nil {
+		panic(err)
+	}
+	msgpack.PutEncoder(enc)
+	return buf.Bytes()
+}
+
 func main() {
 	// Create a configuration file for the local testnet.
 	config := configuration.DefaultConfiguration()
@@ -58,19 +70,28 @@ func main() {
 		panic(err)
 	}
 	if err := db.Update(func(txn *badger.Txn) error {
-		key := struct {
+		if err := txn.Set([]byte("key/"+testEntityAddress), storageEncode(&struct {
 			Address string        `json:"address"`
 			KeyPair *keys.KeyPair `json:"keypair"`
-		}{testEntityAddress, testEntityKeyPair}
-		var keyBuf bytes.Buffer
-		enc := msgpack.GetEncoder()
-		enc.Reset(&keyBuf)
-		enc.UseJSONTag(true)
-		if err := enc.Encode(&key); err != nil {
+		}{
+			Address: testEntityAddress,
+			KeyPair: testEntityKeyPair,
+		})); err != nil {
 			panic(err)
 		}
-		msgpack.PutEncoder(enc)
-		if err := txn.Set([]byte("key/"+testEntityAddress), keyBuf.Bytes()); err != nil {
+		testEntityAccountIdentifier := types.AccountIdentifier{Address: testEntityAddress}
+		if err := txn.Set([]byte("balance/"+types.Hash(&testEntityAccountIdentifier)+"/"+types.Hash(services.OasisCurrency)), storageEncode(&struct {
+			Account *types.AccountIdentifier `json:"account"`
+			Amount  *types.Amount            `json:"amount"`
+			Block   *types.BlockIdentifier   `json:"block"`
+		}{
+			Account: &testEntityAccountIdentifier,
+			Amount: &types.Amount{
+				// https://github.com/oasisprotocol/oasis-core/blob/v20.8.2/go/oasis-node/cmd/genesis/genesis.go#L534
+				Value:    "100000000000",
+				Currency: services.OasisCurrency,
+			},
+		})); err != nil {
 			panic(err)
 		}
 		return nil
