@@ -37,8 +37,11 @@ const FeeGasKey = "fee_gas"
 // DefaultGas is the gas limit used in creating a transaction.
 const DefaultGas transaction.Gas = 10000
 
-// FromPlaceholder represents the signer address in an unsigned transaction.
-const FromPlaceholder = "(from)"
+// UnsignedTransaction is a transaction with the account that would sign it.
+type UnsignedTransaction struct {
+	Tx     transaction.Transaction `json:"tx"`
+	Signer string                  `json:"signer"`
+}
 
 var loggerCons = logging.GetLogger("services/construction")
 
@@ -232,15 +235,15 @@ func (s *constructionAPIService) ConstructionCombine(
 	// transaction returned from this method will be sent to the
 	// `/construction/submit` endpoint by the caller.
 
-	var tx transaction.Transaction
-	if err := json.Unmarshal([]byte(request.UnsignedTransaction), &tx); err != nil {
+	var ut UnsignedTransaction
+	if err := json.Unmarshal([]byte(request.UnsignedTransaction), &ut); err != nil {
 		loggerCons.Error("ConstructionCombine: unmarshal unsigned transaction",
 			"unsigned_transaction", request.UnsignedTransaction,
 			"err", err,
 		)
 		return nil, ErrMalformedValue
 	}
-	txBuf := cbor.Marshal(tx)
+	txBuf := cbor.Marshal(ut.Tx)
 	if len(request.Signatures) != 1 {
 		loggerCons.Error("ConstructionCombine: need exactly one signature",
 			"len_signatures", len(request.Signatures),
@@ -332,14 +335,16 @@ func (s *constructionAPIService) ConstructionParse(
 		from = staking.NewAddress(st.Signature.PublicKey).String()
 		signers = []string{from}
 	} else {
-		if err := json.Unmarshal([]byte(request.Transaction), &tx); err != nil {
+		var ut UnsignedTransaction
+		if err := json.Unmarshal([]byte(request.Transaction), &ut); err != nil {
 			loggerCons.Error("ConstructionParse: unsigned transaction unmarshal",
 				"src", request.Transaction,
 				"err", err,
 			)
 			return nil, ErrMalformedValue
 		}
-		from = FromPlaceholder
+		tx = ut.Tx
+		from = ut.Signer
 	}
 
 	feeAmountStr := "-0"
@@ -822,25 +827,28 @@ func (s *constructionAPIService) ConstructionPayloads(
 		return nil, ErrNotImplemented
 	}
 
-	tx := transaction.Transaction{
-		Nonce: nonce,
-		Fee: &transaction.Fee{
-			Amount: *feeAmount,
-			Gas:    feeGas,
+	ut := UnsignedTransaction{
+		Tx: transaction.Transaction{
+			Nonce: nonce,
+			Fee: &transaction.Fee{
+				Amount: *feeAmount,
+				Gas:    feeGas,
+			},
+			Method: method,
+			Body:   body,
 		},
-		Method: method,
-		Body:   body,
+		Signer: signWithAddr,
 	}
 
-	txJSON, err := json.Marshal(tx)
+	utJSON, err := json.Marshal(ut)
 	if err != nil {
-		loggerCons.Error("ConstructionPayloads: marshal transaction",
-			"tx", tx,
+		loggerCons.Error("ConstructionPayloads: marshal unsigned transaction",
+			"unsigned_transaction", ut,
 			"err", err,
 		)
 		return nil, ErrMalformedValue
 	}
-	txCBOR := cbor.Marshal(tx)
+	txCBOR := cbor.Marshal(ut.Tx)
 	txMessage, err := signature.PrepareSignerMessage(transaction.SignatureContext, txCBOR)
 	if err != nil {
 		loggerCons.Error("ConstructionPayloads: PrepareSignerMessage",
@@ -851,7 +859,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 		return nil, ErrMalformedValue
 	}
 	resp := &types.ConstructionPayloadsResponse{
-		UnsignedTransaction: string(txJSON),
+		UnsignedTransaction: string(utJSON),
 		Payloads: []*types.SigningPayload{
 			{
 				Address:       signWithAddr,

@@ -132,24 +132,13 @@ func main() {
 			{
 				OperationIdentifier: ops[0].OperationIdentifier,
 				Type:                ops[0].Type,
-				Account: &types.AccountIdentifier{
-					Address:    services.FromPlaceholder,
-					SubAccount: ops[0].Account.SubAccount,
-				},
-				Amount: ops[0].Amount,
+				Account:             ops[0].Account,
+				Amount:              ops[0].Amount,
 				Metadata: map[string]interface{}{
 					services.FeeGasKey: float64(services.DefaultGas),
 				},
 			},
-			{
-				OperationIdentifier: ops[1].OperationIdentifier,
-				Type:                ops[1].Type,
-				Account: &types.AccountIdentifier{
-					Address:    services.FromPlaceholder,
-					SubAccount: ops[1].Account.SubAccount,
-				},
-				Amount: ops[1].Amount,
-			},
+			ops[1],
 			ops[2],
 		},
 		Metadata: r3.Metadata,

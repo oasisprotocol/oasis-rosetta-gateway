@@ -224,11 +224,11 @@ func main() {
 		fmt.Println(tt.name, "unsigned transaction", r2.UnsignedTransaction)
 		fmt.Println(tt.name, "signing payloads", common.DumpJSON(r2.Payloads))
 
-		var tx transaction.Transaction
-		if err := json.Unmarshal([]byte(r2.UnsignedTransaction), &tx); err != nil {
+		var ut services.UnsignedTransaction
+		if err := json.Unmarshal([]byte(r2.UnsignedTransaction), &ut); err != nil {
 			panic(err)
 		}
-		if !reflect.DeepEqual(&tx, tt.reference) {
+		if !reflect.DeepEqual(&ut.Tx, tt.reference) {
 			fmt.Println(tt.name, "reference transaction", common.DumpJSON(tt.reference))
 			panic(fmt.Errorf("%s: transaction mismatch", tt.name))
 		}
@@ -248,19 +248,8 @@ func main() {
 		fmt.Println(tt.name, "parsed signers", common.DumpJSON(r3.Signers))
 		fmt.Println(tt.name, "parsed metadata", common.DumpJSON(r3.Metadata))
 
-		var parsedOpsResolved []*types.Operation
-		for _, op := range r3.Operations {
-			if op.Account.Address == services.FromPlaceholder {
-				opCopy := *op
-				op = &opCopy
-				accountCopy := *op.Account
-				op.Account = &accountCopy
-				op.Account.Address = testEntityAddress
-			}
-			parsedOpsResolved = append(parsedOpsResolved, op)
-		}
-		if !reflect.DeepEqual(parsedOpsResolved, tt.ops) {
-			fmt.Println(tt.name, "parsed operations resolved", common.DumpJSON(parsedOpsResolved))
+		if !reflect.DeepEqual(r3.Operations, tt.ops) {
+			fmt.Println(tt.name, "parsed operations", common.DumpJSON(r3.Operations))
 			fmt.Println(tt.name, "reference operations", common.DumpJSON(tt.ops))
 			panic(fmt.Errorf("%s: operations mismatch", tt.name))
 		}
