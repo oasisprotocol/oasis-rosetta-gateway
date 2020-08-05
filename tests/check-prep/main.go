@@ -64,7 +64,7 @@ func main() {
 				Address: "{{ SENDER }}",
 			},
 			Amount: &types.Amount{
-				Value:    "-0",
+				Value:    "-100",
 				Currency: services.OasisCurrency,
 			},
 		},
