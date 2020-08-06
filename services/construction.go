@@ -210,7 +210,7 @@ func (s *constructionAPIService) ConstructionDerive(
 	}
 
 	resp := &types.ConstructionDeriveResponse{
-		Address: staking.NewAddress(pk).String(),
+		Address: StringFromAddress(staking.NewAddress(pk)),
 	}
 
 	jr, _ := json.Marshal(resp)
@@ -332,7 +332,7 @@ func (s *constructionAPIService) ConstructionParse(
 			)
 			return nil, ErrMalformedValue
 		}
-		from = staking.NewAddress(st.Signature.PublicKey).String()
+		from = StringFromAddress(staking.NewAddress(st.Signature.PublicKey))
 		signers = []string{from}
 	} else {
 		var ut UnsignedTransaction
@@ -401,7 +401,7 @@ func (s *constructionAPIService) ConstructionParse(
 				},
 				Type: OpTransfer,
 				Account: &types.AccountIdentifier{
-					Address: body.To.String(),
+					Address: StringFromAddress(body.To),
 				},
 				Amount: &types.Amount{
 					Value:    body.Tokens.String(),
@@ -462,7 +462,7 @@ func (s *constructionAPIService) ConstructionParse(
 				},
 				Type: OpTransfer,
 				Account: &types.AccountIdentifier{
-					Address: body.Account.String(),
+					Address: StringFromAddress(body.Account),
 					SubAccount: &types.SubAccountIdentifier{
 						Address: SubAccountEscrow,
 					},
@@ -489,7 +489,7 @@ func (s *constructionAPIService) ConstructionParse(
 				},
 				Type: OpTransfer,
 				Account: &types.AccountIdentifier{
-					Address: body.Account.String(),
+					Address: StringFromAddress(body.Account),
 					SubAccount: &types.SubAccountIdentifier{
 						Address: SubAccountEscrow,
 					},

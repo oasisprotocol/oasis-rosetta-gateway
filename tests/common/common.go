@@ -11,6 +11,8 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/entity"
 	"github.com/oasisprotocol/oasis-core/go/staking/api"
+
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
 )
 
 const DstAddress = "oasis1qpkant39yhx59sagnzpc8v0sg8aerwa3jyqde3ge"
@@ -28,7 +30,7 @@ func TestEntity() (string, *keys.KeyPair) {
 	if err != nil {
 		panic(err)
 	}
-	address := api.NewAddress(signer.Public()).String()
+	address := services.StringFromAddress(api.NewAddress(signer.Public()))
 
 	seed := sha512.Sum512_256([]byte("ekiden test entity key seed"))
 	priv := ed25519.NewKeyFromSeed(seed[:])

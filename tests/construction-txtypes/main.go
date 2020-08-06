@@ -9,7 +9,6 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/client"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
-	"github.com/oasisprotocol/oasis-core/go/common/entity"
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	"github.com/oasisprotocol/oasis-core/go/staking/api"
@@ -21,11 +20,7 @@ import (
 const dummyNonce = 3
 
 func main() {
-	_, signer, err := entity.TestEntity()
-	if err != nil {
-		panic(err)
-	}
-	testEntityAddress := api.NewAddress(signer.Public()).String()
+	testEntityAddress, _ := common.TestEntity()
 
 	var dstAddr api.Address
 	if err := dstAddr.UnmarshalText([]byte(common.DstAddress)); err != nil {
