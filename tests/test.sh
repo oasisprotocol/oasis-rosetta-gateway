@@ -159,6 +159,7 @@ sleep 3
 printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
 go run ./check-prep
 ./rosetta-cli --configuration-file rosetta-cli-config.json check:data --end 42
+./rosetta-cli --configuration-file rosetta-cli-config.json check:construction
 rm -rf "${ROOT}/validator-data" /tmp/rosetta-cli*
 
 printf "${GRN}### Testing construction signing workflow...${OFF}\n"
