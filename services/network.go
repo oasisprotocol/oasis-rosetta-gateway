@@ -8,8 +8,9 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
+
+	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
 )
 
 var loggerNet = logging.GetLogger("services/network")
@@ -113,7 +114,7 @@ func (s *networkAPIService) NetworkOptions(
 
 	return &types.NetworkOptionsResponse{
 		Version: &types.Version{
-			RosettaVersion: "1.3.5",
+			RosettaVersion: "1.4.0",
 			NodeVersion:    status.SoftwareVersion,
 		},
 		Allow: &types.Allow{

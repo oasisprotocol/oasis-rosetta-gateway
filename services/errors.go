@@ -65,7 +65,7 @@ var (
 
 	ErrMustSpecifySubAccount = &types.Error{
 		Code:      11,
-		Message:   "a valid subaccount must be specified ('general' or 'escrow')",
+		Message:   "a valid subaccount must be specified (absent or {\"address\": \"escrow\"})",
 		Retriable: false,
 	}
 
