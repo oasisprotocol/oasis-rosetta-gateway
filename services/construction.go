@@ -473,33 +473,6 @@ func (s *constructionAPIService) ConstructionParse(
 				},
 			},
 		)
-	case staking.MethodReclaimEscrow:
-		var body staking.ReclaimEscrow
-		if err := cbor.Unmarshal(tx.Body, &body); err != nil {
-			loggerCons.Error("ConstructionParse: reclaim escrow unmarshal",
-				"body", tx.Body,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-		ops = append(ops,
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: 1,
-				},
-				Type: OpTransfer,
-				Account: &types.AccountIdentifier{
-					Address: StringFromAddress(body.Account),
-					SubAccount: &types.SubAccountIdentifier{
-						Address: SubAccountEscrow,
-					},
-				},
-				Amount: &types.Amount{
-					Value:    "-" + body.Shares.String(),
-					Currency: PoolShare,
-				},
-			},
-		)
 	default:
 		loggerCons.Error("ConstructionParse: unmatched method",
 			"method", tx.Method,
@@ -581,10 +554,6 @@ func readOasisCurrency(amount *types.Amount) (*quantity.Quantity, error) {
 
 func readOasisCurrencyNeg(amount *types.Amount) (*quantity.Quantity, error) {
 	return readCurrency(amount, OasisCurrency, true)
-}
-
-func readPoolShareNeg(amount *types.Amount) (*quantity.Quantity, error) {
-	return readCurrency(amount, PoolShare, true)
 }
 
 // ConstructionPayloads implements the /construction/payloads endpoint.
@@ -793,33 +762,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 			Account: escrowAccount,
 			Tokens:  *amount,
 		})
-	case len(request.Operations) == 2 &&
-		request.Operations[1].Type == OpTransfer &&
-		request.Operations[1].Account.SubAccount != nil &&
-		request.Operations[1].Account.SubAccount.Address == SubAccountEscrow:
-		loggerCons.Debug("ConstructionPayloads: matched reclaim escrow")
-		method = staking.MethodReclaimEscrow
-
-		var escrowAccount staking.Address
-		if err = escrowAccount.UnmarshalText([]byte(request.Operations[1].Account.Address)); err != nil {
-			loggerCons.Error("ConstructionPayloads: reclaim escrow from UnmarshalText",
-				"addr", request.Operations[1].Account.Address,
-				"err", err,
-			)
-		}
-		amount, err := readPoolShareNeg(request.Operations[1].Amount)
-		if err != nil {
-			loggerCons.Error("ConstructionPayloads: reclaim escrow from amount",
-				"amount", request.Operations[1].Amount,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-
-		body = cbor.Marshal(staking.ReclaimEscrow{
-			Account: escrowAccount,
-			Shares:  *amount,
-		})
+	// TODO: Devise a way to support reclaim escrow.
 	default:
 		loggerCons.Error("ConstructionPayloads: unmatched operations list",
 			"operations", request.Operations,
