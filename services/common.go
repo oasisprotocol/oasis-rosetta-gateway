@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
+	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
 	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
 )
@@ -51,4 +52,14 @@ func ValidateNetworkIdentifier(ctx context.Context, oc oc.OasisClient, ni *types
 		return ErrMissingNID
 	}
 	return nil
+}
+
+// StringFromAddress converts a staking API address to string using MarshalText.
+// If marshalling fails, this panics.
+func StringFromAddress(address staking.Address) string {
+	buf, err := address.MarshalText()
+	if err != nil {
+		panic(err)
+	}
+	return string(buf)
 }

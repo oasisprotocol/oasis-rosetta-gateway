@@ -7,13 +7,11 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
-)
 
-// SubAccountGeneral specifies the name of the general subaccount.
-const SubAccountGeneral = "general"
+	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
+)
 
 // SubAccountEscrow specifies the name of the escrow subaccount.
 const SubAccountEscrow = "escrow"
@@ -65,17 +63,12 @@ func (s *accountAPIService) AccountBalance(
 		return nil, ErrInvalidAccountAddress
 	}
 
-	if request.AccountIdentifier.SubAccount == nil {
-		loggerAcct.Error("AccountBalance: invalid sub-account (empty)")
+	switch {
+	case request.AccountIdentifier.SubAccount == nil:
+	case request.AccountIdentifier.SubAccount.Address == SubAccountEscrow:
+	default:
+		loggerAcct.Error("AccountBalance: invalid subaccount", "sub_account", request.AccountIdentifier.SubAccount)
 		return nil, ErrMustSpecifySubAccount
-	} else {
-		switch request.AccountIdentifier.SubAccount.Address {
-		case SubAccountGeneral:
-		case SubAccountEscrow:
-		default:
-			loggerAcct.Error("AccountBalance: invalid sub-account", "subaccount", request.AccountIdentifier.SubAccount.Address)
-			return nil, ErrMustSpecifySubAccount
-		}
 	}
 
 	act, err := s.oasisClient.GetAccount(ctx, height, owner)
@@ -101,10 +94,10 @@ func (s *accountAPIService) AccountBalance(
 	md[NonceKey] = act.General.Nonce
 
 	var value string
-	switch request.AccountIdentifier.SubAccount.Address {
-	case SubAccountGeneral:
+	switch {
+	case request.AccountIdentifier.SubAccount == nil:
 		value = act.General.Balance.String()
-	case SubAccountEscrow:
+	case request.AccountIdentifier.SubAccount.Address == SubAccountEscrow:
 		// Total is Active + Debonding.
 		total := act.Escrow.Active.Balance.Clone()
 		if err := total.Add(&act.Escrow.Debonding.Balance); err != nil {
@@ -141,7 +134,7 @@ func (s *accountAPIService) AccountBalance(
 	loggerAcct.Debug("AccountBalance OK",
 		"response", jr,
 		"account_id", owner.String(),
-		"subaccount", request.AccountIdentifier.SubAccount.Address,
+		"sub_account", request.AccountIdentifier.SubAccount,
 	)
 
 	return resp, nil
