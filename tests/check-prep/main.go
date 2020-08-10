@@ -13,6 +13,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/keys"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/dgraph-io/badger"
+	"github.com/oasisprotocol/oasis-core/go/staking/api"
 	"github.com/vmihailenco/msgpack/v5"
 
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
@@ -74,6 +75,19 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
+				Address: services.StringFromAddress(api.FeeAccumulatorAddress),
+			},
+			Amount: &types.Amount{
+				Value:    "100",
+				Currency: services.OasisCurrency,
+			},
+		},
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 2,
+			},
+			Type: services.OpTransfer,
+			Account: &types.AccountIdentifier{
 				Address: "{{ SENDER }}",
 			},
 			Amount: &types.Amount{
@@ -83,7 +97,7 @@ func main() {
 		},
 		{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index: 2,
+				Index: 3,
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
