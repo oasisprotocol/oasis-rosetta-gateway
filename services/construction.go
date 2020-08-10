@@ -347,30 +347,45 @@ func (s *constructionAPIService) ConstructionParse(
 		from = ut.Signer
 	}
 
-	feeAmountStr := "-0"
-	feeGas := transaction.Gas(0)
-	if tx.Fee != nil {
-		feeAmountStr = "-" + tx.Fee.Amount.String()
-		feeGas = tx.Fee.Gas
+	var ops []*types.Operation
+	var opIndex int64
+
+	if tx.Fee != nil && !tx.Fee.Amount.IsZero() {
+		feeAmountStr := tx.Fee.Amount.String()
+		ops = append(ops,
+			&types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: opIndex,
+				},
+				Type: OpTransfer,
+				Account: &types.AccountIdentifier{
+					Address: from,
+				},
+				Amount: &types.Amount{
+					Value:    "-" + feeAmountStr,
+					Currency: OasisCurrency,
+				},
+				Metadata: map[string]interface{}{
+					FeeGasKey: tx.Fee.Gas,
+				},
+			},
+			&types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: opIndex + 1,
+				},
+				Type: OpTransfer,
+				Account: &types.AccountIdentifier{
+					Address: StringFromAddress(staking.FeeAccumulatorAddress),
+				},
+				Amount: &types.Amount{
+					Value:    feeAmountStr,
+					Currency: OasisCurrency,
+				},
+			},
+		)
+		opIndex += 2
 	}
-	ops := []*types.Operation{
-		{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: 0,
-			},
-			Type: OpTransfer,
-			Account: &types.AccountIdentifier{
-				Address: from,
-			},
-			Amount: &types.Amount{
-				Value:    feeAmountStr,
-				Currency: OasisCurrency,
-			},
-			Metadata: map[string]interface{}{
-				FeeGasKey: feeGas,
-			},
-		},
-	}
+
 	switch tx.Method {
 	case staking.MethodTransfer:
 		var body staking.Transfer
@@ -384,7 +399,7 @@ func (s *constructionAPIService) ConstructionParse(
 		ops = append(ops,
 			&types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
-					Index: 1,
+					Index: opIndex,
 				},
 				Type: OpTransfer,
 				Account: &types.AccountIdentifier{
@@ -397,7 +412,7 @@ func (s *constructionAPIService) ConstructionParse(
 			},
 			&types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
-					Index: 2,
+					Index: opIndex + 1,
 				},
 				Type: OpTransfer,
 				Account: &types.AccountIdentifier{
@@ -421,7 +436,7 @@ func (s *constructionAPIService) ConstructionParse(
 		ops = append(ops,
 			&types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
-					Index: 1,
+					Index: opIndex,
 				},
 				Type: OpBurn,
 				Account: &types.AccountIdentifier{
@@ -445,7 +460,7 @@ func (s *constructionAPIService) ConstructionParse(
 		ops = append(ops,
 			&types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
-					Index: 1,
+					Index: opIndex,
 				},
 				Type: OpTransfer,
 				Account: &types.AccountIdentifier{
@@ -458,7 +473,7 @@ func (s *constructionAPIService) ConstructionParse(
 			},
 			&types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
-					Index: 2,
+					Index: opIndex + 1,
 				},
 				Type: OpTransfer,
 				Account: &types.AccountIdentifier{
