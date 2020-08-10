@@ -593,6 +593,9 @@ func (s *constructionAPIService) ConstructionPayloads(
 	}
 	nonce := uint64(nonceF64)
 
+	// remainingOps is a slice that we shorten as we parse vaguely independent
+	// pieces. Notably, we look for a fee payment and then slice it off before
+	// we look for the rest of the transaction.
 	remainingOps := request.Operations
 	var signWithAddr string
 	feeGas := DefaultGas
