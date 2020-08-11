@@ -51,6 +51,9 @@ type OasisClient interface {
 	// at given height.
 	GetAccount(ctx context.Context, height int64, owner staking.Address) (*staking.Account, error)
 
+	// GetTransactions returns Oasis consensus transactions at given height.
+	GetTransactions(ctx context.Context, height int64) ([][]byte, error)
+
 	// GetStakingEvents returns Oasis staking events at given height.
 	GetStakingEvents(ctx context.Context, height int64) ([]*staking.Event, error)
 
@@ -203,6 +206,15 @@ func (oc *grpcOasisClient) GetAccount(ctx context.Context, height int64, owner s
 		Height: height,
 		Owner:  owner,
 	})
+}
+
+func (oc *grpcOasisClient) GetTransactions(ctx context.Context, height int64) ([][]byte, error) {
+	conn, err := oc.connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	client := consensus.NewConsensusClient(conn)
+	return client.GetTransactions(ctx, height)
 }
 
 func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) ([]*staking.Event, error) {

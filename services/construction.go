@@ -34,6 +34,10 @@ const NonceKey = "nonce"
 // This is optional, and we use DefaultGas if it's absent.
 const FeeGasKey = "fee_gas"
 
+// ReclaimEscrowSharesKey is the name of the key in the Metadata map inside a
+// reclaim escrow operation that specifies the number of shares to reclaim.
+const ReclaimEscrowSharesKey = "reclaim_escrow_shares"
+
 // DefaultGas is the gas limit used in creating a transaction.
 const DefaultGas transaction.Gas = 10000
 
@@ -488,6 +492,41 @@ func (s *constructionAPIService) ConstructionParse(
 				},
 			},
 		)
+	case staking.MethodReclaimEscrow:
+		var body staking.ReclaimEscrow
+		if err := cbor.Unmarshal(tx.Body, &body); err != nil {
+			loggerCons.Error("ConstructionParse: reclaim escrow unmarshal",
+				"body", tx.Body,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+		ops = append(ops,
+			&types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: opIndex,
+				},
+				Type: OpReclaimEscrow,
+				Account: &types.AccountIdentifier{
+					Address: from,
+				},
+			},
+			&types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: opIndex + 1,
+				},
+				Type: OpReclaimEscrow,
+				Account: &types.AccountIdentifier{
+					Address: StringFromAddress(body.Account),
+					SubAccount: &types.SubAccountIdentifier{
+						Address: SubAccountEscrow,
+					},
+				},
+				Metadata: map[string]interface{}{
+					ReclaimEscrowSharesKey: body.Shares.String(),
+				},
+			},
+		)
 	default:
 		loggerCons.Error("ConstructionParse: unmatched method",
 			"method", tx.Method,
@@ -625,7 +664,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 
 		signWithAddr = remainingOps[0].Account.Address
 		if remainingOps[0].Account.SubAccount != nil {
-			loggerCons.Error("ConstructionPayloads: fee transfer from wrong subaccount",
+			loggerCons.Error("ConstructionPayloads: fee transfer wrong from subaccount",
 				"sub_account", remainingOps[0].Account.SubAccount,
 				"expected_sub_account", nil,
 			)
@@ -649,7 +688,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 		}
 
 		if remainingOps[1].Account.SubAccount != nil {
-			loggerCons.Error("ConstructionPayloads: fee transfer to wrong subaccount",
+			loggerCons.Error("ConstructionPayloads: fee transfer wrong to subaccount",
 				"sub_account", remainingOps[1].Account.SubAccount,
 				"expected_sub_account", nil,
 			)
@@ -771,7 +810,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 		if len(signWithAddr) == 0 {
 			signWithAddr = remainingOps[0].Account.Address
 		} else if remainingOps[0].Account.Address != signWithAddr {
-			loggerCons.Error("ConstructionPayloads: add escrow from doesn't match signer",
+			loggerCons.Error("ConstructionPayloads: add escrow owner doesn't match signer",
 				"from", remainingOps[0].Account.Address,
 				"signer", signWithAddr,
 			)
@@ -779,7 +818,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 		}
 		amount, err := readOasisCurrencyNeg(remainingOps[0].Amount)
 		if err != nil {
-			loggerCons.Error("ConstructionPayloads: add escrow from amount",
+			loggerCons.Error("ConstructionPayloads: add escrow owner amount",
 				"amount", remainingOps[0].Amount,
 				"err", err,
 			)
@@ -788,14 +827,14 @@ func (s *constructionAPIService) ConstructionPayloads(
 
 		var escrowAccount staking.Address
 		if err = escrowAccount.UnmarshalText([]byte(remainingOps[1].Account.Address)); err != nil {
-			loggerCons.Error("ConstructionPayloads: add escrow account UnmarshalText",
+			loggerCons.Error("ConstructionPayloads: add escrow escrow account UnmarshalText",
 				"addr", remainingOps[1].Account.Address,
 				"err", err,
 			)
 		}
 		amount2, err := readOasisCurrency(remainingOps[1].Amount)
 		if err != nil {
-			loggerCons.Error("ConstructionPayloads: add escrow account amount",
+			loggerCons.Error("ConstructionPayloads: add escrow escrow amount",
 				"amount", remainingOps[1].Amount,
 				"err", err,
 			)
@@ -814,7 +853,68 @@ func (s *constructionAPIService) ConstructionPayloads(
 			Account: escrowAccount,
 			Amount:  *amount,
 		})
-	// TODO: Devise a way to support reclaim escrow.
+	case len(remainingOps) == 2 &&
+		remainingOps[0].Type == OpReclaimEscrow &&
+		remainingOps[1].Type == OpReclaimEscrow &&
+		remainingOps[1].Account.SubAccount != nil &&
+		remainingOps[1].Account.SubAccount.Address == SubAccountEscrow:
+		loggerCons.Debug("ConstructionPayloads: matched reclaim escrow")
+		method = staking.MethodReclaimEscrow
+
+		if len(signWithAddr) == 0 {
+			signWithAddr = remainingOps[0].Account.Address
+		} else if remainingOps[0].Account.Address != signWithAddr {
+			loggerCons.Error("ConstructionPayloads: reclaim escrow owner doesn't match signer",
+				"from", remainingOps[0].Account.Address,
+				"signer", signWithAddr,
+			)
+			return nil, ErrMalformedValue
+		}
+		if remainingOps[0].Amount != nil {
+			loggerCons.Error("ConstructionPayloads: reclaim escrow wrong owner amount",
+				"owner_amount", remainingOps[0].Amount,
+				"expected_amount", nil,
+			)
+			return nil, ErrMalformedValue
+		}
+
+		var escrowAccount staking.Address
+		if err = escrowAccount.UnmarshalText([]byte(remainingOps[1].Account.Address)); err != nil {
+			loggerCons.Error("ConstructionPayloads: reclaim escrow escrow account UnmarshalText",
+				"addr", remainingOps[1].Account.Address,
+				"err", err,
+			)
+		}
+		if remainingOps[1].Amount != nil {
+			loggerCons.Error("ConstructionPayloads: reclaim escrow wrong escrow amount",
+				"escrow_amount", remainingOps[1].Amount,
+				"expected_amount", nil,
+			)
+			return nil, ErrMalformedValue
+		}
+		sharesRaw, ok := remainingOps[1].Metadata[ReclaimEscrowSharesKey]
+		if !ok {
+			loggerCons.Error("ConstructionPayloads: reclaim escrow shares metadata not given")
+			return nil, ErrMalformedValue
+		}
+		sharesStr, ok := sharesRaw.(string)
+		if !ok {
+			loggerCons.Error("ConstructionPayloads: malformed reclaim escrow shares metadata")
+			return nil, ErrMalformedValue
+		}
+		var shares quantity.Quantity
+		if err = shares.UnmarshalText([]byte(sharesStr)); err != nil {
+			loggerCons.Error("ConstructionPayloads: reclaim escrow shares UnmarshalText",
+				"shares", shares,
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
+
+		body = cbor.Marshal(staking.ReclaimEscrow{
+			Account: escrowAccount,
+			Shares:  shares,
+		})
 	default:
 		loggerCons.Error("ConstructionPayloads: unmatched operations list",
 			"operations", remainingOps,

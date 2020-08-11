@@ -6,6 +6,9 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/oasisprotocol/oasis-core/go/common/cbor"
+	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
+	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
@@ -19,6 +22,9 @@ const OpTransfer = "Transfer"
 // OpBurn is the Burn operation.
 const OpBurn = "Burn"
 
+// OpReclaimEscrow is the Burn operation.
+const OpReclaimEscrow = "ReclaimEscrow"
+
 // OpStatusOK is the OK status.
 const OpStatusOK = "OK"
 
@@ -26,6 +32,7 @@ const OpStatusOK = "OK"
 var SupportedOperationTypes = []string{
 	OpTransfer,
 	OpBurn,
+	OpReclaimEscrow,
 }
 
 var loggerBlk = logging.GetLogger("services/block")
@@ -103,7 +110,28 @@ func (s *blockAPIService) Block(
 		return nil, ErrUnableToGetBlk
 	}
 
-	evts, err := s.oasisClient.GetStakingEvents(ctx, height)
+	// We group transactions by hash and number the operations within a
+	// transaction in the order as they appear.
+	txns := []*types.Transaction{}
+	txnmap := make(map[string]*types.Transaction) // hash -> transaction in txns
+	// getTxn get existing transaction if it already exists or
+	// create a new one and return it if it doesn't.
+	getTxn := func(txhash string) *types.Transaction {
+		if txn, exists := txnmap[txhash]; exists {
+			return txn
+		}
+		tx := &types.Transaction{
+			TransactionIdentifier: &types.TransactionIdentifier{
+				Hash: txhash,
+			},
+			Operations: []*types.Operation{},
+		}
+		txns = append(txns, tx)
+		txnmap[txhash] = tx
+		return tx
+	}
+
+	rawTxs, err := s.oasisClient.GetTransactions(ctx, height)
 	if err != nil {
 		loggerBlk.Error("Block: unable to get transactions",
 			"height", height,
@@ -111,49 +139,107 @@ func (s *blockAPIService) Block(
 		)
 		return nil, ErrUnableToGetTxns
 	}
-
-	// We group transactions by hash and number the operations within a
-	// transaction in the order as they appear.
-	txns := []*types.Transaction{}
-	txnmap := make(map[string]uint) // hash -> index into txns
-	for _, evt := range evts {
-		// Get index of existing transaction if it already exists or
-		// create a new one and return its index if it doesn't.
-		var txidx uint
-		txhash := evt.TxHash.String()
-		if idx, exists := txnmap[txhash]; exists {
-			txidx = idx
-		} else {
-			txidx = uint(len(txns))
-			txnmap[txhash] = txidx
-			txns = append(txns, &types.Transaction{
-				TransactionIdentifier: &types.TransactionIdentifier{
-					Hash: txhash,
-				},
-				Operations: []*types.Operation{},
-			})
+	for i, rawTx := range rawTxs {
+		var sigTx transaction.SignedTransaction
+		if err := cbor.Unmarshal(rawTx, &sigTx); err != nil {
+			loggerBlk.Warn("Block: malformed transaction",
+				"height", height,
+				"index", i,
+				"raw_tx", rawTx,
+				"err", err,
+			)
+			continue
 		}
+		var tx transaction.Transaction
+		if err := sigTx.Open(&tx); err != nil {
+			loggerBlk.Warn("Block: invalid transaction signature",
+				"height", height,
+				"index", i,
+				"sig_tx", sigTx,
+				"err", err,
+			)
+			continue
+		}
+		switch tx.Method {
+		case staking.MethodReclaimEscrow:
+			var reclaim staking.ReclaimEscrow
+			if err := cbor.Unmarshal(tx.Body, &reclaim); err != nil {
+				loggerBlk.Warn("Block: malformed reclaim escrow",
+					"height", height,
+					"index", i,
+					"body", tx.Body,
+					"err", err,
+				)
+				continue
+			}
+			// Emit the reclaim escrow intent.
+			// TODO: Maybe alter oasis-core to emit a staking event so we
+			// don't create operations failed transactions. Fortunately, the
+			// intent here is a no-op.
+			txn := getTxn(hash.NewFromBytes(rawTx).String())
+			opidx := int64(len(txn.Operations))
+			txn.Operations = append(txn.Operations,
+				&types.Operation{
+					OperationIdentifier: &types.OperationIdentifier{
+						Index: opidx,
+					},
+					Type: OpReclaimEscrow,
+					Account: &types.AccountIdentifier{
+						Address: StringFromAddress(staking.NewAddress(sigTx.Signature.PublicKey)),
+					},
+					Metadata: nil,
+				},
+				&types.Operation{
+					OperationIdentifier: &types.OperationIdentifier{
+						Index: opidx + 1,
+					},
+					Type: OpReclaimEscrow,
+					Account: &types.AccountIdentifier{
+						Address: StringFromAddress(reclaim.Account),
+						SubAccount: &types.SubAccountIdentifier{
+							Address: SubAccountEscrow,
+						},
+					},
+					Metadata: map[string]interface{}{
+						ReclaimEscrowSharesKey: reclaim.Shares.String(),
+					},
+				},
+			)
+		}
+	}
+
+	evts, err := s.oasisClient.GetStakingEvents(ctx, height)
+	if err != nil {
+		loggerBlk.Error("Block: unable to get staking events",
+			"height", height,
+			"err", err,
+		)
+		return nil, ErrUnableToGetTxns
+	}
+
+	for _, evt := range evts {
+		txn := getTxn(evt.TxHash.String())
 
 		switch {
 		case evt.Transfer != nil:
-			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(evt.Transfer.From), nil, "-"+evt.Transfer.Amount.String())
-			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(evt.Transfer.To), nil, evt.Transfer.Amount.String())
+			txn.Operations = appendOp(txn.Operations, OpTransfer, StringFromAddress(evt.Transfer.From), nil, "-"+evt.Transfer.Amount.String())
+			txn.Operations = appendOp(txn.Operations, OpTransfer, StringFromAddress(evt.Transfer.To), nil, evt.Transfer.Amount.String())
 		case evt.Burn != nil:
-			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpBurn, StringFromAddress(evt.Burn.Owner), nil, "-"+evt.Burn.Amount.String())
+			txn.Operations = appendOp(txn.Operations, OpBurn, StringFromAddress(evt.Burn.Owner), nil, "-"+evt.Burn.Amount.String())
 		case evt.Escrow != nil:
 			ee := evt.Escrow
 			switch {
 			case ee.Add != nil:
 				// Owner's general account -> escrow account.
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Add.Owner), nil, "-"+ee.Add.Amount.String())
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Add.Escrow), &types.SubAccountIdentifier{Address: SubAccountEscrow}, ee.Add.Amount.String())
+				txn.Operations = appendOp(txn.Operations, OpTransfer, StringFromAddress(ee.Add.Owner), nil, "-"+ee.Add.Amount.String())
+				txn.Operations = appendOp(txn.Operations, OpTransfer, StringFromAddress(ee.Add.Escrow), &types.SubAccountIdentifier{Address: SubAccountEscrow}, ee.Add.Amount.String())
 			case ee.Take != nil:
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Take.Owner), &types.SubAccountIdentifier{Address: SubAccountEscrow}, "-"+ee.Take.Amount.String())
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(staking.CommonPoolAddress), nil, ee.Take.Amount.String())
+				txn.Operations = appendOp(txn.Operations, OpTransfer, StringFromAddress(ee.Take.Owner), &types.SubAccountIdentifier{Address: SubAccountEscrow}, "-"+ee.Take.Amount.String())
+				txn.Operations = appendOp(txn.Operations, OpTransfer, StringFromAddress(staking.CommonPoolAddress), nil, ee.Take.Amount.String())
 			case ee.Reclaim != nil:
 				// Escrow account -> owner's general account.
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Reclaim.Escrow), &types.SubAccountIdentifier{Address: SubAccountEscrow}, "-"+ee.Reclaim.Amount.String())
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Reclaim.Owner), nil, ee.Reclaim.Amount.String())
+				txn.Operations = appendOp(txn.Operations, OpTransfer, StringFromAddress(ee.Reclaim.Escrow), &types.SubAccountIdentifier{Address: SubAccountEscrow}, "-"+ee.Reclaim.Amount.String())
+				txn.Operations = appendOp(txn.Operations, OpTransfer, StringFromAddress(ee.Reclaim.Owner), nil, ee.Reclaim.Amount.String())
 			}
 		}
 	}
