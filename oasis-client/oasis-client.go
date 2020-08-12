@@ -52,7 +52,7 @@ type OasisClient interface {
 	GetAccount(ctx context.Context, height int64, owner staking.Address) (*staking.Account, error)
 
 	// GetStakingEvents returns Oasis staking events at given height.
-	GetStakingEvents(ctx context.Context, height int64) ([]staking.Event, error)
+	GetStakingEvents(ctx context.Context, height int64) ([]*staking.Event, error)
 
 	// SubmitTx submits the given JSON-encoded transaction to the node.
 	SubmitTx(ctx context.Context, txRaw string) error
@@ -205,7 +205,7 @@ func (oc *grpcOasisClient) GetAccount(ctx context.Context, height int64, owner s
 	})
 }
 
-func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) ([]staking.Event, error) {
+func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) ([]*staking.Event, error) {
 	conn, err := oc.connect(ctx)
 	if err != nil {
 		return nil, err
@@ -219,7 +219,7 @@ func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) (
 	var gotBlkHash bool
 	var blkHash []byte
 	for i := range evts {
-		e := &evts[i]
+		e := evts[i]
 		if e.TxHash.IsEmpty() {
 			if !gotBlkHash {
 				// First time, need to fetch the block hash.

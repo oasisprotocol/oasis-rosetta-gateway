@@ -83,6 +83,7 @@ gen_transfer() {
 	local amount=$2
 	local dst=$3
 	${OASIS_NODE} stake account gen_transfer \
+		--assume_yes \
 		--stake.amount $amount \
 		--stake.transfer.destination "$dst" \
 		--transaction.file "$tx" \
@@ -100,6 +101,7 @@ gen_burn() {
 	local tx=$1
 	local amount=$2
 	${OASIS_NODE} stake account gen_burn \
+		--assume_yes \
 		--stake.amount $amount \
 		--transaction.file "$tx" \
 		--transaction.nonce ${NONCE} \

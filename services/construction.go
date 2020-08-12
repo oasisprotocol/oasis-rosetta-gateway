@@ -406,7 +406,7 @@ func (s *constructionAPIService) ConstructionParse(
 					Address: from,
 				},
 				Amount: &types.Amount{
-					Value:    "-" + body.Tokens.String(),
+					Value:    "-" + body.Amount.String(),
 					Currency: OasisCurrency,
 				},
 			},
@@ -419,7 +419,7 @@ func (s *constructionAPIService) ConstructionParse(
 					Address: StringFromAddress(body.To),
 				},
 				Amount: &types.Amount{
-					Value:    body.Tokens.String(),
+					Value:    body.Amount.String(),
 					Currency: OasisCurrency,
 				},
 			},
@@ -443,7 +443,7 @@ func (s *constructionAPIService) ConstructionParse(
 					Address: from,
 				},
 				Amount: &types.Amount{
-					Value:    "-" + body.Tokens.String(),
+					Value:    "-" + body.Amount.String(),
 					Currency: OasisCurrency,
 				},
 			},
@@ -467,7 +467,7 @@ func (s *constructionAPIService) ConstructionParse(
 					Address: from,
 				},
 				Amount: &types.Amount{
-					Value:    "-" + body.Tokens.String(),
+					Value:    "-" + body.Amount.String(),
 					Currency: OasisCurrency,
 				},
 			},
@@ -483,7 +483,7 @@ func (s *constructionAPIService) ConstructionParse(
 					},
 				},
 				Amount: &types.Amount{
-					Value:    body.Tokens.String(),
+					Value:    body.Amount.String(),
 					Currency: OasisCurrency,
 				},
 			},
@@ -730,7 +730,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 
 		body = cbor.Marshal(staking.Transfer{
 			To:     to,
-			Tokens: *amount,
+			Amount: *amount,
 		})
 	case len(remainingOps) == 1 &&
 		remainingOps[0].Type == OpBurn &&
@@ -757,7 +757,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 		}
 
 		body = cbor.Marshal(staking.Burn{
-			Tokens: *amount,
+			Amount: *amount,
 		})
 	case len(remainingOps) == 2 &&
 		remainingOps[0].Type == OpTransfer &&
@@ -812,7 +812,7 @@ func (s *constructionAPIService) ConstructionPayloads(
 
 		body = cbor.Marshal(staking.Escrow{
 			Account: escrowAccount,
-			Tokens:  *amount,
+			Amount:  *amount,
 		})
 	// TODO: Devise a way to support reclaim escrow.
 	default:

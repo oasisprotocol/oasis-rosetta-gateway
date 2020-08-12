@@ -95,7 +95,7 @@ func main() {
 		Method: api.MethodTransfer,
 		Body: cbor.Marshal(api.Transfer{
 			To:     dstAddr,
-			Tokens: *quantity.NewFromUint64(1000),
+			Amount: *quantity.NewFromUint64(1000),
 		}),
 	}
 	opsBurn := []*types.Operation{
@@ -120,7 +120,7 @@ func main() {
 		Fee:    fee100,
 		Method: api.MethodBurn,
 		Body: cbor.Marshal(api.Burn{
-			Tokens: *quantity.NewFromUint64(1000),
+			Amount: *quantity.NewFromUint64(1000),
 		}),
 	}
 	opsAddEscrow := []*types.Operation{
@@ -162,7 +162,7 @@ func main() {
 		Method: api.MethodAddEscrow,
 		Body: cbor.Marshal(api.Escrow{
 			Account: dstAddr,
-			Tokens:  *quantity.NewFromUint64(1000),
+			Amount:  *quantity.NewFromUint64(1000),
 		}),
 	}
 
