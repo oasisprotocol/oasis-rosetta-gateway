@@ -26,7 +26,7 @@ func main() {
 	if err := dstAddr.UnmarshalText([]byte(common.DstAddress)); err != nil {
 		panic(err)
 	}
-	fee100Op := &types.Operation{
+	fee100Op1 := &types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: 0,
 		},
@@ -42,15 +42,29 @@ func main() {
 			services.FeeGasKey: 10001.,
 		},
 	}
+	fee100Op2 := &types.Operation{
+		OperationIdentifier: &types.OperationIdentifier{
+			Index: 1,
+		},
+		Type: services.OpTransfer,
+		Account: &types.AccountIdentifier{
+			Address: services.StringFromAddress(api.FeeAccumulatorAddress),
+		},
+		Amount: &types.Amount{
+			Value:    "100",
+			Currency: services.OasisCurrency,
+		},
+	}
 	fee100 := &transaction.Fee{
 		Amount: *quantity.NewFromUint64(100),
 		Gas:    10001,
 	}
 	opsTransfer := []*types.Operation{
-		fee100Op,
+		fee100Op1,
+		fee100Op2,
 		{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index: 1,
+				Index: 2,
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
@@ -63,7 +77,7 @@ func main() {
 		},
 		{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index: 2,
+				Index: 3,
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
@@ -85,10 +99,11 @@ func main() {
 		}),
 	}
 	opsBurn := []*types.Operation{
-		fee100Op,
+		fee100Op1,
+		fee100Op2,
 		{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index: 1,
+				Index: 2,
 			},
 			Type: services.OpBurn,
 			Account: &types.AccountIdentifier{
@@ -109,10 +124,11 @@ func main() {
 		}),
 	}
 	opsAddEscrow := []*types.Operation{
-		fee100Op,
+		fee100Op1,
+		fee100Op2,
 		{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index: 1,
+				Index: 2,
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
@@ -125,7 +141,7 @@ func main() {
 		},
 		{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index: 2,
+				Index: 3,
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
@@ -147,34 +163,6 @@ func main() {
 		Body: cbor.Marshal(api.Escrow{
 			Account: dstAddr,
 			Tokens:  *quantity.NewFromUint64(1000),
-		}),
-	}
-	opsReclaimEscrow := []*types.Operation{
-		fee100Op,
-		{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: 1,
-			},
-			Type: services.OpTransfer,
-			Account: &types.AccountIdentifier{
-				Address: common.DstAddress,
-				SubAccount: &types.SubAccountIdentifier{
-					Address: services.SubAccountEscrow,
-				},
-			},
-			Amount: &types.Amount{
-				Value:    "-1000",
-				Currency: services.PoolShare,
-			},
-		},
-	}
-	txReclaimEscrow := &transaction.Transaction{
-		Nonce:  dummyNonce,
-		Fee:    fee100,
-		Method: api.MethodReclaimEscrow,
-		Body: cbor.Marshal(api.ReclaimEscrow{
-			Account: dstAddr,
-			Shares:  *quantity.NewFromUint64(1000),
 		}),
 	}
 
@@ -201,7 +189,6 @@ func main() {
 		{"transfer", opsTransfer, txTransfer},
 		{"burn", opsBurn, txBurn},
 		{"add escrow", opsAddEscrow, txAddEscrow},
-		{"reclaim escrow", opsReclaimEscrow, txReclaimEscrow},
 	} {
 		r2, re, err := rc.ConstructionAPI.ConstructionPayloads(context.Background(), &types.ConstructionPayloadsRequest{
 			NetworkIdentifier: ni,

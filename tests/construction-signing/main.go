@@ -27,26 +27,13 @@ func main() {
 				Address: testEntityAddress,
 			},
 			Amount: &types.Amount{
-				Value:    "-0",
-				Currency: services.OasisCurrency,
-			},
-		},
-		{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: 1,
-			},
-			Type: services.OpTransfer,
-			Account: &types.AccountIdentifier{
-				Address: testEntityAddress,
-			},
-			Amount: &types.Amount{
 				Value:    "-1000",
 				Currency: services.OasisCurrency,
 			},
 		},
 		{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index: 2,
+				Index: 1,
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
@@ -128,20 +115,8 @@ func main() {
 	fmt.Println("unsigned signers", common.DumpJSON(r4p.Signers))
 	fmt.Println("unsigned metadata", common.DumpJSON(r4p.Metadata))
 	r4pRef := &types.ConstructionParseResponse{
-		Operations: []*types.Operation{
-			{
-				OperationIdentifier: ops[0].OperationIdentifier,
-				Type:                ops[0].Type,
-				Account:             ops[0].Account,
-				Amount:              ops[0].Amount,
-				Metadata: map[string]interface{}{
-					services.FeeGasKey: float64(services.DefaultGas),
-				},
-			},
-			ops[1],
-			ops[2],
-		},
-		Metadata: r3.Metadata,
+		Operations: ops,
+		Metadata:   r3.Metadata,
 	}
 	if !reflect.DeepEqual(r4p, r4pRef) {
 		fmt.Println("unsigned transaction parsed", common.DumpJSON(r4p))
@@ -189,21 +164,9 @@ func main() {
 	fmt.Println("signed signers", common.DumpJSON(r5p.Signers))
 	fmt.Println("signed metadata", common.DumpJSON(r5p.Metadata))
 	r5pRef := &types.ConstructionParseResponse{
-		Operations: []*types.Operation{
-			{
-				OperationIdentifier: ops[0].OperationIdentifier,
-				Type:                ops[0].Type,
-				Account:             ops[0].Account,
-				Amount:              ops[0].Amount,
-				Metadata: map[string]interface{}{
-					services.FeeGasKey: float64(services.DefaultGas),
-				},
-			},
-			ops[1],
-			ops[2],
-		},
-		Signers:  []string{testEntityAddress},
-		Metadata: r3.Metadata,
+		Operations: ops,
+		Signers:    []string{testEntityAddress},
+		Metadata:   r3.Metadata,
 	}
 	if !reflect.DeepEqual(r5p, r5pRef) {
 		fmt.Println("signed transaction parsed", common.DumpJSON(r5p))
