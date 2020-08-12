@@ -131,7 +131,7 @@ func (s *blockAPIService) Block(
 		return tx
 	}
 
-	rawTxs, err := s.oasisClient.GetTransactions(ctx, height)
+	txsWithRes, err := s.oasisClient.GetTransactionsWithResults(ctx, height)
 	if err != nil {
 		loggerBlk.Error("Block: unable to get transactions",
 			"height", height,
@@ -139,7 +139,11 @@ func (s *blockAPIService) Block(
 		)
 		return nil, ErrUnableToGetTxns
 	}
-	for i, rawTx := range rawTxs {
+	for i, res := range txsWithRes.Results {
+		if !res.IsSuccess() {
+			continue
+		}
+		rawTx := txsWithRes.Transactions[i]
 		var sigTx transaction.SignedTransaction
 		if err := cbor.Unmarshal(rawTx, &sigTx); err != nil {
 			loggerBlk.Warn("Block: malformed transaction",
@@ -173,9 +177,6 @@ func (s *blockAPIService) Block(
 				continue
 			}
 			// Emit the reclaim escrow intent.
-			// TODO: Maybe alter oasis-core to emit a staking event so we
-			// don't create operations failed transactions. Fortunately, the
-			// intent here is a no-op.
 			txn := getTxn(hash.NewFromBytes(rawTx).String())
 			opidx := int64(len(txn.Operations))
 			txn.Operations = append(txn.Operations,
