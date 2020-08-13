@@ -218,8 +218,7 @@ func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) (
 	// Change empty hashes to block hashes, as they belong to block events.
 	var gotBlkHash bool
 	var blkHash []byte
-	for i := range evts {
-		e := evts[i]
+	for _, e := range evts {
 		if e.TxHash.IsEmpty() {
 			if !gotBlkHash {
 				// First time, need to fetch the block hash.
