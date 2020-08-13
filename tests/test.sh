@@ -165,7 +165,7 @@ go run ./check-prep
   # We'll cause a sigpipe on this process, so ignore the exit status.
   # The downstream awk will exit with nonzero status if this test actually fails without confirming any transactions.
   ./rosetta-cli --configuration-file rosetta-cli-config.json check:construction || true
-} | awk '{ print $0 }; $1 == "[STATS]" && $4 >= 42 { confirmed = 1; exit }; END { exit !confirmed }'
+} | stdbuf -oL awk '{ print $0 }; $1 == "[STATS]" && $4 >= 42 { confirmed = 1; exit }; END { exit !confirmed }'
 rm -rf "${ROOT}/validator-data" /tmp/rosetta-cli*
 
 printf "${GRN}### Testing construction signing workflow...${OFF}\n"
