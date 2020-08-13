@@ -54,8 +54,8 @@ type OasisClient interface {
 	// GetStakingEvents returns Oasis staking events at given height.
 	GetStakingEvents(ctx context.Context, height int64) ([]*staking.Event, error)
 
-	// SubmitTx submits the given JSON-encoded transaction to the node.
-	SubmitTx(ctx context.Context, txRaw string) error
+	// SubmitTxNoWait submits the given JSON-encoded transaction to the node.
+	SubmitTxNoWait(ctx context.Context, txRaw string) error
 
 	// GetNextNonce returns the nonce that should be used when signing the
 	// next transaction for the given account address at given height.
@@ -236,7 +236,7 @@ func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) (
 	return evts, nil
 }
 
-func (oc *grpcOasisClient) SubmitTx(ctx context.Context, txRaw string) error {
+func (oc *grpcOasisClient) SubmitTxNoWait(ctx context.Context, txRaw string) error {
 	conn, err := oc.connect(ctx)
 	if err != nil {
 		return err
@@ -244,10 +244,10 @@ func (oc *grpcOasisClient) SubmitTx(ctx context.Context, txRaw string) error {
 	client := consensus.NewConsensusClient(conn)
 	var tx *transaction.SignedTransaction
 	if err := json.Unmarshal([]byte(txRaw), &tx); err != nil {
-		logger.Debug("SubmitTx: failed to unmarshal raw transaction", "err", err)
+		logger.Debug("SubmitTxNoWait: failed to unmarshal raw transaction", "err", err)
 		return err
 	}
-	return client.SubmitTx(ctx, tx)
+	return client.SubmitTxNoWait(ctx, tx)
 }
 
 func (oc *grpcOasisClient) GetNextNonce(ctx context.Context, addr staking.Address, height int64) (uint64, error) {

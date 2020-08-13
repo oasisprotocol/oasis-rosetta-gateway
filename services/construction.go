@@ -125,8 +125,8 @@ func (s *constructionAPIService) ConstructionSubmit(
 		return nil, terr
 	}
 
-	if err := s.oasisClient.SubmitTx(ctx, request.SignedTransaction); err != nil {
-		loggerCons.Error("ConstructionSubmit: SubmitTx failed", "err", err)
+	if err := s.oasisClient.SubmitTxNoWait(ctx, request.SignedTransaction); err != nil {
+		loggerCons.Error("ConstructionSubmit: SubmitTxNoWait failed", "err", err)
 		return nil, ErrUnableToSubmitTx
 	}
 
