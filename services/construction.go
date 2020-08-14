@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
+	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
@@ -140,7 +142,11 @@ func (s *constructionAPIService) ConstructionSubmit(
 
 	if err := s.oasisClient.SubmitTxNoWait(ctx, tx); err != nil {
 		loggerCons.Error("ConstructionSubmit: SubmitTxNoWait failed", "err", err)
-		return nil, NewDetailedError(ErrUnableToSubmitTx, err)
+		if errors.Is(err, consensus.ErrDuplicateTx) {
+			loggerCons.Info("ConstructionSubmit: treating ErrDuplicateTx as success")
+		} else {
+			return nil, NewDetailedError(ErrUnableToSubmitTx, err)
+		}
 	}
 
 	resp := &types.TransactionIdentifierResponse{
