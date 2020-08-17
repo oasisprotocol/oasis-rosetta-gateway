@@ -165,6 +165,43 @@ func main() {
 			Amount:  *quantity.NewFromUint64(1000),
 		}),
 	}
+	opsReclaimEscrow := []*types.Operation{
+		fee100Op1,
+		fee100Op2,
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 2,
+			},
+			Type: services.OpReclaimEscrow,
+			Account: &types.AccountIdentifier{
+				Address: testEntityAddress,
+			},
+		},
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 3,
+			},
+			Type: services.OpReclaimEscrow,
+			Account: &types.AccountIdentifier{
+				Address: common.DstAddress,
+				SubAccount: &types.SubAccountIdentifier{
+					Address: services.SubAccountEscrow,
+				},
+			},
+			Metadata: map[string]interface{}{
+				services.ReclaimEscrowSharesKey: "1000",
+			},
+		},
+	}
+	txReclaimEscrow := &transaction.Transaction{
+		Nonce:  dummyNonce,
+		Fee:    fee100,
+		Method: api.MethodReclaimEscrow,
+		Body: cbor.Marshal(api.ReclaimEscrow{
+			Account: dstAddr,
+			Shares:  *quantity.NewFromUint64(1000),
+		}),
+	}
 
 	rc := client.NewAPIClient(client.NewConfiguration("http://localhost:8080", "rosetta-sdk-go", nil))
 
@@ -189,6 +226,7 @@ func main() {
 		{"transfer", opsTransfer, txTransfer},
 		{"burn", opsBurn, txBurn},
 		{"add escrow", opsAddEscrow, txAddEscrow},
+		{"reclaim escrow", opsReclaimEscrow, txReclaimEscrow},
 	} {
 		r2, re, err := rc.ConstructionAPI.ConstructionPayloads(context.Background(), &types.ConstructionPayloadsRequest{
 			NetworkIdentifier: ni,
