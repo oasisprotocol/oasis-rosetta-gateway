@@ -136,24 +136,24 @@ func (s *blockAPIService) Block(
 
 		switch {
 		case evt.Transfer != nil:
-			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(evt.Transfer.From), nil, "-"+evt.Transfer.Tokens.String())
-			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(evt.Transfer.To), nil, evt.Transfer.Tokens.String())
+			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(evt.Transfer.From), nil, "-"+evt.Transfer.Amount.String())
+			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(evt.Transfer.To), nil, evt.Transfer.Amount.String())
 		case evt.Burn != nil:
-			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpBurn, StringFromAddress(evt.Burn.Owner), nil, "-"+evt.Burn.Tokens.String())
+			txns[txidx].Operations = appendOp(txns[txidx].Operations, OpBurn, StringFromAddress(evt.Burn.Owner), nil, "-"+evt.Burn.Amount.String())
 		case evt.Escrow != nil:
 			ee := evt.Escrow
 			switch {
 			case ee.Add != nil:
 				// Owner's general account -> escrow account.
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Add.Owner), nil, "-"+ee.Add.Tokens.String())
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Add.Escrow), &types.SubAccountIdentifier{Address: SubAccountEscrow}, ee.Add.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Add.Owner), nil, "-"+ee.Add.Amount.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Add.Escrow), &types.SubAccountIdentifier{Address: SubAccountEscrow}, ee.Add.Amount.String())
 			case ee.Take != nil:
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Take.Owner), &types.SubAccountIdentifier{Address: SubAccountEscrow}, "-"+ee.Take.Tokens.String())
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(staking.CommonPoolAddress), nil, ee.Take.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Take.Owner), &types.SubAccountIdentifier{Address: SubAccountEscrow}, "-"+ee.Take.Amount.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(staking.CommonPoolAddress), nil, ee.Take.Amount.String())
 			case ee.Reclaim != nil:
 				// Escrow account -> owner's general account.
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Reclaim.Escrow), &types.SubAccountIdentifier{Address: SubAccountEscrow}, "-"+ee.Reclaim.Tokens.String())
-				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Reclaim.Owner), nil, ee.Reclaim.Tokens.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Reclaim.Escrow), &types.SubAccountIdentifier{Address: SubAccountEscrow}, "-"+ee.Reclaim.Amount.String())
+				txns[txidx].Operations = appendOp(txns[txidx].Operations, OpTransfer, StringFromAddress(ee.Reclaim.Owner), nil, ee.Reclaim.Amount.String())
 			}
 		}
 	}

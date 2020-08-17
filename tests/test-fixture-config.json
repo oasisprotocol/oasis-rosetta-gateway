@@ -5,9 +5,15 @@
     },
     "network": {
         "node_binary": "oasis-node",
-        "consensus_backend": "",
-        "consensus_timeout_commit": 1000000000,
-        "consensus_gas_costs_tx_byte": 0,
+        "consensus": {
+            "backend": "",
+            "params": {
+                "timeout_commit": 1000000000,
+                "gas_costs": {
+                    "tx_byte": 0
+                }
+            }
+        },
         "halt_epoch": 18446744073709551615,
         "epochtime_mock": true,
         "epochtime_tendermint_interval": 0,
