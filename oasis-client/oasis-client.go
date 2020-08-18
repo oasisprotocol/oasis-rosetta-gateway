@@ -3,7 +3,6 @@ package oasis_client
 import (
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -57,8 +56,8 @@ type OasisClient interface {
 	// GetStakingEvents returns Oasis staking events at given height.
 	GetStakingEvents(ctx context.Context, height int64) ([]*staking.Event, error)
 
-	// SubmitTxNoWait submits the given JSON-encoded transaction to the node.
-	SubmitTxNoWait(ctx context.Context, txRaw string) error
+	// SubmitTxNoWait submits the given signed transaction to the node.
+	SubmitTxNoWait(ctx context.Context, tx *transaction.SignedTransaction) error
 
 	// GetNextNonce returns the nonce that should be used when signing the
 	// next transaction for the given account address at given height.
@@ -248,17 +247,12 @@ func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) (
 	return evts, nil
 }
 
-func (oc *grpcOasisClient) SubmitTxNoWait(ctx context.Context, txRaw string) error {
+func (oc *grpcOasisClient) SubmitTxNoWait(ctx context.Context, tx *transaction.SignedTransaction) error {
 	conn, err := oc.connect(ctx)
 	if err != nil {
 		return err
 	}
 	client := consensus.NewConsensusClient(conn)
-	var tx *transaction.SignedTransaction
-	if err := json.Unmarshal([]byte(txRaw), &tx); err != nil {
-		logger.Debug("SubmitTxNoWait: failed to unmarshal raw transaction", "err", err)
-		return err
-	}
 	return client.SubmitTxNoWait(ctx, tx)
 }
 

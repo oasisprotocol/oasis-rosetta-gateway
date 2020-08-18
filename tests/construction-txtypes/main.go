@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"reflect"
 
@@ -244,11 +243,15 @@ func main() {
 		fmt.Println(tt.name, "unsigned transaction", r2.UnsignedTransaction)
 		fmt.Println(tt.name, "signing payloads", common.DumpJSON(r2.Payloads))
 
-		var ut services.UnsignedTransaction
-		if err := json.Unmarshal([]byte(r2.UnsignedTransaction), &ut); err != nil {
+		ut, err := services.DecodeUnsignedTransaction(r2.UnsignedTransaction)
+		if err != nil {
 			panic(err)
 		}
-		if !reflect.DeepEqual(&ut.Tx, tt.reference) {
+		var tx transaction.Transaction
+		if err = cbor.Unmarshal(ut.Tx, &tx); err != nil {
+			panic(err)
+		}
+		if !reflect.DeepEqual(&tx, tt.reference) {
 			fmt.Println(tt.name, "reference transaction", common.DumpJSON(tt.reference))
 			panic(fmt.Errorf("%s: transaction mismatch", tt.name))
 		}
