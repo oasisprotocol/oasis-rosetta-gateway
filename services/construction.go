@@ -3,6 +3,7 @@ package services
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -11,7 +12,6 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
-	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
@@ -43,8 +43,8 @@ const DefaultGas transaction.Gas = 10000
 
 // UnsignedTransaction is a transaction with the account that would sign it.
 type UnsignedTransaction struct {
-	Tx     transaction.Transaction `json:"tx"`
-	Signer string                  `json:"signer"`
+	Tx     cbor.RawMessage `json:"tx"`
+	Signer string          `json:"signer"`
 }
 
 var loggerCons = logging.GetLogger("services/construction")
@@ -129,26 +129,23 @@ func (s *constructionAPIService) ConstructionSubmit(
 		return nil, terr
 	}
 
-	if err := s.oasisClient.SubmitTxNoWait(ctx, request.SignedTransaction); err != nil {
+	tx, err := DecodeSignedTransaction(request.SignedTransaction)
+	if err != nil {
+		loggerCons.Error("ConstructionSubmit: failed to unmarshal signed transaction",
+			"err", err,
+			"signed_tx", request.SignedTransaction,
+		)
+		return nil, ErrMalformedValue
+	}
+
+	if err := s.oasisClient.SubmitTxNoWait(ctx, tx); err != nil {
 		loggerCons.Error("ConstructionSubmit: SubmitTxNoWait failed", "err", err)
 		return nil, ErrUnableToSubmitTx
 	}
 
-	var h hash.Hash
-	var st transaction.SignedTransaction
-	if err := json.Unmarshal([]byte(request.SignedTransaction), &st); err != nil {
-		loggerCons.Error("ConstructionSubmit: unmarshal unsigned transaction",
-			"unsigned_transaction", request.SignedTransaction,
-			"err", err,
-		)
-		return nil, ErrMalformedValue
-	}
-	h.From(st)
-	txID := h.String()
-
 	resp := &types.TransactionIdentifierResponse{
 		TransactionIdentifier: &types.TransactionIdentifier{
-			Hash: txID,
+			Hash: tx.Hash().String(),
 		},
 	}
 
@@ -169,21 +166,18 @@ func (s *constructionAPIService) ConstructionHash(
 		return nil, terr
 	}
 
-	var h hash.Hash
-	var st transaction.SignedTransaction
-	if err := json.Unmarshal([]byte(request.SignedTransaction), &st); err != nil {
-		loggerCons.Error("ConstructionHash: unmarshal unsigned transaction",
-			"unsigned_transaction", request.SignedTransaction,
+	tx, err := DecodeSignedTransaction(request.SignedTransaction)
+	if err != nil {
+		loggerCons.Error("ConstructionSubmit: failed to unmarshal signed transaction",
 			"err", err,
+			"signed_tx", request.SignedTransaction,
 		)
 		return nil, ErrMalformedValue
 	}
-	h.From(st)
-	txID := h.String()
 
 	resp := &types.TransactionIdentifierResponse{
 		TransactionIdentifier: &types.TransactionIdentifier{
-			Hash: txID,
+			Hash: tx.Hash().String(),
 		},
 	}
 
@@ -239,15 +233,14 @@ func (s *constructionAPIService) ConstructionCombine(
 	// transaction returned from this method will be sent to the
 	// `/construction/submit` endpoint by the caller.
 
-	var ut UnsignedTransaction
-	if err := json.Unmarshal([]byte(request.UnsignedTransaction), &ut); err != nil {
+	ut, err := DecodeUnsignedTransaction(request.UnsignedTransaction)
+	if err != nil {
 		loggerCons.Error("ConstructionCombine: unmarshal unsigned transaction",
 			"unsigned_transaction", request.UnsignedTransaction,
 			"err", err,
 		)
 		return nil, ErrMalformedValue
 	}
-	txBuf := cbor.Marshal(ut.Tx)
 	if len(request.Signatures) != 1 {
 		loggerCons.Error("ConstructionCombine: need exactly one signature",
 			"len_signatures", len(request.Signatures),
@@ -271,26 +264,18 @@ func (s *constructionAPIService) ConstructionCombine(
 		)
 		return nil, ErrMalformedValue
 	}
-	st := transaction.SignedTransaction{
+	tx := transaction.SignedTransaction{
 		Signed: signature.Signed{
-			Blob: txBuf,
+			Blob: ut.Tx,
 			Signature: signature.Signature{
 				PublicKey: pk,
 				Signature: rs,
 			},
 		},
 	}
-	stJSON, err := json.Marshal(st)
-	if err != nil {
-		loggerCons.Error("ConstructionCombine: marshal signed transaction",
-			"signed_transaction", st,
-			"err", err,
-		)
-		return nil, ErrMalformedValue
-	}
 
 	resp := &types.ConstructionCombineResponse{
-		SignedTransaction: string(stJSON),
+		SignedTransaction: base64.StdEncoding.EncodeToString(cbor.Marshal(tx)),
 	}
 
 	jr, _ := json.Marshal(resp)
@@ -317,19 +302,27 @@ func (s *constructionAPIService) ConstructionParse(
 
 	// TODO: Unify some of this verboseness with block.go. If you prefer.
 
+	rawTx, err := base64.StdEncoding.DecodeString(request.Transaction)
+	if err != nil {
+		loggerCons.Error("ConstructionParse: base64 decoding failed",
+			"err", err,
+		)
+		return nil, ErrMalformedValue
+	}
+
 	var tx transaction.Transaction
 	var from string
 	var signers []string
 	if request.Signed {
 		var st transaction.SignedTransaction
-		if err := json.Unmarshal([]byte(request.Transaction), &st); err != nil {
+		if err = cbor.Unmarshal(rawTx, &st); err != nil {
 			loggerCons.Error("ConstructionParse: signed transaction unmarshal",
 				"src", request.Transaction,
 				"err", err,
 			)
 			return nil, ErrMalformedValue
 		}
-		if err := st.Open(&tx); err != nil {
+		if err = st.Open(&tx); err != nil {
 			loggerCons.Error("ConstructionParse: signed transaction open",
 				"signed_transaction", st,
 				"err", err,
@@ -340,14 +333,19 @@ func (s *constructionAPIService) ConstructionParse(
 		signers = []string{from}
 	} else {
 		var ut UnsignedTransaction
-		if err := json.Unmarshal([]byte(request.Transaction), &ut); err != nil {
+		if err = cbor.Unmarshal(rawTx, &ut); err != nil {
 			loggerCons.Error("ConstructionParse: unsigned transaction unmarshal",
 				"src", request.Transaction,
 				"err", err,
 			)
 			return nil, ErrMalformedValue
 		}
-		tx = ut.Tx
+		if err = cbor.Unmarshal(ut.Tx, &tx); err != nil {
+			loggerCons.Error("ConstructionParse: inner unsigned transaction unmarshal",
+				"err", err,
+			)
+			return nil, ErrMalformedValue
+		}
 		from = ut.Signer
 	}
 
@@ -922,20 +920,21 @@ func (s *constructionAPIService) ConstructionPayloads(
 		return nil, ErrNotImplemented
 	}
 
-	ut := UnsignedTransaction{
-		Tx: transaction.Transaction{
-			Nonce: nonce,
-			Fee: &transaction.Fee{
-				Amount: *feeAmount,
-				Gas:    feeGas,
-			},
-			Method: method,
-			Body:   body,
+	tx := transaction.Transaction{
+		Nonce: nonce,
+		Fee: &transaction.Fee{
+			Amount: *feeAmount,
+			Gas:    feeGas,
 		},
+		Method: method,
+		Body:   body,
+	}
+	ut := UnsignedTransaction{
+		Tx:     cbor.Marshal(tx),
 		Signer: signWithAddr,
 	}
 
-	utJSON, err := json.Marshal(ut)
+	utCBOR := cbor.Marshal(ut)
 	if err != nil {
 		loggerCons.Error("ConstructionPayloads: marshal unsigned transaction",
 			"unsigned_transaction", ut,
@@ -943,18 +942,17 @@ func (s *constructionAPIService) ConstructionPayloads(
 		)
 		return nil, ErrMalformedValue
 	}
-	txCBOR := cbor.Marshal(ut.Tx)
-	txMessage, err := signature.PrepareSignerMessage(transaction.SignatureContext, txCBOR)
+	txMessage, err := signature.PrepareSignerMessage(transaction.SignatureContext, ut.Tx)
 	if err != nil {
 		loggerCons.Error("ConstructionPayloads: PrepareSignerMessage",
 			"signature_context", transaction.SignatureContext,
-			"tx_hex", hex.EncodeToString(txCBOR),
+			"tx_hex", hex.EncodeToString(ut.Tx),
 			"err", err,
 		)
 		return nil, ErrMalformedValue
 	}
 	resp := &types.ConstructionPayloadsResponse{
-		UnsignedTransaction: string(utJSON),
+		UnsignedTransaction: base64.StdEncoding.EncodeToString(utCBOR),
 		Payloads: []*types.SigningPayload{
 			{
 				Address:       signWithAddr,
@@ -968,4 +966,32 @@ func (s *constructionAPIService) ConstructionPayloads(
 	loggerCons.Debug("ConstructionPayloads OK", "response", jr)
 
 	return resp, nil
+}
+
+// DecodeSignedTransaction decodes a signed transaction from a Base64-encoded CBOR blob.
+func DecodeSignedTransaction(raw string) (*transaction.SignedTransaction, error) {
+	rawTx, err := base64.StdEncoding.DecodeString(raw)
+	if err != nil {
+		return nil, fmt.Errorf("base64 decode failed: %w", err)
+	}
+
+	var tx transaction.SignedTransaction
+	if err := cbor.Unmarshal(rawTx, &tx); err != nil {
+		return nil, fmt.Errorf("CBOR decode failed: %w", err)
+	}
+	return &tx, nil
+}
+
+// DecodeUnsignedTransaction decodes an unsigned transaction from a Base64-encoded CBOR blob.
+func DecodeUnsignedTransaction(raw string) (*UnsignedTransaction, error) {
+	rawTx, err := base64.StdEncoding.DecodeString(raw)
+	if err != nil {
+		return nil, fmt.Errorf("base64 decode failed: %w", err)
+	}
+
+	var tx UnsignedTransaction
+	if err := cbor.Unmarshal(rawTx, &tx); err != nil {
+		return nil, fmt.Errorf("CBOR decode failed: %w", err)
+	}
+	return &tx, nil
 }
