@@ -184,7 +184,8 @@ func (s *blockAPIService) Block(
 					OperationIdentifier: &types.OperationIdentifier{
 						Index: opidx,
 					},
-					Type: OpReclaimEscrow,
+					Type:   OpReclaimEscrow,
+					Status: OpStatusOK,
 					Account: &types.AccountIdentifier{
 						Address: StringFromAddress(staking.NewAddress(sigTx.Signature.PublicKey)),
 					},
@@ -194,7 +195,8 @@ func (s *blockAPIService) Block(
 					OperationIdentifier: &types.OperationIdentifier{
 						Index: opidx + 1,
 					},
-					Type: OpReclaimEscrow,
+					Type:   OpReclaimEscrow,
+					Status: OpStatusOK,
 					Account: &types.AccountIdentifier{
 						Address: StringFromAddress(reclaim.Account),
 						SubAccount: &types.SubAccountIdentifier{
