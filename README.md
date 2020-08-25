@@ -1,6 +1,13 @@
+[![CI badge](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/workflows/Continuous%20integration/badge.svg)](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/actions?query=workflow%3A%22Continuous+integration%22+branch%3Amaster)
+
 # Oasis Gateway for Rosetta
 
 This repository implements the [Rosetta][1] server for the [Oasis][0] network.
+See the [Rosetta API docs][3] for information on how to use the API.
+Oasis-specific Rosetta API information is given in the "Oasis-specific
+information" subsection below.
+
+## Building and testing
 
 To build the server:
 
@@ -19,9 +26,27 @@ To clean-up:
 set up a test Oasis network, make some sample transactions, then run the
 gateway and validate it using `rosetta-cli`.
 
+## Running the gateway
+
+The gateway connects to an Oasis node, so make sure you have a running node
+first.  If you don't have an Oasis node yet, follow the [instructions for running an Oasis node][4].
+
+Set the `OASIS_NODE_GRPC_ADDR` environment variable to the node's gRPC socket
+address (e.g. `unix:/path/to/node/internal.sock`).
+
+Optionally, set the `OASIS_ROSETTA_GATEWAY_PORT` environment variable to the
+port that you want the gateway to listen on (default is 8080).
+
+Start the gateway simply by running the executable `oasis-core-rosetta-gateway`.
+
+
 [0]: https://github.com/oasisprotocol/oasis-core
 [1]: https://github.com/coinbase/rosetta-sdk-go
 [2]: https://github.com/coinbase/rosetta-cli
+[3]: https://www.rosetta-api.org/
+[4]: https://docs.oasis.dev/general/operator-docs/running-a-node
+
+
 
 ## Oasis-specific information
 This section describes how Oasis fits into the Rosetta APIs.
