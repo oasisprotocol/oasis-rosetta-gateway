@@ -542,3 +542,34 @@ For transfer, `amount_sh` shares to `signer_addr` from `escrow_addr` with gas li
     }
 ]
 ```
+
+### Block API
+Rosetta reference: https://www.rosetta-api.org/docs/BlockApi.html#block
+
+In a partial block identifier https://www.rosetta-api.org/docs/models/PartialBlockIdentifier.html:
+
+* Set only the `index` field to the block height.
+
+In a block response https://www.rosetta-api.org/docs/models/BlockResponse.html:
+
+* The `other_transactions` field is absent.
+
+In a block https://www.rosetta-api.org/docs/models/Block.html:
+
+* Block identifier `index` fields contain the height of the block.
+* Block identifier `hash` fields are lowercase hex encoded.
+* The `parent_block_identifier` field is has undefined content.
+* The `metadata` field is absent.
+
+In a transaction https://www.rosetta-api.org/docs/models/Transaction.html:
+
+* The transaction identifier `hash` field is lowercase hex encoded.
+* The `operations` field contains the transaction intent with some modifications.
+* The `metadata` field is absent.
+
+In an operation https://www.rosetta-api.org/docs/models/Operation.html as compared to the corresponding operation from
+the transaction's intent:
+
+* The `related_operations` field may be set.
+* The `status` field is set to `OK`.
+* The `metadata` field is absent.
