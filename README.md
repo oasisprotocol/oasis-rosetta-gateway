@@ -70,11 +70,11 @@ In general (e.g., for other testnets), the `.network` string is the lowercase he
 Rosetta reference: https://www.rosetta-api.org/docs/api_identifiers.html#account-identifier
 
 #### General account
-For an account `account`'s (e.g. `oasis1qzzd6khm3acqskpxlk9vd5044cmmcce78y5l6000`) general account:
+For an account `account_addr`'s (e.g. `oasis1qzzd6khm3acqskpxlk9vd5044cmmcce78y5l6000`) general account:
 
 ```js
 {
-    "address": address
+    "address": account_addr
     /* no sub_account */
     /* no metadata */
 }
