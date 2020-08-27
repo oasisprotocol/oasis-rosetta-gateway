@@ -558,7 +558,8 @@ In a block https://www.rosetta-api.org/docs/models/Block.html:
 
 * Block identifier `index` fields contain the height of the block.
 * Block identifier `hash` fields are lowercase hex encoded.
-* The `parent_block_identifier` field is has undefined content.
+* The `parent_block_identifier` field contains the block identifier of the previous block, except when querying for
+first block.
 * The `metadata` field is absent.
 
 In a transaction https://www.rosetta-api.org/docs/models/Transaction.html:
