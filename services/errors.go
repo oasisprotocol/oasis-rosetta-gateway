@@ -1,6 +1,21 @@
 package services
 
-import "github.com/coinbase/rosetta-sdk-go/types"
+import (
+	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/oasisprotocol/oasis-core/go/common/errors"
+)
+
+const (
+	// CauseKey is a key in an error's details map, mapping to an object with
+	// keys ModuleKey, CodeKey (see
+	// https://pkg.go.dev/github.com/oasisprotocol/oasis-core/go@v0.20.9/common/errors?tab=doc#Code),
+	// and MsgKey with some information about an error
+	// from the Oasis network.
+	CauseKey  = "cause"
+	ModuleKey = "module"
+	CodeKey   = "code"
+	MsgKey    = "msg"
+)
 
 var (
 	ErrUnableToGetChainID = &types.Error{
@@ -132,3 +147,18 @@ var (
 		ErrUnableToGetNodeStatus,
 	}
 )
+
+// NewDetailedError returns a new Rosetta error Code, Message, and Retriable
+// set from proto and Details[CauseKey] set from cause.
+func NewDetailedError(proto *types.Error, cause error) *types.Error {
+	module, code := errors.Code(cause)
+	detailedError := *proto
+	detailedError.Details = map[string]interface{}{
+		CauseKey: map[string]interface{}{
+			ModuleKey: module,
+			CodeKey:   code,
+			MsgKey:    cause.Error(),
+		},
+	}
+	return &detailedError
+}

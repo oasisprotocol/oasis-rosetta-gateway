@@ -140,7 +140,7 @@ func (s *constructionAPIService) ConstructionSubmit(
 
 	if err := s.oasisClient.SubmitTxNoWait(ctx, tx); err != nil {
 		loggerCons.Error("ConstructionSubmit: SubmitTxNoWait failed", "err", err)
-		return nil, ErrUnableToSubmitTx
+		return nil, NewDetailedError(ErrUnableToSubmitTx, err)
 	}
 
 	resp := &types.TransactionIdentifierResponse{
