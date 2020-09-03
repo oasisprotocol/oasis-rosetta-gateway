@@ -13,7 +13,7 @@ FROM golang:1.14-alpine AS build
 # Install prerequisites.
 RUN rm -f /var/cache/apk/*; apk --no-cache add bash git make gcc g++ libressl-dev libseccomp-dev linux-headers
 
-ARG CORE_BRANCH="v20.9"
+ARG CORE_BRANCH="v20.9.2"
 ARG GATEWAY_BRANCH="master"
 
 # Fetch and build oasis-core.
