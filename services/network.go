@@ -123,6 +123,10 @@ func (s *networkAPIService) NetworkOptions(
 					Status:     OpStatusOK,
 					Successful: true,
 				},
+				{
+					Status:     OpStatusFailed,
+					Successful: false,
+				},
 			},
 			OperationTypes: SupportedOperationTypes,
 			Errors:         ErrorList,
