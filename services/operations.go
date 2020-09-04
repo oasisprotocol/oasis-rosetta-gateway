@@ -2,14 +2,28 @@ package services
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
+	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction/results"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 )
+
+// FeeGasKey is the name of the key in the Metadata map inside a fee
+// operation that specifies the gas value in the transaction fee.
+// This is optional, and we use DefaultGas if it's absent.
+const FeeGasKey = "fee_gas"
+
+// ReclaimEscrowSharesKey is the name of the key in the Metadata map inside a
+// reclaim escrow operation that specifies the number of shares to reclaim.
+const ReclaimEscrowSharesKey = "reclaim_escrow_shares"
+
+// DefaultGas is the default gas limit used in creating a transaction.
+const DefaultGas transaction.Gas = 10000
 
 const (
 	// OpTransfer is the Transfer operation.
@@ -203,6 +217,249 @@ func (m *operationToTransactionMapper) HasFee() bool {
 		m.ops[0].Type == OpTransfer &&
 		m.ops[1].Type == OpTransfer &&
 		m.ops[1].Account.Address == StringFromAddress(staking.FeeAccumulatorAddress)
+}
+
+// GetFee returns the fee (if any) extracted from the fee payment operations.
+//
+// If fee payment operations are present, this method also returns the signer address.
+func (m *operationToTransactionMapper) GetFee() (string, *transaction.Fee, error) {
+	fee := transaction.Fee{
+		Gas: DefaultGas,
+	}
+	if !m.HasFee() {
+		return "", &fee, nil
+	}
+
+	signWithAddr := m.ops[0].Account.Address
+	if m.ops[0].Account.SubAccount != nil {
+		return "", nil, fmt.Errorf("fee transfer from wrong subaccount (got: %s expected: nil)",
+			m.ops[0].Account.SubAccount,
+		)
+	}
+	feeAmount, err := readOasisCurrencyNeg(m.ops[0].Amount)
+	if err != nil {
+		return "", nil, fmt.Errorf("invalid fee transfer from amount: %w", err)
+	}
+	if feeGasRaw, ok := m.ops[0].Metadata[FeeGasKey]; ok {
+		feeGasF64, ok := feeGasRaw.(float64)
+		if !ok {
+			return "", nil, fmt.Errorf("malformed fee transfer gas metadata")
+		}
+		fee.Gas = transaction.Gas(feeGasF64)
+	}
+
+	if m.ops[1].Account.SubAccount != nil {
+		return "", nil, fmt.Errorf("fee transfer to wrong subaccount (got: %s expected: nil)",
+			m.ops[1].Account.SubAccount,
+		)
+	}
+	feeAmount2, err := readOasisCurrency(m.ops[1].Amount)
+	if err != nil {
+		return "", nil, fmt.Errorf("invalid fee transfer to amount: %w", err)
+	}
+	if feeAmount.Cmp(feeAmount2) != 0 {
+		return "", nil, fmt.Errorf("fee transfer amounts differ between operations (from: %s to: %s)", feeAmount, feeAmount2)
+	}
+	fee.Amount = *feeAmount
+	return signWithAddr, &fee, nil
+}
+
+func readCurrency(amount *types.Amount, currency *types.Currency, negative bool) (*quantity.Quantity, error) {
+	// TODO: Is it up to us to check other fields?
+	if amount.Currency.Symbol != currency.Symbol {
+		return nil, fmt.Errorf("wrong currency")
+	}
+	bi := new(big.Int)
+	if err := bi.UnmarshalText([]byte(amount.Value)); err != nil {
+		return nil, fmt.Errorf("bi UnmarshalText Value: %w", err)
+	}
+	if negative {
+		bi.Neg(bi)
+	}
+	q := quantity.NewQuantity()
+	if err := q.FromBigInt(bi); err != nil {
+		return nil, fmt.Errorf("q FromBigInt bi: %w", err)
+	}
+	return q, nil
+}
+
+func readOasisCurrency(amount *types.Amount) (*quantity.Quantity, error) {
+	return readCurrency(amount, OasisCurrency, false)
+}
+
+func readOasisCurrencyNeg(amount *types.Amount) (*quantity.Quantity, error) {
+	return readCurrency(amount, OasisCurrency, true)
+}
+
+// GetTransaction decodes an Oasis transaction from given Rosetta operations.
+//
+// The method also returns the signer address.
+func (m *operationToTransactionMapper) GetTransaction() (string, *transaction.Transaction, error) {
+	signWithAddr, fee, err := m.GetFee()
+	if err != nil {
+		return "", nil, fmt.Errorf("malformed fee operations: %w", err)
+	}
+
+	remainingOps := m.ops
+	if m.HasFee() {
+		remainingOps = remainingOps[2:]
+	}
+
+	var method transaction.MethodName
+	var body cbor.RawMessage
+	switch {
+	case len(remainingOps) == 2 &&
+		remainingOps[0].Type == OpTransfer &&
+		remainingOps[0].Account.SubAccount == nil &&
+		remainingOps[1].Type == OpTransfer &&
+		remainingOps[1].Account.SubAccount == nil:
+		// Staking transfer.
+		method = staking.MethodTransfer
+
+		if len(signWithAddr) == 0 {
+			signWithAddr = remainingOps[0].Account.Address
+		} else if remainingOps[0].Account.Address != signWithAddr {
+			return "", nil, fmt.Errorf("transfer from doesn't match signer (from: %s signer: %s)",
+				remainingOps[0].Account.Address,
+				signWithAddr,
+			)
+		}
+		amount, err := readOasisCurrencyNeg(remainingOps[0].Amount)
+		if err != nil {
+			return "", nil, fmt.Errorf("invalid transfer from amount: %w", err)
+		}
+
+		var to staking.Address
+		if err = to.UnmarshalText([]byte(remainingOps[1].Account.Address)); err != nil {
+			return "", nil, fmt.Errorf("invalid transfer to address (%s): %w", remainingOps[1].Account.Address, err)
+		}
+		amount2, err := readOasisCurrency(remainingOps[1].Amount)
+		if err != nil {
+			return "", nil, fmt.Errorf("invalid transfer to amount: %w", err)
+		}
+		if amount.Cmp(amount2) != 0 {
+			return "", nil, fmt.Errorf("transfer amounts differ between operations (from: %s to: %s)", amount, amount2)
+		}
+
+		body = cbor.Marshal(staking.Transfer{
+			To:     to,
+			Amount: *amount,
+		})
+	case len(remainingOps) == 1 &&
+		remainingOps[0].Type == OpBurn &&
+		remainingOps[0].Account.SubAccount == nil:
+		// Staking burn.
+		method = staking.MethodBurn
+
+		if len(signWithAddr) == 0 {
+			signWithAddr = remainingOps[0].Account.Address
+		} else if remainingOps[0].Account.Address != signWithAddr {
+			return "", nil, fmt.Errorf("burn from doesn't match signer (from: %s signer: %s)",
+				remainingOps[0].Account.Address,
+				signWithAddr,
+			)
+		}
+		amount, err := readOasisCurrencyNeg(remainingOps[0].Amount)
+		if err != nil {
+			return "", nil, fmt.Errorf("invalid burn from amount: %w", err)
+		}
+
+		body = cbor.Marshal(staking.Burn{
+			Amount: *amount,
+		})
+	case len(remainingOps) == 2 &&
+		remainingOps[0].Type == OpTransfer &&
+		remainingOps[0].Account.SubAccount == nil &&
+		remainingOps[1].Type == OpTransfer &&
+		remainingOps[1].Account.SubAccount != nil &&
+		remainingOps[1].Account.SubAccount.Address == SubAccountEscrow:
+		// Staking add escrow.
+		method = staking.MethodAddEscrow
+
+		if len(signWithAddr) == 0 {
+			signWithAddr = remainingOps[0].Account.Address
+		} else if remainingOps[0].Account.Address != signWithAddr {
+			return "", nil, fmt.Errorf("add escrow from doesn't match signer (from: %s signer: %s)",
+				remainingOps[0].Account.Address,
+				signWithAddr,
+			)
+		}
+		amount, err := readOasisCurrencyNeg(remainingOps[0].Amount)
+		if err != nil {
+			return "", nil, fmt.Errorf("invalid add escrow from amount: %w", err)
+		}
+
+		var escrowAccount staking.Address
+		if err = escrowAccount.UnmarshalText([]byte(remainingOps[1].Account.Address)); err != nil {
+			return "", nil, fmt.Errorf("invalid add escrow to address (%s): %w", remainingOps[1].Account.Address, err)
+		}
+		amount2, err := readOasisCurrency(remainingOps[1].Amount)
+		if err != nil {
+			return "", nil, fmt.Errorf("invalid add escrow to amount: %w", err)
+		}
+		if amount.Cmp(amount2) != 0 {
+			return "", nil, fmt.Errorf("add escrow amounts differ between operations (from: %s to: %s)", amount, amount2)
+		}
+
+		body = cbor.Marshal(staking.Escrow{
+			Account: escrowAccount,
+			Amount:  *amount,
+		})
+	case len(remainingOps) == 2 &&
+		remainingOps[0].Type == OpReclaimEscrow &&
+		remainingOps[1].Type == OpReclaimEscrow &&
+		remainingOps[1].Account.SubAccount != nil &&
+		remainingOps[1].Account.SubAccount.Address == SubAccountEscrow:
+		// Staking reclaim escrow.
+		method = staking.MethodReclaimEscrow
+
+		if len(signWithAddr) == 0 {
+			signWithAddr = remainingOps[0].Account.Address
+		} else if remainingOps[0].Account.Address != signWithAddr {
+			return "", nil, fmt.Errorf("reclaim escrow from doesn't match signer (from: %s signer: %s)",
+				remainingOps[0].Account.Address,
+				signWithAddr,
+			)
+		}
+		if remainingOps[0].Amount != nil {
+			return "", nil, fmt.Errorf("invalid reclaim escrow from amount (expected: nil): %w", err)
+		}
+
+		var escrowAccount staking.Address
+		if err = escrowAccount.UnmarshalText([]byte(remainingOps[1].Account.Address)); err != nil {
+			return "", nil, fmt.Errorf("invalid reclaim escrow address (%s): %w", remainingOps[1].Account.Address, err)
+		}
+		if remainingOps[1].Amount != nil {
+			return "", nil, fmt.Errorf("invalid reclaim escrow to amount (expected: nil): %w", err)
+		}
+		sharesRaw, ok := remainingOps[1].Metadata[ReclaimEscrowSharesKey]
+		if !ok {
+			return "", nil, fmt.Errorf("reclaim escrow shares metadata not specified")
+		}
+		sharesStr, ok := sharesRaw.(string)
+		if !ok {
+			return "", nil, fmt.Errorf("malformed reclaim escrow shares metadata")
+		}
+		var shares quantity.Quantity
+		if err = shares.UnmarshalText([]byte(sharesStr)); err != nil {
+			return "", nil, fmt.Errorf("malformed reclaim escrow shares metadata (%s): %w", sharesStr, err)
+		}
+
+		body = cbor.Marshal(staking.ReclaimEscrow{
+			Account: escrowAccount,
+			Shares:  shares,
+		})
+	default:
+		return "", nil, fmt.Errorf("not supported")
+	}
+
+	tx := &transaction.Transaction{
+		// Nonce is omitted and must be filled in by caller.
+		Fee:    fee,
+		Method: method,
+		Body:   body,
+	}
+	return signWithAddr, tx, nil
 }
 
 func newOperationToTransactionMapper(ops []*types.Operation) *operationToTransactionMapper {
