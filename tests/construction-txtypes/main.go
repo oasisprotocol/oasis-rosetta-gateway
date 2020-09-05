@@ -53,6 +53,11 @@ func main() {
 			Value:    "100",
 			Currency: services.OasisCurrency,
 		},
+		RelatedOperations: []*types.OperationIdentifier{
+			&types.OperationIdentifier{
+				Index: 0,
+			},
+		},
 	}
 	fee100 := &transaction.Fee{
 		Amount: *quantity.NewFromUint64(100),
@@ -85,6 +90,11 @@ func main() {
 			Amount: &types.Amount{
 				Value:    "1000",
 				Currency: services.OasisCurrency,
+			},
+			RelatedOperations: []*types.OperationIdentifier{
+				&types.OperationIdentifier{
+					Index: 2,
+				},
 			},
 		},
 	}
@@ -153,6 +163,11 @@ func main() {
 				Value:    "1000",
 				Currency: services.OasisCurrency,
 			},
+			RelatedOperations: []*types.OperationIdentifier{
+				&types.OperationIdentifier{
+					Index: 2,
+				},
+			},
 		},
 	}
 	txAddEscrow := &transaction.Transaction{
@@ -189,6 +204,11 @@ func main() {
 			},
 			Metadata: map[string]interface{}{
 				services.ReclaimEscrowSharesKey: "1000",
+			},
+			RelatedOperations: []*types.OperationIdentifier{
+				&types.OperationIdentifier{
+					Index: 2,
+				},
 			},
 		},
 	}

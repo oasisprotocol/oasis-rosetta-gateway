@@ -43,6 +43,11 @@ func main() {
 				Value:    "1000",
 				Currency: services.OasisCurrency,
 			},
+			RelatedOperations: []*types.OperationIdentifier{
+				&types.OperationIdentifier{
+					Index: 0,
+				},
+			},
 		},
 	}
 	fmt.Println("operations", common.DumpJSON(ops))

@@ -222,29 +222,7 @@ func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) (
 		return nil, err
 	}
 	client := staking.NewStakingClient(conn)
-	evts, err := client.GetEvents(ctx, height)
-	if err != nil {
-		return nil, err
-	}
-	// Change empty hashes to block hashes, as they belong to block events.
-	var gotBlkHash bool
-	var blkHash []byte
-	for _, e := range evts {
-		if e.TxHash.IsEmpty() {
-			if !gotBlkHash {
-				// First time, need to fetch the block hash.
-				conClient := consensus.NewConsensusClient(conn)
-				blk, err := conClient.GetBlock(ctx, height)
-				if err != nil {
-					return nil, err
-				}
-				blkHash = blk.Hash
-				gotBlkHash = true
-			}
-			copy(e.TxHash[:], blkHash)
-		}
-	}
-	return evts, nil
+	return client.GetEvents(ctx, height)
 }
 
 func (oc *grpcOasisClient) SubmitTxNoWait(ctx context.Context, tx *transaction.SignedTransaction) error {

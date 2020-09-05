@@ -572,5 +572,5 @@ In an operation https://www.rosetta-api.org/docs/models/Operation.html as compar
 the transaction's intent:
 
 * The `related_operations` field may be set.
-* The `status` field is set to `OK`.
+* The `status` field is set to `OK` for successful transactions and `Failed` for failed transactions.
 * The `metadata` field is absent.

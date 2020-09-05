@@ -8,14 +8,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/big"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
-	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
@@ -30,18 +28,6 @@ const OptionsIDKey = "id"
 // NonceKey is the name of the key in the Metadata map inside a
 // ConstructionMetadataResponse that specifies the next valid nonce.
 const NonceKey = "nonce"
-
-// FeeGasKey is the name of the key in the Metadata map inside a fee
-// operation that specifies the gas value in the transaction fee.
-// This is optional, and we use DefaultGas if it's absent.
-const FeeGasKey = "fee_gas"
-
-// ReclaimEscrowSharesKey is the name of the key in the Metadata map inside a
-// reclaim escrow operation that specifies the number of shares to reclaim.
-const ReclaimEscrowSharesKey = "reclaim_escrow_shares"
-
-// DefaultGas is the gas limit used in creating a transaction.
-const DefaultGas transaction.Gas = 10000
 
 // UnsignedTransaction is a transaction with the account that would sign it.
 type UnsignedTransaction struct {
@@ -306,8 +292,6 @@ func (s *constructionAPIService) ConstructionParse(
 	// before signing (after `/construction/payloads`) and before broadcast
 	// (after `/construction/combine`).
 
-	// TODO: Unify some of this verboseness with block.go. If you prefer.
-
 	rawTx, err := base64.StdEncoding.DecodeString(request.Transaction)
 	if err != nil {
 		loggerCons.Error("ConstructionParse: base64 decoding failed",
@@ -355,191 +339,17 @@ func (s *constructionAPIService) ConstructionParse(
 		from = ut.Signer
 	}
 
-	var ops []*types.Operation
-	var opIndex int64
-
-	if tx.Fee != nil && !tx.Fee.Amount.IsZero() {
-		feeAmountStr := tx.Fee.Amount.String()
-		ops = append(ops,
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex,
-				},
-				Type: OpTransfer,
-				Account: &types.AccountIdentifier{
-					Address: from,
-				},
-				Amount: &types.Amount{
-					Value:    "-" + feeAmountStr,
-					Currency: OasisCurrency,
-				},
-				Metadata: map[string]interface{}{
-					FeeGasKey: tx.Fee.Gas,
-				},
-			},
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex + 1,
-				},
-				Type: OpTransfer,
-				Account: &types.AccountIdentifier{
-					Address: StringFromAddress(staking.FeeAccumulatorAddress),
-				},
-				Amount: &types.Amount{
-					Value:    feeAmountStr,
-					Currency: OasisCurrency,
-				},
-			},
+	om := newTransactionToOperationMapper(&tx, from, "", []*types.Operation{})
+	om.EmitFeeOps()
+	if err := om.EmitTxOps(); err != nil {
+		loggerCons.Error("ConstructionParse: malformed transaction",
+			"err", err,
 		)
-		opIndex += 2
-	}
-
-	switch tx.Method {
-	case staking.MethodTransfer:
-		var body staking.Transfer
-		if err := cbor.Unmarshal(tx.Body, &body); err != nil {
-			loggerCons.Error("ConstructionParse: transfer unmarshal",
-				"body", tx.Body,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-		ops = append(ops,
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex,
-				},
-				Type: OpTransfer,
-				Account: &types.AccountIdentifier{
-					Address: from,
-				},
-				Amount: &types.Amount{
-					Value:    "-" + body.Amount.String(),
-					Currency: OasisCurrency,
-				},
-			},
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex + 1,
-				},
-				Type: OpTransfer,
-				Account: &types.AccountIdentifier{
-					Address: StringFromAddress(body.To),
-				},
-				Amount: &types.Amount{
-					Value:    body.Amount.String(),
-					Currency: OasisCurrency,
-				},
-			},
-		)
-	case staking.MethodBurn:
-		var body staking.Burn
-		if err := cbor.Unmarshal(tx.Body, &body); err != nil {
-			loggerCons.Error("ConstructionParse: burn unmarshal",
-				"body", tx.Body,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-		ops = append(ops,
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex,
-				},
-				Type: OpBurn,
-				Account: &types.AccountIdentifier{
-					Address: from,
-				},
-				Amount: &types.Amount{
-					Value:    "-" + body.Amount.String(),
-					Currency: OasisCurrency,
-				},
-			},
-		)
-	case staking.MethodAddEscrow:
-		var body staking.Escrow
-		if err := cbor.Unmarshal(tx.Body, &body); err != nil {
-			loggerCons.Error("ConstructionParse: add escrow unmarshal",
-				"body", tx.Body,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-		ops = append(ops,
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex,
-				},
-				Type: OpTransfer,
-				Account: &types.AccountIdentifier{
-					Address: from,
-				},
-				Amount: &types.Amount{
-					Value:    "-" + body.Amount.String(),
-					Currency: OasisCurrency,
-				},
-			},
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex + 1,
-				},
-				Type: OpTransfer,
-				Account: &types.AccountIdentifier{
-					Address: StringFromAddress(body.Account),
-					SubAccount: &types.SubAccountIdentifier{
-						Address: SubAccountEscrow,
-					},
-				},
-				Amount: &types.Amount{
-					Value:    body.Amount.String(),
-					Currency: OasisCurrency,
-				},
-			},
-		)
-	case staking.MethodReclaimEscrow:
-		var body staking.ReclaimEscrow
-		if err := cbor.Unmarshal(tx.Body, &body); err != nil {
-			loggerCons.Error("ConstructionParse: reclaim escrow unmarshal",
-				"body", tx.Body,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-		ops = append(ops,
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex,
-				},
-				Type: OpReclaimEscrow,
-				Account: &types.AccountIdentifier{
-					Address: from,
-				},
-			},
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex + 1,
-				},
-				Type: OpReclaimEscrow,
-				Account: &types.AccountIdentifier{
-					Address: StringFromAddress(body.Account),
-					SubAccount: &types.SubAccountIdentifier{
-						Address: SubAccountEscrow,
-					},
-				},
-				Metadata: map[string]interface{}{
-					ReclaimEscrowSharesKey: body.Shares.String(),
-				},
-			},
-		)
-	default:
-		loggerCons.Error("ConstructionParse: unmatched method",
-			"method", tx.Method,
-		)
-		return nil, ErrNotImplemented
+		return nil, ErrMalformedValue
 	}
 
 	resp := &types.ConstructionParseResponse{
-		Operations: ops,
+		Operations: om.Operations(),
 		Signers:    signers,
 		Metadata: map[string]interface{}{
 			NonceKey: tx.Nonce,
@@ -569,17 +379,18 @@ func (s *constructionAPIService) ConstructionPreprocess(
 	// be used by the caller (in a different execution environment) to call
 	// the `/construction/metadata` endpoint.
 
-	// Coincidentally the first operation comes from the sender, whether it's
-	// a fee transfer or any of the transaction types currently supported.
-	if len(request.Operations) < 1 {
-		loggerCons.Error("ConstructionPreprocess: missing operations")
-		return nil, ErrMalformedValue
+	om := newOperationToTransactionMapper(request.Operations)
+	signWithAddr, _, err := om.GetTransaction()
+	if err != nil {
+		loggerCons.Error("ConstructionPreprocess: bad operations",
+			"err", err,
+		)
+		return nil, NewDetailedError(ErrMalformedValue, err)
 	}
-	senderOp := request.Operations[0]
 
 	resp := &types.ConstructionPreprocessResponse{
 		Options: map[string]interface{}{
-			OptionsIDKey: senderOp.Account.Address,
+			OptionsIDKey: signWithAddr,
 		},
 	}
 
@@ -587,33 +398,6 @@ func (s *constructionAPIService) ConstructionPreprocess(
 	loggerCons.Debug("ConstructionPreprocess OK", "response", jr)
 
 	return resp, nil
-}
-
-func readCurrency(amount *types.Amount, currency *types.Currency, negative bool) (*quantity.Quantity, error) {
-	// TODO: Is it up to us to check other fields?
-	if amount.Currency.Symbol != currency.Symbol {
-		return nil, fmt.Errorf("wrong currency")
-	}
-	bi := new(big.Int)
-	if err := bi.UnmarshalText([]byte(amount.Value)); err != nil {
-		return nil, fmt.Errorf("bi UnmarshalText Value: %w", err)
-	}
-	if negative {
-		bi.Neg(bi)
-	}
-	q := quantity.NewQuantity()
-	if err := q.FromBigInt(bi); err != nil {
-		return nil, fmt.Errorf("q FromBigInt bi: %w", err)
-	}
-	return q, nil
-}
-
-func readOasisCurrency(amount *types.Amount) (*quantity.Quantity, error) {
-	return readCurrency(amount, OasisCurrency, false)
-}
-
-func readOasisCurrencyNeg(amount *types.Amount) (*quantity.Quantity, error) {
-	return readCurrency(amount, OasisCurrency, true)
 }
 
 // ConstructionPayloads implements the /construction/payloads endpoint.
@@ -651,290 +435,16 @@ func (s *constructionAPIService) ConstructionPayloads(
 	}
 	nonce := uint64(nonceF64)
 
-	// remainingOps is a slice that we shorten as we parse vaguely independent
-	// pieces. Notably, we look for a fee payment and then slice it off before
-	// we look for the rest of the transaction.
-	remainingOps := request.Operations
-	var signWithAddr string
-	feeGas := DefaultGas
-	feeAmount := quantity.NewQuantity()
-	var err error
-
-	if len(remainingOps) >= 2 &&
-		remainingOps[0].Type == OpTransfer &&
-		remainingOps[1].Type == OpTransfer &&
-		remainingOps[1].Account.Address == StringFromAddress(staking.FeeAccumulatorAddress) {
-		loggerCons.Debug("ConstructionPayloads: matched fee transfer")
-
-		signWithAddr = remainingOps[0].Account.Address
-		if remainingOps[0].Account.SubAccount != nil {
-			loggerCons.Error("ConstructionPayloads: fee transfer wrong from subaccount",
-				"sub_account", remainingOps[0].Account.SubAccount,
-				"expected_sub_account", nil,
-			)
-			return nil, ErrMalformedValue
-		}
-		feeAmount, err = readOasisCurrencyNeg(remainingOps[0].Amount)
-		if err != nil {
-			loggerCons.Error("ConstructionPayloads: fee transfer from amount",
-				"amount", remainingOps[0].Amount,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-		if feeGasRaw, ok := remainingOps[0].Metadata[FeeGasKey]; ok {
-			feeGasF64, ok := feeGasRaw.(float64)
-			if !ok {
-				loggerCons.Error("ConstructionPayloads: malformed fee transfer gas metadata")
-				return nil, ErrMalformedValue
-			}
-			feeGas = transaction.Gas(feeGasF64)
-		}
-
-		if remainingOps[1].Account.SubAccount != nil {
-			loggerCons.Error("ConstructionPayloads: fee transfer wrong to subaccount",
-				"sub_account", remainingOps[1].Account.SubAccount,
-				"expected_sub_account", nil,
-			)
-			return nil, ErrMalformedValue
-		}
-		feeAmount2, err := readOasisCurrency(remainingOps[1].Amount)
-		if err != nil {
-			loggerCons.Error("ConstructionPayloads: transfer to amount",
-				"amount", remainingOps[1].Amount,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-		if feeAmount.Cmp(feeAmount2) != 0 {
-			loggerCons.Error("ConstructionPayloads: fee transfer amounts differ",
-				"amount_from", feeAmount,
-				"amount_to", feeAmount2,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-
-		remainingOps = remainingOps[2:]
-	}
-
-	var method transaction.MethodName
-	var body cbor.RawMessage
-	switch {
-	case len(remainingOps) == 2 &&
-		remainingOps[0].Type == OpTransfer &&
-		remainingOps[0].Account.SubAccount == nil &&
-		remainingOps[1].Type == OpTransfer &&
-		remainingOps[1].Account.SubAccount == nil:
-		loggerCons.Debug("ConstructionPayloads: matched transfer")
-		method = staking.MethodTransfer
-
-		if len(signWithAddr) == 0 {
-			signWithAddr = remainingOps[0].Account.Address
-		} else if remainingOps[0].Account.Address != signWithAddr {
-			loggerCons.Error("ConstructionPayloads: transfer from doesn't match signer",
-				"from", remainingOps[0].Account.Address,
-				"signer", signWithAddr,
-			)
-			return nil, ErrMalformedValue
-		}
-		amount, err := readOasisCurrencyNeg(remainingOps[0].Amount)
-		if err != nil {
-			loggerCons.Error("ConstructionPayloads: transfer from amount",
-				"amount", remainingOps[0].Amount,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-
-		var to staking.Address
-		if err = to.UnmarshalText([]byte(remainingOps[1].Account.Address)); err != nil {
-			loggerCons.Error("ConstructionPayloads: transfer to UnmarshalText",
-				"addr", remainingOps[1].Account.Address,
-				"err", err,
-			)
-		}
-		amount2, err := readOasisCurrency(remainingOps[1].Amount)
-		if err != nil {
-			loggerCons.Error("ConstructionPayloads: transfer to amount",
-				"amount", remainingOps[1].Amount,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-		if amount.Cmp(amount2) != 0 {
-			loggerCons.Error("ConstructionPayloads: transfer amounts differ",
-				"amount_from", amount,
-				"amount_to", amount2,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-
-		body = cbor.Marshal(staking.Transfer{
-			To:     to,
-			Amount: *amount,
-		})
-	case len(remainingOps) == 1 &&
-		remainingOps[0].Type == OpBurn &&
-		remainingOps[0].Account.SubAccount == nil:
-		loggerCons.Debug("ConstructionPayloads: matched burn")
-		method = staking.MethodBurn
-
-		if len(signWithAddr) == 0 {
-			signWithAddr = remainingOps[0].Account.Address
-		} else if remainingOps[0].Account.Address != signWithAddr {
-			loggerCons.Error("ConstructionPayloads: burn from doesn't match signer",
-				"from", remainingOps[0].Account.Address,
-				"signer", signWithAddr,
-			)
-			return nil, ErrMalformedValue
-		}
-		amount, err := readOasisCurrencyNeg(remainingOps[0].Amount)
-		if err != nil {
-			loggerCons.Error("ConstructionPayloads: burn from amount",
-				"amount", remainingOps[0].Amount,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-
-		body = cbor.Marshal(staking.Burn{
-			Amount: *amount,
-		})
-	case len(remainingOps) == 2 &&
-		remainingOps[0].Type == OpTransfer &&
-		remainingOps[0].Account.SubAccount == nil &&
-		remainingOps[1].Type == OpTransfer &&
-		remainingOps[1].Account.SubAccount != nil &&
-		remainingOps[1].Account.SubAccount.Address == SubAccountEscrow:
-		loggerCons.Debug("ConstructionPayloads: matched add escrow")
-		method = staking.MethodAddEscrow
-
-		if len(signWithAddr) == 0 {
-			signWithAddr = remainingOps[0].Account.Address
-		} else if remainingOps[0].Account.Address != signWithAddr {
-			loggerCons.Error("ConstructionPayloads: add escrow owner doesn't match signer",
-				"from", remainingOps[0].Account.Address,
-				"signer", signWithAddr,
-			)
-			return nil, ErrMalformedValue
-		}
-		amount, err := readOasisCurrencyNeg(remainingOps[0].Amount)
-		if err != nil {
-			loggerCons.Error("ConstructionPayloads: add escrow owner amount",
-				"amount", remainingOps[0].Amount,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-
-		var escrowAccount staking.Address
-		if err = escrowAccount.UnmarshalText([]byte(remainingOps[1].Account.Address)); err != nil {
-			loggerCons.Error("ConstructionPayloads: add escrow escrow account UnmarshalText",
-				"addr", remainingOps[1].Account.Address,
-				"err", err,
-			)
-		}
-		amount2, err := readOasisCurrency(remainingOps[1].Amount)
-		if err != nil {
-			loggerCons.Error("ConstructionPayloads: add escrow escrow amount",
-				"amount", remainingOps[1].Amount,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-		if amount.Cmp(amount2) != 0 {
-			loggerCons.Error("ConstructionPayloads: add escrow amounts differ",
-				"amount_from", amount,
-				"amount_to", amount2,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-
-		body = cbor.Marshal(staking.Escrow{
-			Account: escrowAccount,
-			Amount:  *amount,
-		})
-	case len(remainingOps) == 2 &&
-		remainingOps[0].Type == OpReclaimEscrow &&
-		remainingOps[1].Type == OpReclaimEscrow &&
-		remainingOps[1].Account.SubAccount != nil &&
-		remainingOps[1].Account.SubAccount.Address == SubAccountEscrow:
-		loggerCons.Debug("ConstructionPayloads: matched reclaim escrow")
-		method = staking.MethodReclaimEscrow
-
-		if len(signWithAddr) == 0 {
-			signWithAddr = remainingOps[0].Account.Address
-		} else if remainingOps[0].Account.Address != signWithAddr {
-			loggerCons.Error("ConstructionPayloads: reclaim escrow owner doesn't match signer",
-				"from", remainingOps[0].Account.Address,
-				"signer", signWithAddr,
-			)
-			return nil, ErrMalformedValue
-		}
-		if remainingOps[0].Amount != nil {
-			loggerCons.Error("ConstructionPayloads: reclaim escrow wrong owner amount",
-				"owner_amount", remainingOps[0].Amount,
-				"expected_amount", nil,
-			)
-			return nil, ErrMalformedValue
-		}
-
-		var escrowAccount staking.Address
-		if err = escrowAccount.UnmarshalText([]byte(remainingOps[1].Account.Address)); err != nil {
-			loggerCons.Error("ConstructionPayloads: reclaim escrow escrow account UnmarshalText",
-				"addr", remainingOps[1].Account.Address,
-				"err", err,
-			)
-		}
-		if remainingOps[1].Amount != nil {
-			loggerCons.Error("ConstructionPayloads: reclaim escrow wrong escrow amount",
-				"escrow_amount", remainingOps[1].Amount,
-				"expected_amount", nil,
-			)
-			return nil, ErrMalformedValue
-		}
-		sharesRaw, ok := remainingOps[1].Metadata[ReclaimEscrowSharesKey]
-		if !ok {
-			loggerCons.Error("ConstructionPayloads: reclaim escrow shares metadata not given")
-			return nil, ErrMalformedValue
-		}
-		sharesStr, ok := sharesRaw.(string)
-		if !ok {
-			loggerCons.Error("ConstructionPayloads: malformed reclaim escrow shares metadata")
-			return nil, ErrMalformedValue
-		}
-		var shares quantity.Quantity
-		if err = shares.UnmarshalText([]byte(sharesStr)); err != nil {
-			loggerCons.Error("ConstructionPayloads: reclaim escrow shares UnmarshalText",
-				"shares", shares,
-				"err", err,
-			)
-			return nil, ErrMalformedValue
-		}
-
-		body = cbor.Marshal(staking.ReclaimEscrow{
-			Account: escrowAccount,
-			Shares:  shares,
-		})
-	default:
-		loggerCons.Error("ConstructionPayloads: unmatched operations list",
-			"operations", remainingOps,
+	om := newOperationToTransactionMapper(request.Operations)
+	signWithAddr, tx, err := om.GetTransaction()
+	if err != nil {
+		loggerCons.Error("ConstructionPayloads: bad operations",
+			"err", err,
 		)
-		return nil, ErrNotImplemented
+		return nil, NewDetailedError(ErrMalformedValue, err)
 	}
 
-	tx := transaction.Transaction{
-		Nonce: nonce,
-		Fee: &transaction.Fee{
-			Amount: *feeAmount,
-			Gas:    feeGas,
-		},
-		Method: method,
-		Body:   body,
-	}
+	tx.Nonce = nonce
 	ut := UnsignedTransaction{
 		Tx:     cbor.Marshal(tx),
 		Signer: signWithAddr,
