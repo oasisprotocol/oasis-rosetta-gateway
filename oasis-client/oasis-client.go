@@ -53,6 +53,10 @@ type OasisClient interface {
 	// GetTransactions returns Oasis consensus transactions at given height.
 	GetTransactionsWithResults(ctx context.Context, height int64) (*consensus.TransactionsWithResults, error)
 
+	// GetUnconfirmedTransactions returns a list of transactions currently in the local node's
+	// mempool. These have not yet been included in a block.
+	GetUnconfirmedTransactions(ctx context.Context) ([][]byte, error)
+
 	// GetStakingEvents returns Oasis staking events at given height.
 	GetStakingEvents(ctx context.Context, height int64) ([]*staking.Event, error)
 
@@ -214,6 +218,15 @@ func (oc *grpcOasisClient) GetTransactionsWithResults(ctx context.Context, heigh
 	}
 	client := consensus.NewConsensusClient(conn)
 	return client.GetTransactionsWithResults(ctx, height)
+}
+
+func (oc *grpcOasisClient) GetUnconfirmedTransactions(ctx context.Context) ([][]byte, error) {
+	conn, err := oc.connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	client := consensus.NewConsensusClient(conn)
+	return client.GetUnconfirmedTransactions(ctx)
 }
 
 func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) ([]*staking.Event, error) {

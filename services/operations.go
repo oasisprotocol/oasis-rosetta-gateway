@@ -67,7 +67,9 @@ func (d *transactionsDecoder) DecodeTx(rawTx []byte, result *results.Result) err
 	rosettaTx := d.getOrCreateTx(txHash)
 
 	// Decode events emitted by the transaction.
-	d.decodeEvents(rosettaTx, result.Events)
+	if result != nil {
+		d.decodeEvents(rosettaTx, result.Events)
+	}
 	// In case this transaction failed, there were no events emitted for the failing parts.
 	//
 	// Case 1:
@@ -81,10 +83,22 @@ func (d *transactionsDecoder) DecodeTx(rawTx []byte, result *results.Result) err
 	//   enough balance in the account. Failed fee operations need to be emitted here.
 	// * The transaction also failed in this case (since it got aborted when processing the fee),
 	//   and so we need to generate Failed operations.
-	if !result.IsSuccess() {
+	//
+	// Case 3:
+	// * Result is not provided because the transaction has not yet been executed. In this case
+	//   nothing has been emitted yet so we need to generate OK operations.
+	if result == nil || !result.IsSuccess() {
 		txSignerAddress := StringFromAddress(staking.NewAddress(sigTx.Signature.PublicKey))
 		o2t := newOperationToTransactionMapper(rosettaTx.Operations)
-		t2o := newTransactionToOperationMapper(&tx, txSignerAddress, OpStatusFailed, rosettaTx.Operations)
+
+		var status string
+		switch {
+		case result == nil:
+			status = OpStatusOK
+		default:
+			status = OpStatusFailed
+		}
+		t2o := newTransactionToOperationMapper(&tx, txSignerAddress, status, rosettaTx.Operations)
 
 		// If no fee operations were emitted, emit some now.
 		if !o2t.HasFee() {
