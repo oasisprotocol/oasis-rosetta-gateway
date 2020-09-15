@@ -1,6 +1,6 @@
 #!/usr/bin/env gmake
 
-OASIS_RELEASE := 20.9.2
+OASIS_RELEASE := 20.10
 ROSETTA_CLI_RELEASE := 0.4.0
 
 OASIS_GO ?= go
@@ -52,11 +52,11 @@ tests/oasis_core_release.tar.gz:
 
 tests/oasis-net-runner: tests/oasis_core_release.tar.gz
 	@printf "$(MAGENTA)*** Unpacking oasis-net-runner...$(OFF)\n"
-	@tar -xf $< -C tests oasis-net-runner
+	@tar -xf $< -C tests --strip-components=1 oasis_core_$(OASIS_RELEASE)_linux_amd64/oasis-net-runner
 
 tests/oasis-node: tests/oasis_core_release.tar.gz
 	@printf "$(MAGENTA)*** Unpacking oasis-node...$(OFF)\n"
-	@tar -xf $< -C tests oasis-node
+	@tar -xf $< -C tests --strip-components=1 oasis_core_$(OASIS_RELEASE)_linux_amd64/oasis-node
 
 tests/rosetta-cli.tar.gz:
 	@printf "$(MAGENTA)*** Downloading rosetta-cli release $(ROSETTA_CLI_RELEASE)...$(OFF)\n"
