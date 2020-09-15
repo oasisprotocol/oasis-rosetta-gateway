@@ -126,6 +126,12 @@ var (
 		Retriable: true,
 	}
 
+	ErrTransactionNotFound = &types.Error{
+		Code:      19,
+		Message:   "transaction not found",
+		Retriable: true,
+	}
+
 	ErrorList = []*types.Error{
 		ErrUnableToGetChainID,
 		ErrInvalidBlockchain,
@@ -145,6 +151,7 @@ var (
 		ErrUnableToGetNextNonce,
 		ErrMalformedValue,
 		ErrUnableToGetNodeStatus,
+		ErrTransactionNotFound,
 	}
 )
 

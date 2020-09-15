@@ -191,4 +191,29 @@ func main() {
 	}
 	fmt.Println("transaction hash", r6.TransactionIdentifier.Hash)
 	fmt.Println("transaction metadata", common.DumpJSON(r6.Metadata))
+
+	r7, re, err := rc.MempoolAPI.Mempool(context.Background(), &types.NetworkRequest{
+		NetworkIdentifier: ni,
+	})
+	if err != nil {
+		panic(err)
+	}
+	if re != nil {
+		panic(re)
+	}
+	fmt.Println("transactions in mempool", len(r7.TransactionIdentifiers))
+
+	for _, ti := range r7.TransactionIdentifiers {
+		tr, re, err := rc.MempoolAPI.MempoolTransaction(context.Background(), &types.MempoolTransactionRequest{
+			NetworkIdentifier:     ni,
+			TransactionIdentifier: ti,
+		})
+		if err != nil {
+			panic(err)
+		}
+		if re != nil {
+			panic(re)
+		}
+		fmt.Println("transaction from mempool", common.DumpJSON(tr))
+	}
 }
