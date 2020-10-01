@@ -76,6 +76,15 @@ func (s *networkAPIService) NetworkStatus(
 		})
 	}
 
+	var genesisBlockIdentifierHash string
+	if len(status.Consensus.GenesisHash) > 0 {
+		genesisBlockIdentifierHash = hex.EncodeToString(status.Consensus.GenesisHash)
+	} else {
+		// If the block is pruned, fill in a dummy value so that users can still get
+		// other network status instead of erroring out completely.
+		genesisBlockIdentifierHash = "not available"
+	}
+
 	resp := &types.NetworkStatusResponse{
 		CurrentBlockIdentifier: &types.BlockIdentifier{
 			Index: status.Consensus.LatestHeight,
@@ -84,7 +93,7 @@ func (s *networkAPIService) NetworkStatus(
 		CurrentBlockTimestamp: status.Consensus.LatestTime.UnixNano() / 1000000, // ms
 		GenesisBlockIdentifier: &types.BlockIdentifier{
 			Index: status.Consensus.GenesisHeight,
-			Hash:  hex.EncodeToString(status.Consensus.GenesisHash),
+			Hash:  genesisBlockIdentifierHash,
 		},
 		Peers: peers,
 	}
