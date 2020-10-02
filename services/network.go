@@ -85,6 +85,14 @@ func (s *networkAPIService) NetworkStatus(
 		genesisBlockIdentifierHash = "not available"
 	}
 
+	var oldestBlockIdentifier *types.BlockIdentifier
+	if len(status.Consensus.LastRetainedHash) > 0 {
+		oldestBlockIdentifier = &types.BlockIdentifier{
+			Index: status.Consensus.LastRetainedHeight,
+			Hash:  hex.EncodeToString(status.Consensus.LastRetainedHash),
+		}
+	}
+
 	resp := &types.NetworkStatusResponse{
 		CurrentBlockIdentifier: &types.BlockIdentifier{
 			Index: status.Consensus.LatestHeight,
@@ -95,6 +103,7 @@ func (s *networkAPIService) NetworkStatus(
 			Index: status.Consensus.GenesisHeight,
 			Hash:  genesisBlockIdentifierHash,
 		},
+		OldestBlockIdentifier: oldestBlockIdentifier,
 		Peers: peers,
 	}
 
