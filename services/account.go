@@ -16,6 +16,30 @@ import (
 // SubAccountEscrow specifies the name of the escrow subaccount.
 const SubAccountEscrow = "escrow"
 
+// ActiveBalanceKey is the name of the key in the Metadata map inside
+// the response of an account balance request for an escrow account.
+// The value in the Metadata map specifies how many token base units are in
+// the active escrow pool.
+const ActiveBalanceKey = "active_balance"
+
+// ActiveSharesKey is the name of the key in the Metadata map inside
+// the response of an account balance request for an escrow account.
+// The value in the Metadata map specifies how many shares are in
+// the active escrow pool.
+const ActiveSharesKey = "active_shares"
+
+// DebondingBalanceKey is the name of the key in the Metadata map inside
+// the response of an account balance request for an escrow account.
+// The value in the Metadata map specifies how many token base units are in
+// the debonding escrow pool.
+const DebondingBalanceKey = "debonding_balance"
+
+// DebondingSharesKey is the name of the key in the Metadata map inside
+// the response of an account balance request for an escrow account.
+// The value in the Metadata map specifies how many shares are in
+// the debonding escrow pool.
+const DebondingSharesKey = "debonding_shares"
+
 var loggerAcct = logging.GetLogger("services/account")
 
 type accountAPIService struct {
@@ -111,6 +135,11 @@ func (s *accountAPIService) AccountBalance(
 			return nil, ErrMalformedValue
 		}
 		value = total.String()
+
+		md[ActiveBalanceKey] = act.Escrow.Active.Balance.String()
+		md[ActiveSharesKey] = act.Escrow.Active.TotalShares.String()
+		md[DebondingBalanceKey] = act.Escrow.Debonding.Balance.String()
+		md[DebondingSharesKey] = act.Escrow.Debonding.TotalShares.String()
 	default:
 		// This shouldn't happen, since we already check for this above.
 		return nil, ErrMustSpecifySubAccount
