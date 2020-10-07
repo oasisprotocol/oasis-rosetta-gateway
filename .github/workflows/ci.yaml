@@ -17,12 +17,11 @@ jobs:
       - name: Lint code
         uses: golangci/golangci-lint-action@v2.2.0
         with:
-          version: v1.27
-
+          version: v1.31
 
   build:
     name: Build
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
