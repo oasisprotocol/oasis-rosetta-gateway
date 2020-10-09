@@ -9,7 +9,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go v0.3.3
 	github.com/dgraph-io/badger v1.6.2
 	github.com/oasisprotocol/ed25519 v0.0.0-20200819094954-65138ca6ec7c
-	github.com/oasisprotocol/oasis-core/go v0.2010.1
+	github.com/oasisprotocol/oasis-core/go v0.2011.1
 	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1
 	google.golang.org/grpc v1.32.0
 )
