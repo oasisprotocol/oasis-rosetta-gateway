@@ -14,7 +14,6 @@ OFF=$'\e[0m'
 OASIS_ROSETTA_GW="${ROOT}/../oasis-core-rosetta-gateway"
 OASIS_NET_RUNNER="${ROOT}/oasis-net-runner"
 OASIS_NODE="${ROOT}/oasis-node"
-FIXTURE_FILE="${ROOT}/test-fixture-config.json"
 
 # Destination address for test transfers.
 DST="oasis1qpkant39yhx59sagnzpc8v0sg8aerwa3jyqde3ge"
@@ -33,13 +32,23 @@ TEST_BASE_DIR=$(mktemp -d -t oasis-rosetta-XXXXXXXXXX)
 # The oasis-node binary must be in the path for the oasis-net-runner to find it.
 export PATH="${PATH}:${ROOT}"
 
-printf "${GRN}### Starting the test network...${OFF}\n"
-${OASIS_NET_RUNNER} \
-	--fixture.file ${FIXTURE_FILE} \
-	--basedir.no_temp_dir \
-	--basedir ${TEST_BASE_DIR} &
+# Helper function for running the test network.
+start_network() {
+	local height=$1
+	${OASIS_NET_RUNNER} \
+		--fixture.default.initial_height=${height} \
+		--fixture.default.setup_runtimes=false \
+		--fixture.default.num_entities=1 \
+		--fixture.default.epochtime_mock=true \
+		--basedir.no_temp_dir \
+		--basedir ${TEST_BASE_DIR} &
 
-export OASIS_NODE_GRPC_ADDR="unix:${TEST_BASE_DIR}/net-runner/network/client-0/internal.sock"
+}
+
+printf "${GRN}### Starting the test network...${OFF}\n"
+start_network 1
+
+export OASIS_NODE_GRPC_ADDR="unix:${TEST_BASE_DIR}/net-runner/network/validator-0/internal.sock"
 
 # How many nodes to wait for each epoch.
 NUM_NODES=1
@@ -174,7 +183,45 @@ go run ./construction-signing
 printf "${GRN}### Testing construction transaction types...${OFF}\n"
 go run ./construction-txtypes
 
-# Clean up after a successful run.
+# Now test if the initial block height change works on a new network.
+printf "${GRN}### Terminating existing test network...${OFF}\n"
+cleanup
 rm -rf "${TEST_BASE_DIR}"
+mkdir -p "${TEST_BASE_DIR}"
+
+printf "${GRN}### Starting new test network at non-1 height...${OFF}\n"
+start_network 123
+NONCE=0
+
+sleep 2
+
+advance_epoch 1
+wait_for_nodes
+
+printf "${GRN}### Starting the Rosetta gateway (again)...${OFF}\n"
+${OASIS_ROSETTA_GW} &
+
+sleep 3
+
+printf "${GRN}### Transferring tokens (1+)...${OFF}\n"
+gen_transfer "${TEST_BASE_DIR}/tx1.json" 1000 "${DST}"
+submit_tx "${TEST_BASE_DIR}/tx1.json"
+
+advance_epoch 2
+wait_for_nodes
+
+advance_epoch 3
+wait_for_nodes
+
+advance_epoch 4
+wait_for_nodes
+
+
+printf "${GRN}### Validating Rosetta gateway implementation (again)...${OFF}\n"
+go run ./check-prep
+./rosetta-cli --configuration-file rosetta-cli-config.json check:data --end 135
+
+# Clean up after a successful run.
+rm -rf "${TEST_BASE_DIR}" /tmp/rosetta-cli*
 
 printf "${GRN}### Tests finished.${OFF}\n"
