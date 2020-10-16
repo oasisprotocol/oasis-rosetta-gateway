@@ -104,7 +104,7 @@ func (s *networkAPIService) NetworkStatus(
 			Hash:  genesisBlockIdentifierHash,
 		},
 		OldestBlockIdentifier: oldestBlockIdentifier,
-		Peers: peers,
+		Peers:                 peers,
 	}
 
 	jr, _ := json.Marshal(resp)

@@ -21,9 +21,6 @@ import (
 // LatestHeight can be used as the height in queries to specify the latest height.
 const LatestHeight = consensus.HeightLatest
 
-// GenesisHeight is the height of the genesis block.
-const GenesisHeight = int64(1)
-
 // GrpcAddrEnvVar is the name of the environment variable that specifies
 // the gRPC host address of the Oasis node that the client should connect to.
 const GrpcAddrEnvVar = "OASIS_NODE_GRPC_ADDR"
@@ -98,6 +95,9 @@ type grpcOasisClient struct {
 
 	// Cached chain ID.
 	chainID string
+
+	// Cached genesis height.
+	genesisHeight int64
 }
 
 // connect() returns a gRPC connection to Oasis node via its internal socket.
@@ -133,6 +133,15 @@ func (oc *grpcOasisClient) connect(ctx context.Context) (*grpc.ClientConn, error
 		)
 		return nil, fmt.Errorf("failed to dial gRPC connection to '%s': %v", grpcAddr, err)
 	}
+
+	// Cache genesis height.
+	status, err := control.NewNodeControllerClient(oc.grpcConn).GetStatus(ctx)
+	if err != nil {
+		logger.Debug("Failed to get status from node", "err", err)
+		return nil, fmt.Errorf("failed to get status from node: %v", err)
+	}
+	oc.genesisHeight = status.Consensus.GenesisHeight
+
 	return oc.grpcConn, nil
 }
 
@@ -177,10 +186,14 @@ func (oc *grpcOasisClient) GetBlock(ctx context.Context, height int64) (*OasisBl
 		)
 		return nil, err
 	}
+
 	parentHeight := blk.Height - 1
 	var parentHash []byte
 	if parentHeight <= 0 {
-		parentHeight = GenesisHeight
+		parentHeight = 1
+	}
+	if parentHeight < oc.genesisHeight {
+		parentHeight = oc.genesisHeight
 	}
 
 	parentBlk, err := client.GetBlock(ctx, parentHeight)
@@ -204,7 +217,7 @@ func (oc *grpcOasisClient) GetLatestBlock(ctx context.Context) (*OasisBlock, err
 }
 
 func (oc *grpcOasisClient) GetGenesisBlock(ctx context.Context) (*OasisBlock, error) {
-	return oc.GetBlock(ctx, GenesisHeight)
+	return oc.GetBlock(ctx, oc.genesisHeight)
 }
 
 func (oc *grpcOasisClient) GetAccount(ctx context.Context, height int64, owner staking.Address) (*staking.Account, error) {
@@ -297,7 +310,11 @@ func (oc *grpcOasisClient) GetStatus(ctx context.Context) (*control.Status, erro
 		return nil, err
 	}
 	client := control.NewNodeControllerClient(conn)
-	return client.GetStatus(ctx)
+	status, err := client.GetStatus(ctx)
+	if err != nil {
+		oc.genesisHeight = status.Consensus.GenesisHeight
+	}
+	return status, err
 }
 
 // New creates a new Oasis gRPC client.
