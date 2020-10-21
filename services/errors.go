@@ -132,6 +132,12 @@ var (
 		Retriable: true,
 	}
 
+	ErrNotAvailableInOfflineMode = &types.Error{
+		Code:      20,
+		Message:   "not available in offline mode",
+		Retriable: false,
+	}
+
 	ErrorList = []*types.Error{
 		ErrUnableToGetChainID,
 		ErrInvalidBlockchain,
@@ -152,6 +158,7 @@ var (
 		ErrMalformedValue,
 		ErrUnableToGetNodeStatus,
 		ErrTransactionNotFound,
+		ErrNotAvailableInOfflineMode,
 	}
 )
 

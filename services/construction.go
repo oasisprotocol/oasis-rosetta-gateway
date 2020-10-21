@@ -53,6 +53,11 @@ func (s *constructionAPIService) ConstructionMetadata(
 	ctx context.Context,
 	request *types.ConstructionMetadataRequest,
 ) (*types.ConstructionMetadataResponse, *types.Error) {
+	if s.oasisClient == nil {
+		loggerCons.Error("ConstructionMetadata: not available in offline mode")
+		return nil, ErrNotAvailableInOfflineMode
+	}
+
 	terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
 	if terr != nil {
 		loggerCons.Error("ConstructionMetadata: network validation failed", "err", terr.Message)
@@ -111,6 +116,11 @@ func (s *constructionAPIService) ConstructionSubmit(
 	ctx context.Context,
 	request *types.ConstructionSubmitRequest,
 ) (*types.TransactionIdentifierResponse, *types.Error) {
+	if s.oasisClient == nil {
+		loggerCons.Error("ConstructionSubmit: not available in offline mode")
+		return nil, ErrNotAvailableInOfflineMode
+	}
+
 	terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
 	if terr != nil {
 		loggerCons.Error("ConstructionSubmit: network validation failed", "err", terr.Message)
