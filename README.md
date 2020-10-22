@@ -39,12 +39,31 @@ port that you want the gateway to listen on (default is 8080).
 
 Start the gateway simply by running the executable `oasis-core-rosetta-gateway`.
 
+## Offline mode
+
+The gateway supports an "offline" mode, which enables only a subset of the
+Construction API and nothing else, but doesn't require a connection to an
+Oasis node.
+
+To enable it, set the environment variable `OASIS_ROSETTA_GATEWAY_OFFLINE_MODE`
+to a non-empty value.  You must also set the environment variable
+`OASIS_ROSETTA_GATEWAY_OFFLINE_MODE_CHAIN_ID` to the [genesis document hash][5]
+of the network that you wish to construct transactions for.
+In online mode, the genesis document hash is fetched from the Oasis node, but
+in offline mode there is no connection to an Oasis node, so it has to be
+specified manually.
+
+The only supported endpoints in offline mode are:
+
+	/construction/{combine,derive,hash,parse,payloads,preprocess}
+
 
 [0]: https://github.com/oasisprotocol/oasis-core
 [1]: https://github.com/coinbase/rosetta-sdk-go
 [2]: https://github.com/coinbase/rosetta-cli
 [3]: https://www.rosetta-api.org/
 [4]: https://docs.oasis.dev/general/operator-docs/running-a-node
+[5]: https://docs.oasis.dev/oasis-core/high-level-components/index/genesis#genesis-documents-hash
 
 
 

@@ -7,6 +7,7 @@ ROOT="$(cd $(dirname $0); pwd -P)"
 cd "${ROOT}"
 
 # ANSI escape codes to brighten up the output.
+RED=$'\e[31;1m'
 GRN=$'\e[32;1m'
 OFF=$'\e[0m'
 
@@ -222,6 +223,33 @@ go run ./check-prep
 ./rosetta-cli --configuration-file rosetta-cli-config.json check:data --end 135
 
 # Clean up after a successful run.
+printf "${GRN}### Terminating existing test network...${OFF}\n"
+cleanup
 rm -rf "${TEST_BASE_DIR}" /tmp/rosetta-cli*
+mkdir -p "${TEST_BASE_DIR}"
 
+# Test offline mode.
+unset OASIS_NODE_GRPC_ADDR
+export OASIS_ROSETTA_GATEWAY_OFFLINE_MODE="1"
+export OASIS_ROSETTA_GATEWAY_OFFLINE_MODE_CHAIN_ID="test"
+
+printf "${GRN}### Starting the Rosetta gateway in offline mode...${OFF}\n"
+${OASIS_ROSETTA_GW} &
+
+sleep 1
+
+printf "${GRN}### Testing /construction/derive in offline mode...${OFF}\n"
+OUTPUT=$(curl -s -H 'Content-Type: application/json' -X POST \
+	-d '{"network_identifier":{"blockchain":"Oasis","network":"test"},"public_key":{"hex_bytes":"1234567890000000000000000000000000000000000000000000000000000000","curve_type":"edwards25519"}}' \
+	http://localhost:8080/construction/derive \
+	| \
+	fgrep 'oasis1qp7cahykn900m3pxsnq7xw0zgvcuul0wtcpyrlp6')
+if [[ "${OUTPUT}" != '{"address":"oasis1qp7cahykn900m3pxsnq7xw0zgvcuul0wtcpyrlp6"}' ]]; then
+	printf "${RED}FAILURE${OFF}\n"
+	exit 1
+else
+	printf "${GRN}SUCCESS${OFF}\n"
+fi
+
+rm -rf "${TEST_BASE_DIR}" /tmp/rosetta-cli*
 printf "${GRN}### Tests finished.${OFF}\n"
