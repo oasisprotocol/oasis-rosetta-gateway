@@ -1,6 +1,14 @@
-[![CI badge](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/workflows/Continuous%20integration/badge.svg)](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/actions?query=workflow%3A%22Continuous+integration%22+branch%3Amaster)
-
 # Oasis Gateway for Rosetta
+
+[![CI test status][github-ci-tests-badge]][github-ci-tests-link]
+[![CI lint status][github-ci-lint-badge]][github-ci-lint-link]
+
+<!-- markdownlint-disable line-length -->
+[github-ci-tests-badge]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/workflows/ci-tests/badge.svg
+[github-ci-tests-link]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/actions?query=workflow:ci-tests+branch:master
+[github-ci-lint-badge]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/workflows/ci-lint/badge.svg
+[github-ci-lint-link]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/actions?query=workflow:ci-lint+branch:master
+<!-- markdownlint-enable line-length -->
 
 This repository implements the [Rosetta] server for the [Oasis Network].
 See the [Rosetta API] docs for information on how to use the API.
