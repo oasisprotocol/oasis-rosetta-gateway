@@ -10,3 +10,5 @@ tests/oasis_core_release.tar.gz
 tests/oasis-core
 tests/rosetta-cli*
 tests/validator-data
+# Ignore Python cache directories.
+__pycache__/
