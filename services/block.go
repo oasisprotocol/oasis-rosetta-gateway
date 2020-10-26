@@ -69,7 +69,7 @@ func (s *blockAPIService) Block(
 	for i, res := range txsWithRes.Results {
 		rawTx := txsWithRes.Transactions[i]
 
-		if err := td.DecodeTx(rawTx, res); err != nil {
+		if err = td.DecodeTx(rawTx, res); err != nil {
 			loggerBlk.Warn("Block: malformed transaction",
 				"height", height,
 				"index", i,
@@ -125,7 +125,7 @@ func (s *blockAPIService) Block(
 
 // BlockTransaction implements the /block/transaction endpoint.
 // Note: we don't implement this, since we already return all transactions
-// in the /block endpoint reponse above.
+// in the /block endpoint response above.
 func (s *blockAPIService) BlockTransaction(
 	ctx context.Context,
 	request *types.BlockTransactionRequest,

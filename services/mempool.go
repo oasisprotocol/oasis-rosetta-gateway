@@ -43,7 +43,7 @@ func (s *mempoolAPIService) Mempool(
 		return nil, ErrUnableToGetTxns
 	}
 
-	var tids []*types.TransactionIdentifier
+	tids := make([]*types.TransactionIdentifier, 0, len(txs))
 	for _, tx := range txs {
 		tids = append(tids, &types.TransactionIdentifier{
 			Hash: hash.NewFromBytes(tx).String(),

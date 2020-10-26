@@ -54,11 +54,21 @@ func NewBlockchainRouter(oasisClient oasis.Client) (http.Handler, error) {
 		return nil, err
 	}
 
-	networkAPIController := server.NewNetworkAPIController(services.NewNetworkAPIService(oasisClient), asserter)
-	accountAPIController := server.NewAccountAPIController(services.NewAccountAPIService(oasisClient), asserter)
-	blockAPIController := server.NewBlockAPIController(services.NewBlockAPIService(oasisClient), asserter)
-	constructionAPIController := server.NewConstructionAPIController(services.NewConstructionAPIService(oasisClient), asserter)
-	mempoolAPIController := server.NewMempoolAPIController(services.NewMempoolAPIService(oasisClient), asserter)
+	networkAPIController := server.NewNetworkAPIController(
+		services.NewNetworkAPIService(oasisClient), asserter,
+	)
+	accountAPIController := server.NewAccountAPIController(
+		services.NewAccountAPIService(oasisClient), asserter,
+	)
+	blockAPIController := server.NewBlockAPIController(
+		services.NewBlockAPIService(oasisClient), asserter,
+	)
+	constructionAPIController := server.NewConstructionAPIController(
+		services.NewConstructionAPIService(oasisClient), asserter,
+	)
+	mempoolAPIController := server.NewMempoolAPIController(
+		services.NewMempoolAPIService(oasisClient), asserter,
+	)
 
 	return server.NewRouter(
 		networkAPIController,

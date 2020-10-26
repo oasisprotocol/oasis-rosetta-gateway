@@ -313,40 +313,41 @@ func (s *constructionAPIService) ConstructionParse(
 	var tx transaction.Transaction
 	var from string
 	var signers []string
-	if request.Signed {
-		var st transaction.SignedTransaction
-		if err = cbor.Unmarshal(rawTx, &st); err != nil {
+	switch request.Signed {
+	case true:
+		var signedTx transaction.SignedTransaction
+		if err = cbor.Unmarshal(rawTx, &signedTx); err != nil {
 			loggerCons.Error("ConstructionParse: signed transaction unmarshal",
 				"src", request.Transaction,
 				"err", err,
 			)
 			return nil, ErrMalformedValue
 		}
-		if err = st.Open(&tx); err != nil {
+		if err = signedTx.Open(&tx); err != nil {
 			loggerCons.Error("ConstructionParse: signed transaction open",
-				"signed_transaction", st,
+				"signed_transaction", signedTx,
 				"err", err,
 			)
 			return nil, ErrMalformedValue
 		}
-		from = StringFromAddress(staking.NewAddress(st.Signature.PublicKey))
+		from = StringFromAddress(staking.NewAddress(signedTx.Signature.PublicKey))
 		signers = []string{from}
-	} else {
-		var ut UnsignedTransaction
-		if err = cbor.Unmarshal(rawTx, &ut); err != nil {
+	case false:
+		var unsignedTx UnsignedTransaction
+		if err = cbor.Unmarshal(rawTx, &unsignedTx); err != nil {
 			loggerCons.Error("ConstructionParse: unsigned transaction unmarshal",
 				"src", request.Transaction,
 				"err", err,
 			)
 			return nil, ErrMalformedValue
 		}
-		if err = cbor.Unmarshal(ut.Tx, &tx); err != nil {
+		if err = cbor.Unmarshal(unsignedTx.Tx, &tx); err != nil {
 			loggerCons.Error("ConstructionParse: inner unsigned transaction unmarshal",
 				"err", err,
 			)
 			return nil, ErrMalformedValue
 		}
-		from = ut.Signer
+		from = unsignedTx.Signer
 	}
 
 	om := newTransactionToOperationMapper(&tx, from, "", []*types.Operation{})

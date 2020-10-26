@@ -12,7 +12,7 @@ import (
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/tests/common"
 )
 
-func main() {
+func main() { //nolint:funlen
 	testEntityAddress, testEntityKeyPair := common.TestEntity()
 	rs := keys.SignerEdwards25519{KeyPair: testEntityKeyPair}
 
@@ -115,14 +115,14 @@ func main() {
 		panic(fmt.Errorf("unsigned transaction parsed wrong"))
 	}
 
-	var sigs []*types.Signature
+	sigs := make([]*types.Signature, 0, len(r4.Payloads))
 	for i, sp := range r4.Payloads {
 		if sp.Address != testEntityAddress {
 			panic(i)
 		}
-		sig, err := rs.Sign(sp, sp.SignatureType)
-		if err != nil {
-			panic(err)
+		sig, err2 := rs.Sign(sp, sp.SignatureType)
+		if err2 != nil {
+			panic(err2)
 		}
 		sigs = append(sigs, sig)
 	}

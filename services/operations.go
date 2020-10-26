@@ -159,7 +159,12 @@ func (d *transactionsDecoder) decodeEvents(tx *types.Transaction, events []*resu
 	}
 }
 
-func appendOp(ops []*types.Operation, kind, acct string, subacct *types.SubAccountIdentifier, amt string) []*types.Operation {
+func appendOp(
+	ops []*types.Operation,
+	kind, acct string,
+	subacct *types.SubAccountIdentifier,
+	amt string,
+) []*types.Operation {
 	opIndex := int64(len(ops))
 	op := &types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
@@ -192,24 +197,78 @@ func appendOp(ops []*types.Operation, kind, acct string, subacct *types.SubAccou
 func (d *transactionsDecoder) decodeStakingEvent(tx *types.Transaction, ev *staking.Event) {
 	switch {
 	case ev.Transfer != nil:
-		tx.Operations = appendOp(tx.Operations, OpTransfer, StringFromAddress(ev.Transfer.From), nil, "-"+ev.Transfer.Amount.String())
-		tx.Operations = appendOp(tx.Operations, OpTransfer, StringFromAddress(ev.Transfer.To), nil, ev.Transfer.Amount.String())
+		tx.Operations = appendOp(
+			tx.Operations,
+			OpTransfer,
+			StringFromAddress(ev.Transfer.From),
+			nil,
+			"-"+ev.Transfer.Amount.String(),
+		)
+		tx.Operations = appendOp(
+			tx.Operations,
+			OpTransfer,
+			StringFromAddress(ev.Transfer.To),
+			nil,
+			ev.Transfer.Amount.String(),
+		)
 	case ev.Burn != nil:
-		tx.Operations = appendOp(tx.Operations, OpBurn, StringFromAddress(ev.Burn.Owner), nil, "-"+ev.Burn.Amount.String())
+		tx.Operations = appendOp(
+			tx.Operations,
+			OpBurn,
+			StringFromAddress(ev.Burn.Owner),
+			nil,
+			"-"+ev.Burn.Amount.String(),
+		)
 	case ev.Escrow != nil:
 		ee := ev.Escrow
 		switch {
 		case ee.Add != nil:
 			// Owner's general account -> escrow account.
-			tx.Operations = appendOp(tx.Operations, OpTransfer, StringFromAddress(ee.Add.Owner), nil, "-"+ee.Add.Amount.String())
-			tx.Operations = appendOp(tx.Operations, OpTransfer, StringFromAddress(ee.Add.Escrow), &types.SubAccountIdentifier{Address: SubAccountEscrow}, ee.Add.Amount.String())
+			tx.Operations = appendOp(
+				tx.Operations,
+				OpTransfer,
+				StringFromAddress(ee.Add.Owner),
+				nil,
+				"-"+ee.Add.Amount.String(),
+			)
+			tx.Operations = appendOp(
+				tx.Operations,
+				OpTransfer,
+				StringFromAddress(ee.Add.Escrow),
+				&types.SubAccountIdentifier{Address: SubAccountEscrow},
+				ee.Add.Amount.String(),
+			)
 		case ee.Take != nil:
-			tx.Operations = appendOp(tx.Operations, OpTransfer, StringFromAddress(ee.Take.Owner), &types.SubAccountIdentifier{Address: SubAccountEscrow}, "-"+ee.Take.Amount.String())
-			tx.Operations = appendOp(tx.Operations, OpTransfer, StringFromAddress(staking.CommonPoolAddress), nil, ee.Take.Amount.String())
+			tx.Operations = appendOp(
+				tx.Operations,
+				OpTransfer,
+				StringFromAddress(ee.Take.Owner),
+				&types.SubAccountIdentifier{Address: SubAccountEscrow},
+				"-"+ee.Take.Amount.String(),
+			)
+			tx.Operations = appendOp(
+				tx.Operations,
+				OpTransfer,
+				StringFromAddress(staking.CommonPoolAddress),
+				nil,
+				ee.Take.Amount.String(),
+			)
 		case ee.Reclaim != nil:
 			// Escrow account -> owner's general account.
-			tx.Operations = appendOp(tx.Operations, OpTransfer, StringFromAddress(ee.Reclaim.Escrow), &types.SubAccountIdentifier{Address: SubAccountEscrow}, "-"+ee.Reclaim.Amount.String())
-			tx.Operations = appendOp(tx.Operations, OpTransfer, StringFromAddress(ee.Reclaim.Owner), nil, ee.Reclaim.Amount.String())
+			tx.Operations = appendOp(
+				tx.Operations,
+				OpTransfer,
+				StringFromAddress(ee.Reclaim.Escrow),
+				&types.SubAccountIdentifier{Address: SubAccountEscrow},
+				"-"+ee.Reclaim.Amount.String(),
+			)
+			tx.Operations = appendOp(
+				tx.Operations,
+				OpTransfer,
+				StringFromAddress(ee.Reclaim.Owner),
+				nil,
+				ee.Reclaim.Amount.String(),
+			)
 		}
 	}
 }
@@ -279,7 +338,6 @@ func (m *operationToTransactionMapper) GetFee() (string, *transaction.Fee, error
 }
 
 func readCurrency(amount *types.Amount, currency *types.Currency, negative bool) (*quantity.Quantity, error) {
-	// TODO: Is it up to us to check other fields?
 	if amount.Currency.Symbol != currency.Symbol {
 		return nil, fmt.Errorf("wrong currency")
 	}

@@ -18,11 +18,12 @@ import (
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 )
 
-// LatestHeight can be used as the height in queries to specify the latest height.
+// LatestHeight can be used as the height in queries to specify the latest
+// height.
 const LatestHeight = consensus.HeightLatest
 
-// GrpcAddrEnvVar is the name of the environment variable that specifies
-// the gRPC host address of the Oasis node that the client should connect to.
+// GrpcAddrEnvVar is the name of the environment variable that specifies the
+// gRPC host address of the Oasis node that the client should connect to.
 const GrpcAddrEnvVar = "OASIS_NODE_GRPC_ADDR"
 
 var logger = logging.GetLogger("oasis")
@@ -30,8 +31,8 @@ var logger = logging.GetLogger("oasis")
 // Client can be used to query an Oasis node for information and to submit
 // transactions.
 type Client interface {
-	// GetChainID returns the network chain context, derived from the
-	// genesis document.
+	// GetChainID returns the network chain context, derived from the genesis
+	// document.
 	GetChainID(ctx context.Context) (string, error)
 
 	// GetBlock returns the Oasis block at given height.
@@ -47,19 +48,25 @@ type Client interface {
 	// at given height.
 	GetAccount(ctx context.Context, height int64, owner staking.Address) (*staking.Account, error)
 
-	// GetDelegations returns the staking active delegations where the given owner address
-	// is the delegator, as of given height.
-	GetDelegations(ctx context.Context, height int64, owner staking.Address) (map[staking.Address]*staking.Delegation, error)
+	// GetDelegations returns the staking active delegations where the given
+	// owner address is the delegator, as of given height.
+	GetDelegations(
+		ctx context.Context, height int64, owner staking.Address,
+	) (map[staking.Address]*staking.Delegation, error)
 
-	// GetDebondingDelegations returns the staking debonding delegations where the given owner address
-	// is the delegator, as of given height.
-	GetDebondingDelegations(ctx context.Context, height int64, owner staking.Address) (map[staking.Address][]*staking.DebondingDelegation, error)
+	// GetDebondingDelegations returns the staking debonding delegations where
+	// the given owner address is the delegator, as of given height.
+	GetDebondingDelegations(
+		ctx context.Context, height int64, owner staking.Address,
+	) (map[staking.Address][]*staking.DebondingDelegation, error)
 
 	// GetTransactions returns Oasis consensus transactions at given height.
-	GetTransactionsWithResults(ctx context.Context, height int64) (*consensus.TransactionsWithResults, error)
+	GetTransactionsWithResults(
+		ctx context.Context, height int64,
+	) (*consensus.TransactionsWithResults, error)
 
-	// GetUnconfirmedTransactions returns a list of transactions currently in the local node's
-	// mempool. These have not yet been included in a block.
+	// GetUnconfirmedTransactions returns a list of transactions currently in
+	// the local node's mempool. These have not yet been included in a block.
 	GetUnconfirmedTransactions(ctx context.Context) ([][]byte, error)
 
 	// GetStakingEvents returns Oasis staking events at given height.
@@ -68,8 +75,8 @@ type Client interface {
 	// SubmitTxNoWait submits the given signed transaction to the node.
 	SubmitTxNoWait(ctx context.Context, tx *transaction.SignedTransaction) error
 
-	// GetNextNonce returns the nonce that should be used when signing the
-	// next transaction for the given account address at given height.
+	// GetNextNonce returns the nonce that should be used when signing the next
+	// transaction for the given account address at given height.
 	GetNextNonce(ctx context.Context, addr staking.Address, height int64) (uint64, error)
 
 	// GetStatus returns the status overview of the node.
@@ -111,10 +118,10 @@ func (c *grpcClient) connect(ctx context.Context) (*grpc.ClientConn, error) {
 	if c.grpcConn != nil && c.grpcConn.GetState() != connectivity.Shutdown {
 		// Return existing connection.
 		return c.grpcConn, nil
-	} else {
-		// Connection needs to be re-established.
-		c.grpcConn = nil
 	}
+
+	// Connection needs to be re-established.
+	c.grpcConn = nil
 
 	// Get gRPC host address from environment variable.
 	grpcAddr := os.Getenv(GrpcAddrEnvVar)
@@ -232,7 +239,11 @@ func (c *grpcClient) GetAccount(ctx context.Context, height int64, owner staking
 	})
 }
 
-func (c *grpcClient) GetDelegations(ctx context.Context, height int64, owner staking.Address) (map[staking.Address]*staking.Delegation, error) {
+func (c *grpcClient) GetDelegations(
+	ctx context.Context,
+	height int64,
+	owner staking.Address,
+) (map[staking.Address]*staking.Delegation, error) {
 	conn, err := c.connect(ctx)
 	if err != nil {
 		return nil, err
@@ -244,7 +255,11 @@ func (c *grpcClient) GetDelegations(ctx context.Context, height int64, owner sta
 	})
 }
 
-func (c *grpcClient) GetDebondingDelegations(ctx context.Context, height int64, owner staking.Address) (map[staking.Address][]*staking.DebondingDelegation, error) {
+func (c *grpcClient) GetDebondingDelegations(
+	ctx context.Context,
+	height int64,
+	owner staking.Address,
+) (map[staking.Address][]*staking.DebondingDelegation, error) {
 	conn, err := c.connect(ctx)
 	if err != nil {
 		return nil, err
@@ -256,7 +271,10 @@ func (c *grpcClient) GetDebondingDelegations(ctx context.Context, height int64, 
 	})
 }
 
-func (c *grpcClient) GetTransactionsWithResults(ctx context.Context, height int64) (*consensus.TransactionsWithResults, error) {
+func (c *grpcClient) GetTransactionsWithResults(
+	ctx context.Context,
+	height int64,
+) (*consensus.TransactionsWithResults, error) {
 	conn, err := c.connect(ctx)
 	if err != nil {
 		return nil, err

@@ -112,7 +112,7 @@ func main() {
 	testEntityAddress, testEntityKeyPair := common.TestEntity()
 
 	constructionStorePath := path.Join(config.DataDirectory, "check-construction", types.Hash(config.Network))
-	if err := os.MkdirAll(constructionStorePath, 0o777); err != nil {
+	if err = os.MkdirAll(constructionStorePath, 0o777); err != nil {
 		panic(err)
 	}
 	db, err := badger.Open(badger.DefaultOptions(constructionStorePath))
@@ -130,15 +130,19 @@ func main() {
 			panic(err)
 		}
 		testEntityAccountIdentifier := types.AccountIdentifier{Address: testEntityAddress}
-		if err := txn.Set([]byte("balance/"+types.Hash(&testEntityAccountIdentifier)+"/"+types.Hash(services.OasisCurrency)), storageEncode(&struct {
-			Account *types.AccountIdentifier `json:"account"`
-			Amount  *types.Amount            `json:"amount"`
-			Block   *types.BlockIdentifier   `json:"block"`
-		}{
-			Account: &testEntityAccountIdentifier,
-			Amount:  common.TestEntityAmount,
-			},
-		})); err != nil {
+		if err := txn.Set(
+			[]byte("balance/"+types.Hash(&testEntityAccountIdentifier)+"/"+types.Hash(services.OasisCurrency)),
+			storageEncode(
+				&struct {
+					Account *types.AccountIdentifier `json:"account"`
+					Amount  *types.Amount            `json:"amount"`
+					Block   *types.BlockIdentifier   `json:"block"`
+				}{
+					Account: &testEntityAccountIdentifier,
+					Amount:  common.TestEntityAmount,
+				},
+			),
+		); err != nil {
 			panic(err)
 		}
 		return nil
