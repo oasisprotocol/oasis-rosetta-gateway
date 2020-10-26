@@ -18,7 +18,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
-	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
 )
 
 // OptionsIDKey is the name of the key in the Options map inside a
@@ -38,11 +38,11 @@ type UnsignedTransaction struct {
 var loggerCons = logging.GetLogger("services/construction")
 
 type constructionAPIService struct {
-	oasisClient oc.OasisClient
+	oasisClient oasis.Client
 }
 
 // NewConstructionAPIService creates a new instance of an ConstructionAPIService.
-func NewConstructionAPIService(oasisClient oc.OasisClient) server.ConstructionAPIServicer {
+func NewConstructionAPIService(oasisClient oasis.Client) server.ConstructionAPIServicer {
 	return &constructionAPIService{
 		oasisClient: oasisClient,
 	}
@@ -88,7 +88,7 @@ func (s *constructionAPIService) ConstructionMetadata(
 		return nil, ErrInvalidAccountAddress
 	}
 
-	nonce, err := s.oasisClient.GetNextNonce(ctx, owner, oc.LatestHeight)
+	nonce, err := s.oasisClient.GetNextNonce(ctx, owner, oasis.LatestHeight)
 	if err != nil {
 		loggerCons.Error("ConstructionMetadata: unable to get next nonce",
 			"account_id", owner.String(),

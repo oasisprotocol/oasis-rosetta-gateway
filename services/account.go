@@ -10,7 +10,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
-	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
 )
 
 // SubAccountEscrow specifies the name of the escrow subaccount.
@@ -55,11 +55,11 @@ const DebondingDelegationsKey = "debonding_delegations"
 var loggerAcct = logging.GetLogger("services/account")
 
 type accountAPIService struct {
-	oasisClient oc.OasisClient
+	oasisClient oasis.Client
 }
 
 // NewAccountAPIService creates a new instance of an AccountAPIService.
-func NewAccountAPIService(oasisClient oc.OasisClient) server.AccountAPIServicer {
+func NewAccountAPIService(oasisClient oasis.Client) server.AccountAPIServicer {
 	return &accountAPIService{
 		oasisClient: oasisClient,
 	}
@@ -76,7 +76,7 @@ func (s *accountAPIService) AccountBalance(
 		return nil, terr
 	}
 
-	height := oc.LatestHeight
+	height := oasis.LatestHeight
 
 	if request.BlockIdentifier != nil {
 		if request.BlockIdentifier.Index != nil {

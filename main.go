@@ -15,7 +15,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
 )
 
@@ -34,7 +34,7 @@ var logger = logging.GetLogger("oasis-rosetta-gateway")
 
 // NewBlockchainRouter returns a Mux http.Handler from a collection of
 // Rosetta service controllers.
-func NewBlockchainRouter(oasisClient oasis_client.OasisClient) (http.Handler, error) {
+func NewBlockchainRouter(oasisClient oasis.Client) (http.Handler, error) {
 	chainID, err := oasisClient.GetChainID(context.Background())
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func main() {
 	}
 
 	var chainID string
-	var oasisClient oasis_client.OasisClient
+	var oasisClient oasis.Client
 
 	// Check if we should run in offline mode.
 	var offlineMode bool
@@ -120,9 +120,9 @@ func main() {
 
 	if !offlineMode {
 		// Wait for the node socket to appear.
-		addr := os.Getenv(oasis_client.GrpcAddrEnvVar)
+		addr := os.Getenv(oasis.GrpcAddrEnvVar)
 		if addr == "" {
-			fmt.Fprintf(os.Stderr, "ERROR: %s environment variable missing\n", oasis_client.GrpcAddrEnvVar)
+			fmt.Fprintf(os.Stderr, "ERROR: %s environment variable missing\n", oasis.GrpcAddrEnvVar)
 			os.Exit(1)
 		}
 		if strings.HasPrefix(addr, "unix:") {
@@ -136,7 +136,7 @@ func main() {
 		}
 
 		// Prepare a new Oasis gRPC client.
-		oasisClient, err = oasis_client.New()
+		oasisClient, err = oasis.New()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "ERROR: Failed to prepare Oasis gRPC client: %v\n", err)
 			os.Exit(1)

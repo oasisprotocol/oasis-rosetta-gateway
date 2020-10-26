@@ -1,4 +1,4 @@
-package oasis_client
+package oasis
 
 import (
 	"context"
@@ -25,23 +25,23 @@ const LatestHeight = consensus.HeightLatest
 // the gRPC host address of the Oasis node that the client should connect to.
 const GrpcAddrEnvVar = "OASIS_NODE_GRPC_ADDR"
 
-var logger = logging.GetLogger("oasis-client")
+var logger = logging.GetLogger("oasis")
 
-// OasisClient can be used to query an Oasis node for information
-// and to submit transactions.
-type OasisClient interface {
+// Client can be used to query an Oasis node for information and to submit
+// transactions.
+type Client interface {
 	// GetChainID returns the network chain context, derived from the
 	// genesis document.
 	GetChainID(ctx context.Context) (string, error)
 
 	// GetBlock returns the Oasis block at given height.
-	GetBlock(ctx context.Context, height int64) (*OasisBlock, error)
+	GetBlock(ctx context.Context, height int64) (*Block, error)
 
 	// GetLatestBlock returns latest Oasis block.
-	GetLatestBlock(ctx context.Context) (*OasisBlock, error)
+	GetLatestBlock(ctx context.Context) (*Block, error)
 
 	// GetGenesisBlock returns the Oasis genesis block.
-	GetGenesisBlock(ctx context.Context) (*OasisBlock, error)
+	GetGenesisBlock(ctx context.Context) (*Block, error)
 
 	// GetAccount returns the Oasis staking account for given owner address
 	// at given height.
@@ -76,9 +76,9 @@ type OasisClient interface {
 	GetStatus(ctx context.Context) (*control.Status, error)
 }
 
-// OasisBlock is a representation of the Oasis block metadata,
-// converted to be more compatible with the Rosetta API.
-type OasisBlock struct {
+// Block is a representation of the Oasis block metadata, converted to be more
+// compatible with the Rosetta API.
+type Block struct {
 	Height       int64  // Block height.
 	Hash         string // Block hash.
 	Timestamp    int64  // UNIX time, converted to milliseconds.
@@ -86,8 +86,8 @@ type OasisBlock struct {
 	ParentHash   string // Hash of parent block.
 }
 
-// grpcOasisClient is an implementation of OasisClient using gRPC.
-type grpcOasisClient struct {
+// grpcClient is an implementation of Client using gRPC.
+type grpcClient struct {
 	sync.RWMutex
 
 	// Connection to an Oasis node's internal socket.
@@ -101,19 +101,19 @@ type grpcOasisClient struct {
 }
 
 // connect() returns a gRPC connection to Oasis node via its internal socket.
-// The connection is cached in the grpcOasisClient struct and re-established
+// The connection is cached in the grpcClient struct and re-established
 // automatically by this method if it gets shut down.
-func (oc *grpcOasisClient) connect(ctx context.Context) (*grpc.ClientConn, error) {
-	oc.Lock()
-	defer oc.Unlock()
+func (c *grpcClient) connect(ctx context.Context) (*grpc.ClientConn, error) {
+	c.Lock()
+	defer c.Unlock()
 
 	// Check if the existing connection is good.
-	if oc.grpcConn != nil && oc.grpcConn.GetState() != connectivity.Shutdown {
+	if c.grpcConn != nil && c.grpcConn.GetState() != connectivity.Shutdown {
 		// Return existing connection.
-		return oc.grpcConn, nil
+		return c.grpcConn, nil
 	} else {
 		// Connection needs to be re-established.
-		oc.grpcConn = nil
+		c.grpcConn = nil
 	}
 
 	// Get gRPC host address from environment variable.
@@ -125,7 +125,7 @@ func (oc *grpcOasisClient) connect(ctx context.Context) (*grpc.ClientConn, error
 	// Establish new gRPC connection.
 	var err error
 	logger.Debug("Establishing connection", "grpc_addr", grpcAddr)
-	oc.grpcConn, err = cmnGrpc.Dial(grpcAddr, grpc.WithInsecure())
+	c.grpcConn, err = cmnGrpc.Dial(grpcAddr, grpc.WithInsecure())
 	if err != nil {
 		logger.Debug("Failed to establish connection",
 			"grpc_addr", grpcAddr,
@@ -135,32 +135,32 @@ func (oc *grpcOasisClient) connect(ctx context.Context) (*grpc.ClientConn, error
 	}
 
 	// Cache genesis height.
-	status, err := control.NewNodeControllerClient(oc.grpcConn).GetStatus(ctx)
+	status, err := control.NewNodeControllerClient(c.grpcConn).GetStatus(ctx)
 	if err != nil {
 		logger.Debug("Failed to get status from node", "err", err)
 		return nil, fmt.Errorf("failed to get status from node: %v", err)
 	}
-	oc.genesisHeight = status.Consensus.GenesisHeight
+	c.genesisHeight = status.Consensus.GenesisHeight
 
-	return oc.grpcConn, nil
+	return c.grpcConn, nil
 }
 
-func (oc *grpcOasisClient) GetChainID(ctx context.Context) (string, error) {
+func (c *grpcClient) GetChainID(ctx context.Context) (string, error) {
 	// Return cached chain ID if we already have it.
-	oc.RLock()
-	cid := oc.chainID
-	oc.RUnlock()
+	c.RLock()
+	cid := c.chainID
+	c.RUnlock()
 	if cid != "" {
 		return cid, nil
 	}
 
-	conn, err := oc.connect(ctx)
+	conn, err := c.connect(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	oc.Lock()
-	defer oc.Unlock()
+	c.Lock()
+	defer c.Unlock()
 
 	client := consensus.NewConsensusClient(conn)
 	genesis, err := client.GetGenesisDocument(ctx)
@@ -168,12 +168,12 @@ func (oc *grpcOasisClient) GetChainID(ctx context.Context) (string, error) {
 		logger.Debug("GetChainID: failed to get genesis document", "err", err)
 		return "", err
 	}
-	oc.chainID = genesis.ChainContext()
-	return oc.chainID, nil
+	c.chainID = genesis.ChainContext()
+	return c.chainID, nil
 }
 
-func (oc *grpcOasisClient) GetBlock(ctx context.Context, height int64) (*OasisBlock, error) {
-	conn, err := oc.connect(ctx)
+func (c *grpcClient) GetBlock(ctx context.Context, height int64) (*Block, error) {
+	conn, err := c.connect(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -192,8 +192,8 @@ func (oc *grpcOasisClient) GetBlock(ctx context.Context, height int64) (*OasisBl
 	if parentHeight <= 0 {
 		parentHeight = 1
 	}
-	if parentHeight < oc.genesisHeight {
-		parentHeight = oc.genesisHeight
+	if parentHeight < c.genesisHeight {
+		parentHeight = c.genesisHeight
 	}
 
 	parentBlk, err := client.GetBlock(ctx, parentHeight)
@@ -203,7 +203,7 @@ func (oc *grpcOasisClient) GetBlock(ctx context.Context, height int64) (*OasisBl
 	parentHeight = parentBlk.Height
 	parentHash = parentBlk.Hash
 
-	return &OasisBlock{
+	return &Block{
 		Height:       blk.Height,
 		Hash:         hex.EncodeToString(blk.Hash),
 		Timestamp:    blk.Time.UnixNano() / 1000000, // ms
@@ -212,16 +212,16 @@ func (oc *grpcOasisClient) GetBlock(ctx context.Context, height int64) (*OasisBl
 	}, nil
 }
 
-func (oc *grpcOasisClient) GetLatestBlock(ctx context.Context) (*OasisBlock, error) {
-	return oc.GetBlock(ctx, consensus.HeightLatest)
+func (c *grpcClient) GetLatestBlock(ctx context.Context) (*Block, error) {
+	return c.GetBlock(ctx, consensus.HeightLatest)
 }
 
-func (oc *grpcOasisClient) GetGenesisBlock(ctx context.Context) (*OasisBlock, error) {
-	return oc.GetBlock(ctx, oc.genesisHeight)
+func (c *grpcClient) GetGenesisBlock(ctx context.Context) (*Block, error) {
+	return c.GetBlock(ctx, c.genesisHeight)
 }
 
-func (oc *grpcOasisClient) GetAccount(ctx context.Context, height int64, owner staking.Address) (*staking.Account, error) {
-	conn, err := oc.connect(ctx)
+func (c *grpcClient) GetAccount(ctx context.Context, height int64, owner staking.Address) (*staking.Account, error) {
+	conn, err := c.connect(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -232,8 +232,8 @@ func (oc *grpcOasisClient) GetAccount(ctx context.Context, height int64, owner s
 	})
 }
 
-func (oc *grpcOasisClient) GetDelegations(ctx context.Context, height int64, owner staking.Address) (map[staking.Address]*staking.Delegation, error) {
-	conn, err := oc.connect(ctx)
+func (c *grpcClient) GetDelegations(ctx context.Context, height int64, owner staking.Address) (map[staking.Address]*staking.Delegation, error) {
+	conn, err := c.connect(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -244,8 +244,8 @@ func (oc *grpcOasisClient) GetDelegations(ctx context.Context, height int64, own
 	})
 }
 
-func (oc *grpcOasisClient) GetDebondingDelegations(ctx context.Context, height int64, owner staking.Address) (map[staking.Address][]*staking.DebondingDelegation, error) {
-	conn, err := oc.connect(ctx)
+func (c *grpcClient) GetDebondingDelegations(ctx context.Context, height int64, owner staking.Address) (map[staking.Address][]*staking.DebondingDelegation, error) {
+	conn, err := c.connect(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -256,8 +256,8 @@ func (oc *grpcOasisClient) GetDebondingDelegations(ctx context.Context, height i
 	})
 }
 
-func (oc *grpcOasisClient) GetTransactionsWithResults(ctx context.Context, height int64) (*consensus.TransactionsWithResults, error) {
-	conn, err := oc.connect(ctx)
+func (c *grpcClient) GetTransactionsWithResults(ctx context.Context, height int64) (*consensus.TransactionsWithResults, error) {
+	conn, err := c.connect(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -265,8 +265,8 @@ func (oc *grpcOasisClient) GetTransactionsWithResults(ctx context.Context, heigh
 	return client.GetTransactionsWithResults(ctx, height)
 }
 
-func (oc *grpcOasisClient) GetUnconfirmedTransactions(ctx context.Context) ([][]byte, error) {
-	conn, err := oc.connect(ctx)
+func (c *grpcClient) GetUnconfirmedTransactions(ctx context.Context) ([][]byte, error) {
+	conn, err := c.connect(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -274,8 +274,8 @@ func (oc *grpcOasisClient) GetUnconfirmedTransactions(ctx context.Context) ([][]
 	return client.GetUnconfirmedTransactions(ctx)
 }
 
-func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) ([]*staking.Event, error) {
-	conn, err := oc.connect(ctx)
+func (c *grpcClient) GetStakingEvents(ctx context.Context, height int64) ([]*staking.Event, error) {
+	conn, err := c.connect(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -283,8 +283,8 @@ func (oc *grpcOasisClient) GetStakingEvents(ctx context.Context, height int64) (
 	return client.GetEvents(ctx, height)
 }
 
-func (oc *grpcOasisClient) SubmitTxNoWait(ctx context.Context, tx *transaction.SignedTransaction) error {
-	conn, err := oc.connect(ctx)
+func (c *grpcClient) SubmitTxNoWait(ctx context.Context, tx *transaction.SignedTransaction) error {
+	conn, err := c.connect(ctx)
 	if err != nil {
 		return err
 	}
@@ -292,8 +292,8 @@ func (oc *grpcOasisClient) SubmitTxNoWait(ctx context.Context, tx *transaction.S
 	return client.SubmitTxNoWait(ctx, tx)
 }
 
-func (oc *grpcOasisClient) GetNextNonce(ctx context.Context, addr staking.Address, height int64) (uint64, error) {
-	conn, err := oc.connect(ctx)
+func (c *grpcClient) GetNextNonce(ctx context.Context, addr staking.Address, height int64) (uint64, error) {
+	conn, err := c.connect(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -304,20 +304,20 @@ func (oc *grpcOasisClient) GetNextNonce(ctx context.Context, addr staking.Addres
 	})
 }
 
-func (oc *grpcOasisClient) GetStatus(ctx context.Context) (*control.Status, error) {
-	conn, err := oc.connect(ctx)
+func (c *grpcClient) GetStatus(ctx context.Context) (*control.Status, error) {
+	conn, err := c.connect(ctx)
 	if err != nil {
 		return nil, err
 	}
 	client := control.NewNodeControllerClient(conn)
 	status, err := client.GetStatus(ctx)
 	if err != nil {
-		oc.genesisHeight = status.Consensus.GenesisHeight
+		c.genesisHeight = status.Consensus.GenesisHeight
 	}
 	return status, err
 }
 
 // New creates a new Oasis gRPC client.
-func New() (OasisClient, error) {
-	return &grpcOasisClient{}, nil
+func New() (Client, error) {
+	return &grpcClient{}, nil
 }

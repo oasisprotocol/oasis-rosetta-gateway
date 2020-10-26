@@ -9,17 +9,17 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
-	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
 )
 
 var loggerBlk = logging.GetLogger("services/block")
 
 type blockAPIService struct {
-	oasisClient oc.OasisClient
+	oasisClient oasis.Client
 }
 
 // NewBlockAPIService creates a new instance of an AccountAPIService.
-func NewBlockAPIService(oasisClient oc.OasisClient) server.BlockAPIServicer {
+func NewBlockAPIService(oasisClient oasis.Client) server.BlockAPIServicer {
 	return &blockAPIService{
 		oasisClient: oasisClient,
 	}
@@ -36,7 +36,7 @@ func (s *blockAPIService) Block(
 		return nil, terr
 	}
 
-	height := oc.LatestHeight
+	height := oasis.LatestHeight
 
 	if request.BlockIdentifier != nil {
 		if request.BlockIdentifier.Index != nil {

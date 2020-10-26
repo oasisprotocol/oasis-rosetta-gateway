@@ -7,7 +7,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
-	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
 )
 
 // OasisBlockchainName is the name of the Oasis blockchain.
@@ -26,7 +26,7 @@ var OasisCurrency = &types.Currency{
 const OfflineModeChainIDEnvVar = "OASIS_ROSETTA_GATEWAY_OFFLINE_MODE_CHAIN_ID"
 
 // GetChainID returns the chain ID.
-func GetChainID(ctx context.Context, oc oc.OasisClient) (string, *types.Error) {
+func GetChainID(ctx context.Context, oc oasis.Client) (string, *types.Error) {
 	chainID, err := oc.GetChainID(ctx)
 	if err != nil {
 		return "", ErrUnableToGetChainID
@@ -35,9 +35,9 @@ func GetChainID(ctx context.Context, oc oc.OasisClient) (string, *types.Error) {
 }
 
 // ValidateNetworkIdentifier validates the network identifier and fetches the
-// chain ID either from the given OasisClient (if not nil), or from the env
-// variable (if oc is nil).
-func ValidateNetworkIdentifier(ctx context.Context, oc oc.OasisClient, ni *types.NetworkIdentifier) *types.Error {
+// chain ID either from the given Client (if not nil), or from the env variable
+// (if oc is nil).
+func ValidateNetworkIdentifier(ctx context.Context, oc oasis.Client, ni *types.NetworkIdentifier) *types.Error {
 	var chainID string
 
 	if oc != nil {
