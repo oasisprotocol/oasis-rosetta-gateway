@@ -10,6 +10,6 @@ require (
 	github.com/dgraph-io/badger v1.6.2
 	github.com/oasisprotocol/ed25519 v0.0.0-20200819094954-65138ca6ec7c
 	github.com/oasisprotocol/oasis-core/go v0.2011.3
-	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1
+	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.8
 	google.golang.org/grpc v1.32.0
 )
