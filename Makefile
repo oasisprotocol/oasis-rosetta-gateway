@@ -51,9 +51,11 @@ test: build tests/oasis-net-runner tests/oasis-node tests/rosetta-cli
 	@$(ECHO) "$(CYAN)*** Running tests...$(OFF)"
 	@$(ROOT)/tests/test.sh
 
+# Format code.
 fmt:
-	@$(ECHO) "$(CYAN)*** Formatting code...$(OFF)"
-	@$(GO) fmt ./...
+	@$(ECHO) "$(CYAN)*** Running Go formatters...$(OFF)"
+	@gofumpt -s -w .
+	@gofumports -w -local github.com/oasisprotocol/oasis-core-rosetta-gateway .
 
 # Lint code, commits and documentation.
 lint-targets := lint-go lint-docs lint-git lint-go-mod-tidy

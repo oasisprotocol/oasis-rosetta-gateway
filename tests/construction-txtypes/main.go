@@ -54,7 +54,7 @@ func main() {
 			Currency: services.OasisCurrency,
 		},
 		RelatedOperations: []*types.OperationIdentifier{
-			&types.OperationIdentifier{
+			{
 				Index: 0,
 			},
 		},
@@ -92,7 +92,7 @@ func main() {
 				Currency: services.OasisCurrency,
 			},
 			RelatedOperations: []*types.OperationIdentifier{
-				&types.OperationIdentifier{
+				{
 					Index: 2,
 				},
 			},
@@ -164,7 +164,7 @@ func main() {
 				Currency: services.OasisCurrency,
 			},
 			RelatedOperations: []*types.OperationIdentifier{
-				&types.OperationIdentifier{
+				{
 					Index: 2,
 				},
 			},
@@ -206,7 +206,7 @@ func main() {
 				services.ReclaimEscrowSharesKey: "1000",
 			},
 			RelatedOperations: []*types.OperationIdentifier{
-				&types.OperationIdentifier{
+				{
 					Index: 2,
 				},
 			},

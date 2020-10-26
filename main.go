@@ -44,7 +44,7 @@ func NewBlockchainRouter(oasisClient oasis.Client) (http.Handler, error) {
 		services.SupportedOperationTypes,
 		true,
 		[]*types.NetworkIdentifier{
-			&types.NetworkIdentifier{
+			{
 				Blockchain: services.OasisBlockchainName,
 				Network:    chainID,
 			},
@@ -75,7 +75,7 @@ func NewOfflineBlockchainRouter(chainID string) (http.Handler, error) {
 		services.SupportedOperationTypes,
 		true,
 		[]*types.NetworkIdentifier{
-			&types.NetworkIdentifier{
+			{
 				Blockchain: services.OasisBlockchainName,
 				Network:    chainID,
 			},

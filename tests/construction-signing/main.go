@@ -44,7 +44,7 @@ func main() {
 				Currency: services.OasisCurrency,
 			},
 			RelatedOperations: []*types.OperationIdentifier{
-				&types.OperationIdentifier{
+				{
 					Index: 0,
 				},
 			},

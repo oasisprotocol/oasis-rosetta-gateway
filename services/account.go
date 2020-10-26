@@ -184,7 +184,7 @@ func (s *accountAPIService) AccountBalance(
 			Hash:  blk.Hash,
 		},
 		Balances: []*types.Amount{
-			&types.Amount{
+			{
 				Value:    value,
 				Currency: OasisCurrency,
 			},

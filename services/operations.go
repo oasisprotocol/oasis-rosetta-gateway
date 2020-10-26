@@ -159,7 +159,7 @@ func (d *transactionsDecoder) decodeEvents(tx *types.Transaction, events []*resu
 	}
 }
 
-func appendOp(ops []*types.Operation, kind string, acct string, subacct *types.SubAccountIdentifier, amt string) []*types.Operation {
+func appendOp(ops []*types.Operation, kind, acct string, subacct *types.SubAccountIdentifier, amt string) []*types.Operation {
 	opIndex := int64(len(ops))
 	op := &types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
@@ -180,7 +180,7 @@ func appendOp(ops []*types.Operation, kind string, acct string, subacct *types.S
 	// Add related operation if it exists.
 	if opIndex >= 1 {
 		op.RelatedOperations = []*types.OperationIdentifier{
-			&types.OperationIdentifier{
+			{
 				Index: opIndex - 1,
 			},
 		}
@@ -533,7 +533,7 @@ func (m *transactionToOperationMapper) EmitFeeOps() {
 				Currency: OasisCurrency,
 			},
 			RelatedOperations: []*types.OperationIdentifier{
-				&types.OperationIdentifier{
+				{
 					Index: opIndex,
 				},
 			},
@@ -581,7 +581,7 @@ func (m *transactionToOperationMapper) EmitTxOps() error {
 					Currency: OasisCurrency,
 				},
 				RelatedOperations: []*types.OperationIdentifier{
-					&types.OperationIdentifier{
+					{
 						Index: opIndex,
 					},
 				},
@@ -647,7 +647,7 @@ func (m *transactionToOperationMapper) EmitTxOps() error {
 					Currency: OasisCurrency,
 				},
 				RelatedOperations: []*types.OperationIdentifier{
-					&types.OperationIdentifier{
+					{
 						Index: opIndex,
 					},
 				},
@@ -686,7 +686,7 @@ func (m *transactionToOperationMapper) EmitTxOps() error {
 					ReclaimEscrowSharesKey: body.Shares.String(),
 				},
 				RelatedOperations: []*types.OperationIdentifier{
-					&types.OperationIdentifier{
+					{
 						Index: opIndex,
 					},
 				},

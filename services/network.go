@@ -39,7 +39,7 @@ func (s *networkAPIService) NetworkList(
 
 	resp := &types.NetworkListResponse{
 		NetworkIdentifiers: []*types.NetworkIdentifier{
-			&types.NetworkIdentifier{
+			{
 				Blockchain: OasisBlockchainName,
 				Network:    chainID,
 			},
