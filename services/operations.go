@@ -305,11 +305,179 @@ func readOasisCurrencyNeg(amount *types.Amount) (*quantity.Quantity, error) {
 	return readCurrency(amount, OasisCurrency, true)
 }
 
+// getStakingTransfer decodes the Oasis staking transfer transaction from the
+// given Rosetta operations.
+func getStakingTransfer(ops []*types.Operation) (*staking.Transfer, error) {
+	amount, err := readOasisCurrencyNeg(ops[0].Amount)
+	if err != nil {
+		return nil, fmt.Errorf("invalid transfer from amount: %w", err)
+	}
+
+	var to staking.Address
+	if err = to.UnmarshalText([]byte(ops[1].Account.Address)); err != nil {
+		return nil, fmt.Errorf("invalid transfer's to address (%s): %w", ops[1].Account.Address, err)
+	}
+	amount2, err := readOasisCurrency(ops[1].Amount)
+	if err != nil {
+		return nil, fmt.Errorf("invalid transfer's to amount: %w", err)
+	}
+	if amount.Cmp(amount2) != 0 {
+		return nil, fmt.Errorf("transfer amounts differ between operations (from: %s to: %s)", amount, amount2)
+	}
+
+	xfer := staking.Transfer{
+		To:     to,
+		Amount: *amount,
+	}
+	return &xfer, nil
+}
+
+// getStakingBurn decodes the Oasis staking burn transaction from then given
+// Rosetta operations.
+func getStakingBurn(ops []*types.Operation) (*staking.Burn, error) {
+	amount, err := readOasisCurrencyNeg(ops[0].Amount)
+	if err != nil {
+		return nil, fmt.Errorf("invalid burn from amount: %w", err)
+	}
+
+	burn := staking.Burn{
+		Amount: *amount,
+	}
+	return &burn, nil
+}
+
+// getStakingAddEscrow decodes the Oasis staking add escrow transaction from the
+// given Rosetta operations.
+func getStakingAddEscrow(ops []*types.Operation) (*staking.Escrow, error) {
+	amount, err := readOasisCurrencyNeg(ops[0].Amount)
+	if err != nil {
+		return nil, fmt.Errorf("invalid add escrow from amount: %w", err)
+	}
+
+	var escrowAccount staking.Address
+	if err = escrowAccount.UnmarshalText([]byte(ops[1].Account.Address)); err != nil {
+		return nil, fmt.Errorf("invalid add escrow to address (%s): %w", ops[1].Account.Address, err)
+	}
+	amount2, err := readOasisCurrency(ops[1].Amount)
+	if err != nil {
+		return nil, fmt.Errorf("invalid add escrow to amount: %w", err)
+	}
+	if amount.Cmp(amount2) != 0 {
+		return nil, fmt.Errorf("add escrow amounts differ between operations (from: %s to: %s)", amount, amount2)
+	}
+
+	escrow := staking.Escrow{
+		Account: escrowAccount,
+		Amount:  *amount,
+	}
+	return &escrow, nil
+}
+
+// getStakingReclaimEscrow decodes the Oasis staking reclaim escrow transaction
+// from the given Rosetta operations.
+func getStakingReclaimEscrow(ops []*types.Operation) (*staking.ReclaimEscrow, error) {
+	if ops[0].Amount != nil {
+		return nil, fmt.Errorf("invalid reclaim escrow's from amount (expected: nil): %s", ops[0].Amount.Value)
+	}
+
+	var escrowAccount staking.Address
+	if err := escrowAccount.UnmarshalText([]byte(ops[1].Account.Address)); err != nil {
+		return nil, fmt.Errorf("invalid reclaim escrow address (%s): %w", ops[1].Account.Address, err)
+	}
+	if ops[1].Amount != nil {
+		return nil, fmt.Errorf("invalid reclaim escrow's to amount (expected: nil): %s", ops[1].Amount.Value)
+	}
+	sharesRaw, ok := ops[1].Metadata[ReclaimEscrowSharesKey]
+	if !ok {
+		return nil, fmt.Errorf("reclaim escrow shares metadata not specified")
+	}
+	sharesStr, ok := sharesRaw.(string)
+	if !ok {
+		return nil, fmt.Errorf("malformed reclaim escrow shares metadata")
+	}
+	var shares quantity.Quantity
+	if err := shares.UnmarshalText([]byte(sharesStr)); err != nil {
+		return nil, fmt.Errorf("malformed reclaim escrow shares metadata (%s): %w", sharesStr, err)
+	}
+
+	reclaim := staking.ReclaimEscrow{
+		Account: escrowAccount,
+		Shares:  shares,
+	}
+	return &reclaim, nil
+}
+
+// checkSigner ensures the operation's signer address matches the given signer
+// address (if specified) and returns the operation's signer address.
+func checkOpSignerAddress(op *types.Operation, signerAddr string) (string, error) {
+	switch {
+	case signerAddr == "":
+		return op.Account.Address, nil
+	case signerAddr != op.Account.Address:
+		return "", fmt.Errorf("operation's address doesn't match signer's address (op: %s signer: %s)",
+			op.Account.Address,
+			signerAddr,
+		)
+	default:
+		return signerAddr, nil
+	}
+}
+
+// TransactionKind is the kind of Oasis transaction.
+type TransactionKind int
+
+const (
+	KindUnknown              TransactionKind = 0
+	KindStakingTransfer      TransactionKind = 1
+	KindStakingBurn          TransactionKind = 2
+	KindStakingAddEscrow     TransactionKind = 3
+	KindStakingReclaimEscrow TransactionKind = 4
+)
+
+// decodeOpsToTransactionKind decodes the Oasis transaction kind from the given
+// Rosetta operations.
+func decodeOpsToTransactionKind(ops []*types.Operation) TransactionKind {
+	switch {
+	case len(ops) == 1:
+		switch {
+		case ops[0].Type == OpBurn &&
+			ops[0].Account.SubAccount == nil:
+			return KindStakingBurn
+		default:
+			return KindUnknown
+		}
+	case len(ops) == 2:
+		switch {
+		case ops[0].Type == OpTransfer &&
+			ops[0].Account.SubAccount == nil &&
+			ops[1].Type == OpTransfer:
+			switch {
+			case ops[1].Account.SubAccount == nil:
+				return KindStakingTransfer
+			case ops[1].Account.SubAccount != nil &&
+				ops[1].Account.SubAccount.Address == SubAccountEscrow:
+				return KindStakingAddEscrow
+			default:
+				return KindUnknown
+			}
+		case ops[0].Type == OpReclaimEscrow &&
+			ops[1].Type == OpReclaimEscrow &&
+			ops[1].Account.SubAccount != nil &&
+			ops[1].Account.SubAccount.Address == SubAccountEscrow:
+			return KindStakingReclaimEscrow
+		default:
+			return KindUnknown
+		}
+	default:
+		return KindUnknown
+	}
+}
+
 // GetTransaction decodes an Oasis transaction from given Rosetta operations.
 //
 // The method also returns the signer address.
 func (m *operationToTransactionMapper) GetTransaction() (string, *transaction.Transaction, error) {
-	signWithAddr, fee, err := m.GetFee()
+	signerAddr, fee, err := m.GetFee()
 	if err != nil {
 		return "", nil, fmt.Errorf("malformed fee operations: %w", err)
 	}
@@ -319,150 +487,46 @@ func (m *operationToTransactionMapper) GetTransaction() (string, *transaction.Tr
 		remainingOps = remainingOps[2:]
 	}
 
+	decodedTxnKind := decodeOpsToTransactionKind(remainingOps)
+
+	if decodedTxnKind != KindUnknown {
+		signerAddr, err = checkOpSignerAddress(remainingOps[0], signerAddr)
+		if err != nil {
+			return "", nil, err
+		}
+	}
+
 	var method transaction.MethodName
 	var body cbor.RawMessage
-	switch {
-	case len(remainingOps) == 2 &&
-		remainingOps[0].Type == OpTransfer &&
-		remainingOps[0].Account.SubAccount == nil &&
-		remainingOps[1].Type == OpTransfer &&
-		remainingOps[1].Account.SubAccount == nil:
-		// Staking transfer.
+	switch decodedTxnKind {
+	case KindStakingTransfer:
 		method = staking.MethodTransfer
-
-		if len(signWithAddr) == 0 {
-			signWithAddr = remainingOps[0].Account.Address
-		} else if remainingOps[0].Account.Address != signWithAddr {
-			return "", nil, fmt.Errorf("transfer from doesn't match signer (from: %s signer: %s)",
-				remainingOps[0].Account.Address,
-				signWithAddr,
-			)
+		transfer, err2 := getStakingTransfer(remainingOps)
+		if err2 != nil {
+			return "", nil, err2
 		}
-		amount, err := readOasisCurrencyNeg(remainingOps[0].Amount)
-		if err != nil {
-			return "", nil, fmt.Errorf("invalid transfer from amount: %w", err)
-		}
-
-		var to staking.Address
-		if err = to.UnmarshalText([]byte(remainingOps[1].Account.Address)); err != nil {
-			return "", nil, fmt.Errorf("invalid transfer to address (%s): %w", remainingOps[1].Account.Address, err)
-		}
-		amount2, err := readOasisCurrency(remainingOps[1].Amount)
-		if err != nil {
-			return "", nil, fmt.Errorf("invalid transfer to amount: %w", err)
-		}
-		if amount.Cmp(amount2) != 0 {
-			return "", nil, fmt.Errorf("transfer amounts differ between operations (from: %s to: %s)", amount, amount2)
-		}
-
-		body = cbor.Marshal(staking.Transfer{
-			To:     to,
-			Amount: *amount,
-		})
-	case len(remainingOps) == 1 &&
-		remainingOps[0].Type == OpBurn &&
-		remainingOps[0].Account.SubAccount == nil:
-		// Staking burn.
+		body = cbor.Marshal(transfer)
+	case KindStakingBurn:
 		method = staking.MethodBurn
-
-		if len(signWithAddr) == 0 {
-			signWithAddr = remainingOps[0].Account.Address
-		} else if remainingOps[0].Account.Address != signWithAddr {
-			return "", nil, fmt.Errorf("burn from doesn't match signer (from: %s signer: %s)",
-				remainingOps[0].Account.Address,
-				signWithAddr,
-			)
+		burn, err2 := getStakingBurn(remainingOps)
+		if err2 != nil {
+			return "", nil, err2
 		}
-		amount, err := readOasisCurrencyNeg(remainingOps[0].Amount)
-		if err != nil {
-			return "", nil, fmt.Errorf("invalid burn from amount: %w", err)
-		}
-
-		body = cbor.Marshal(staking.Burn{
-			Amount: *amount,
-		})
-	case len(remainingOps) == 2 &&
-		remainingOps[0].Type == OpTransfer &&
-		remainingOps[0].Account.SubAccount == nil &&
-		remainingOps[1].Type == OpTransfer &&
-		remainingOps[1].Account.SubAccount != nil &&
-		remainingOps[1].Account.SubAccount.Address == SubAccountEscrow:
-		// Staking add escrow.
+		body = cbor.Marshal(burn)
+	case KindStakingAddEscrow:
 		method = staking.MethodAddEscrow
-
-		if len(signWithAddr) == 0 {
-			signWithAddr = remainingOps[0].Account.Address
-		} else if remainingOps[0].Account.Address != signWithAddr {
-			return "", nil, fmt.Errorf("add escrow from doesn't match signer (from: %s signer: %s)",
-				remainingOps[0].Account.Address,
-				signWithAddr,
-			)
+		addEscrow, err2 := getStakingAddEscrow(remainingOps)
+		if err2 != nil {
+			return "", nil, err2
 		}
-		amount, err := readOasisCurrencyNeg(remainingOps[0].Amount)
-		if err != nil {
-			return "", nil, fmt.Errorf("invalid add escrow from amount: %w", err)
-		}
-
-		var escrowAccount staking.Address
-		if err = escrowAccount.UnmarshalText([]byte(remainingOps[1].Account.Address)); err != nil {
-			return "", nil, fmt.Errorf("invalid add escrow to address (%s): %w", remainingOps[1].Account.Address, err)
-		}
-		amount2, err := readOasisCurrency(remainingOps[1].Amount)
-		if err != nil {
-			return "", nil, fmt.Errorf("invalid add escrow to amount: %w", err)
-		}
-		if amount.Cmp(amount2) != 0 {
-			return "", nil, fmt.Errorf("add escrow amounts differ between operations (from: %s to: %s)", amount, amount2)
-		}
-
-		body = cbor.Marshal(staking.Escrow{
-			Account: escrowAccount,
-			Amount:  *amount,
-		})
-	case len(remainingOps) == 2 &&
-		remainingOps[0].Type == OpReclaimEscrow &&
-		remainingOps[1].Type == OpReclaimEscrow &&
-		remainingOps[1].Account.SubAccount != nil &&
-		remainingOps[1].Account.SubAccount.Address == SubAccountEscrow:
-		// Staking reclaim escrow.
+		body = cbor.Marshal(addEscrow)
+	case KindStakingReclaimEscrow:
 		method = staking.MethodReclaimEscrow
-
-		if len(signWithAddr) == 0 {
-			signWithAddr = remainingOps[0].Account.Address
-		} else if remainingOps[0].Account.Address != signWithAddr {
-			return "", nil, fmt.Errorf("reclaim escrow from doesn't match signer (from: %s signer: %s)",
-				remainingOps[0].Account.Address,
-				signWithAddr,
-			)
+		reclaimEscrow, err2 := getStakingReclaimEscrow(remainingOps)
+		if err2 != nil {
+			return "", nil, err2
 		}
-		if remainingOps[0].Amount != nil {
-			return "", nil, fmt.Errorf("invalid reclaim escrow from amount (expected: nil): %w", err)
-		}
-
-		var escrowAccount staking.Address
-		if err = escrowAccount.UnmarshalText([]byte(remainingOps[1].Account.Address)); err != nil {
-			return "", nil, fmt.Errorf("invalid reclaim escrow address (%s): %w", remainingOps[1].Account.Address, err)
-		}
-		if remainingOps[1].Amount != nil {
-			return "", nil, fmt.Errorf("invalid reclaim escrow to amount (expected: nil): %w", err)
-		}
-		sharesRaw, ok := remainingOps[1].Metadata[ReclaimEscrowSharesKey]
-		if !ok {
-			return "", nil, fmt.Errorf("reclaim escrow shares metadata not specified")
-		}
-		sharesStr, ok := sharesRaw.(string)
-		if !ok {
-			return "", nil, fmt.Errorf("malformed reclaim escrow shares metadata")
-		}
-		var shares quantity.Quantity
-		if err = shares.UnmarshalText([]byte(sharesStr)); err != nil {
-			return "", nil, fmt.Errorf("malformed reclaim escrow shares metadata (%s): %w", sharesStr, err)
-		}
-
-		body = cbor.Marshal(staking.ReclaimEscrow{
-			Account: escrowAccount,
-			Shares:  shares,
-		})
+		body = cbor.Marshal(reclaimEscrow)
 	default:
 		return "", nil, fmt.Errorf("not supported")
 	}
@@ -473,7 +537,7 @@ func (m *operationToTransactionMapper) GetTransaction() (string, *transaction.Tr
 		Method: method,
 		Body:   body,
 	}
-	return signWithAddr, tx, nil
+	return signerAddr, tx, nil
 }
 
 func newOperationToTransactionMapper(ops []*types.Operation) *operationToTransactionMapper {
