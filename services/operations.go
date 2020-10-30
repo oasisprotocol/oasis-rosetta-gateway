@@ -541,157 +541,189 @@ func (m *transactionToOperationMapper) EmitFeeOps() {
 	)
 }
 
+// emitTransferOps emits the required operations for the transfer transaction.
+func (m *transactionToOperationMapper) emitTransferOps() error {
+	var body staking.Transfer
+	if err := cbor.Unmarshal(m.tx.Body, &body); err != nil {
+		return fmt.Errorf("malformed body: %w", err)
+	}
+
+	opIndex := int64(len(m.ops))
+	m.ops = append(m.ops,
+		&types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: opIndex,
+			},
+			Type:   OpTransfer,
+			Status: m.status,
+			Account: &types.AccountIdentifier{
+				Address: m.txSignerAddress,
+			},
+			Amount: &types.Amount{
+				Value:    "-" + body.Amount.String(),
+				Currency: OasisCurrency,
+			},
+		},
+		&types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: opIndex + 1,
+			},
+			Type:   OpTransfer,
+			Status: m.status,
+			Account: &types.AccountIdentifier{
+				Address: StringFromAddress(body.To),
+			},
+			Amount: &types.Amount{
+				Value:    body.Amount.String(),
+				Currency: OasisCurrency,
+			},
+			RelatedOperations: []*types.OperationIdentifier{
+				{
+					Index: opIndex,
+				},
+			},
+		},
+	)
+
+	return nil
+}
+
+// emitBurnOps emits the required operations for the burn transaction.
+func (m *transactionToOperationMapper) emitBurnOps() error {
+	var body staking.Burn
+	if err := cbor.Unmarshal(m.tx.Body, &body); err != nil {
+		return fmt.Errorf("malformed body: %w", err)
+	}
+
+	opIndex := int64(len(m.ops))
+	m.ops = append(m.ops,
+		&types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: opIndex,
+			},
+			Type:   OpBurn,
+			Status: m.status,
+			Account: &types.AccountIdentifier{
+				Address: m.txSignerAddress,
+			},
+			Amount: &types.Amount{
+				Value:    "-" + body.Amount.String(),
+				Currency: OasisCurrency,
+			},
+		},
+	)
+
+	return nil
+}
+
+// emitAddEscrowOps emits the required operations for the add escrow
+// transaction.
+func (m *transactionToOperationMapper) emitAddEscrowOps() error {
+	var body staking.Escrow
+	if err := cbor.Unmarshal(m.tx.Body, &body); err != nil {
+		return fmt.Errorf("malformed body: %w", err)
+	}
+
+	opIndex := int64(len(m.ops))
+	m.ops = append(m.ops,
+		&types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: opIndex,
+			},
+			Type:   OpTransfer,
+			Status: m.status,
+			Account: &types.AccountIdentifier{
+				Address: m.txSignerAddress,
+			},
+			Amount: &types.Amount{
+				Value:    "-" + body.Amount.String(),
+				Currency: OasisCurrency,
+			},
+		},
+		&types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: opIndex + 1,
+			},
+			Type:   OpTransfer,
+			Status: m.status,
+			Account: &types.AccountIdentifier{
+				Address: StringFromAddress(body.Account),
+				SubAccount: &types.SubAccountIdentifier{
+					Address: SubAccountEscrow,
+				},
+			},
+			Amount: &types.Amount{
+				Value:    body.Amount.String(),
+				Currency: OasisCurrency,
+			},
+			RelatedOperations: []*types.OperationIdentifier{
+				{
+					Index: opIndex,
+				},
+			},
+		},
+	)
+
+	return nil
+}
+
+// emitReclaimEscrowOps emits the required operations for the reclaim escrow
+// transaction.
+func (m *transactionToOperationMapper) emitReclaimEscrowOps() error {
+	var body staking.ReclaimEscrow
+	if err := cbor.Unmarshal(m.tx.Body, &body); err != nil {
+		return fmt.Errorf("malformed body: %w", err)
+	}
+
+	opIndex := int64(len(m.ops))
+	m.ops = append(m.ops,
+		&types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: opIndex,
+			},
+			Type:   OpReclaimEscrow,
+			Status: m.status,
+			Account: &types.AccountIdentifier{
+				Address: m.txSignerAddress,
+			},
+		},
+		&types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: opIndex + 1,
+			},
+			Type:   OpReclaimEscrow,
+			Status: m.status,
+			Account: &types.AccountIdentifier{
+				Address: StringFromAddress(body.Account),
+				SubAccount: &types.SubAccountIdentifier{
+					Address: SubAccountEscrow,
+				},
+			},
+			Metadata: map[string]interface{}{
+				ReclaimEscrowSharesKey: body.Shares.String(),
+			},
+			RelatedOperations: []*types.OperationIdentifier{
+				{
+					Index: opIndex,
+				},
+			},
+		},
+	)
+
+	return nil
+}
+
 // EmitTxOps emits the required transaction-specific operations.
 func (m *transactionToOperationMapper) EmitTxOps() error {
-	opIndex := int64(len(m.ops))
-
 	switch m.tx.Method {
 	case staking.MethodTransfer:
-		var body staking.Transfer
-		if err := cbor.Unmarshal(m.tx.Body, &body); err != nil {
-			return fmt.Errorf("malformed body: %w", err)
-		}
-
-		m.ops = append(m.ops,
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex,
-				},
-				Type:   OpTransfer,
-				Status: m.status,
-				Account: &types.AccountIdentifier{
-					Address: m.txSignerAddress,
-				},
-				Amount: &types.Amount{
-					Value:    "-" + body.Amount.String(),
-					Currency: OasisCurrency,
-				},
-			},
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex + 1,
-				},
-				Type:   OpTransfer,
-				Status: m.status,
-				Account: &types.AccountIdentifier{
-					Address: StringFromAddress(body.To),
-				},
-				Amount: &types.Amount{
-					Value:    body.Amount.String(),
-					Currency: OasisCurrency,
-				},
-				RelatedOperations: []*types.OperationIdentifier{
-					{
-						Index: opIndex,
-					},
-				},
-			},
-		)
+		return m.emitTransferOps()
 	case staking.MethodBurn:
-		var body staking.Burn
-		if err := cbor.Unmarshal(m.tx.Body, &body); err != nil {
-			return fmt.Errorf("malformed body: %w", err)
-		}
-
-		m.ops = append(m.ops,
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex,
-				},
-				Type:   OpBurn,
-				Status: m.status,
-				Account: &types.AccountIdentifier{
-					Address: m.txSignerAddress,
-				},
-				Amount: &types.Amount{
-					Value:    "-" + body.Amount.String(),
-					Currency: OasisCurrency,
-				},
-			},
-		)
+		return m.emitBurnOps()
 	case staking.MethodAddEscrow:
-		var body staking.Escrow
-		if err := cbor.Unmarshal(m.tx.Body, &body); err != nil {
-			return fmt.Errorf("malformed body: %w", err)
-		}
-
-		m.ops = append(m.ops,
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex,
-				},
-				Type:   OpTransfer,
-				Status: m.status,
-				Account: &types.AccountIdentifier{
-					Address: m.txSignerAddress,
-				},
-				Amount: &types.Amount{
-					Value:    "-" + body.Amount.String(),
-					Currency: OasisCurrency,
-				},
-			},
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex + 1,
-				},
-				Type:   OpTransfer,
-				Status: m.status,
-				Account: &types.AccountIdentifier{
-					Address: StringFromAddress(body.Account),
-					SubAccount: &types.SubAccountIdentifier{
-						Address: SubAccountEscrow,
-					},
-				},
-				Amount: &types.Amount{
-					Value:    body.Amount.String(),
-					Currency: OasisCurrency,
-				},
-				RelatedOperations: []*types.OperationIdentifier{
-					{
-						Index: opIndex,
-					},
-				},
-			},
-		)
+		return m.emitAddEscrowOps()
 	case staking.MethodReclaimEscrow:
-		var body staking.ReclaimEscrow
-		if err := cbor.Unmarshal(m.tx.Body, &body); err != nil {
-			return fmt.Errorf("malformed body: %w", err)
-		}
-
-		m.ops = append(m.ops,
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex,
-				},
-				Type:   OpReclaimEscrow,
-				Status: m.status,
-				Account: &types.AccountIdentifier{
-					Address: m.txSignerAddress,
-				},
-			},
-			&types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: opIndex + 1,
-				},
-				Type:   OpReclaimEscrow,
-				Status: m.status,
-				Account: &types.AccountIdentifier{
-					Address: StringFromAddress(body.Account),
-					SubAccount: &types.SubAccountIdentifier{
-						Address: SubAccountEscrow,
-					},
-				},
-				Metadata: map[string]interface{}{
-					ReclaimEscrowSharesKey: body.Shares.String(),
-				},
-				RelatedOperations: []*types.OperationIdentifier{
-					{
-						Index: opIndex,
-					},
-				},
-			},
-		)
+		return m.emitReclaimEscrowOps()
 	default:
 		// Other transactions do not affect balances so they do not emit any operations.
 	}
