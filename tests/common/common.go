@@ -1,10 +1,12 @@
 package common
 
 import (
+	"context"
 	"crypto/sha512"
 	"encoding/json"
 	"fmt"
 
+	"github.com/coinbase/rosetta-sdk-go/client"
 	"github.com/coinbase/rosetta-sdk-go/keys"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/oasisprotocol/ed25519"
@@ -65,4 +67,21 @@ func unmarshalAddressOrPanic(addrText string) (addr api.Address) {
 		panic(err)
 	}
 	return
+}
+
+// NewRosettaClient returns a new Rosetta API Client for tests or panics.
+func NewRosettaClient() (*client.APIClient, *types.NetworkIdentifier) {
+	rClient := client.NewAPIClient(client.NewConfiguration("http://localhost:8080", "rosetta-sdk-go", nil))
+	nl, rErr, err := rClient.NetworkAPI.NetworkList(context.Background(), &types.MetadataRequest{})
+	if err != nil {
+		panic(err)
+	}
+	if rErr != nil {
+		panic(rErr)
+	}
+	if len(nl.NetworkIdentifiers) != 1 {
+		panic("there should only be one network identifier")
+	}
+	fmt.Println("network identifiers", DumpJSON(nl.NetworkIdentifiers))
+	return rClient, nl.NetworkIdentifiers[0]
 }

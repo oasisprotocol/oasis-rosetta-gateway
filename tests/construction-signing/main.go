@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/coinbase/rosetta-sdk-go/client"
 	"github.com/coinbase/rosetta-sdk-go/keys"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -52,20 +51,7 @@ func main() {
 	}
 	fmt.Println("operations", common.DumpJSON(ops))
 
-	rc := client.NewAPIClient(client.NewConfiguration("http://localhost:8080", "rosetta-sdk-go", nil))
-
-	r1, re, err := rc.NetworkAPI.NetworkList(context.Background(), &types.MetadataRequest{})
-	if err != nil {
-		panic(err)
-	}
-	if re != nil {
-		panic(re)
-	}
-	if len(r1.NetworkIdentifiers) != 1 {
-		panic("len(r1.NetworkIdentifiers)")
-	}
-	fmt.Println("network identifiers", common.DumpJSON(r1.NetworkIdentifiers))
-	ni := r1.NetworkIdentifiers[0]
+	rc, ni := common.NewRosettaClient()
 
 	r2, re, err := rc.ConstructionAPI.ConstructionPreprocess(context.Background(), &types.ConstructionPreprocessRequest{
 		NetworkIdentifier: ni,
