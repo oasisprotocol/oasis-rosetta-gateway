@@ -4,7 +4,6 @@
         "mr_signer": null
     },
     "network": {
-        "node_binary": "oasis-node",
         "consensus": {
             "backend": "",
             "params": {

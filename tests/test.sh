@@ -37,6 +37,7 @@ export PATH="${PATH}:${ROOT}"
 start_network() {
 	local height=$1
 	${OASIS_NET_RUNNER} \
+	    --fixture.default.node.binary ${OASIS_NODE} \
 		--fixture.default.initial_height=${height} \
 		--fixture.default.setup_runtimes=false \
 		--fixture.default.num_entities=1 \
