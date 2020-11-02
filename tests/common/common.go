@@ -15,7 +15,14 @@ import (
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
 )
 
-const DstAddress = "oasis1qpkant39yhx59sagnzpc8v0sg8aerwa3jyqde3ge"
+const DstAddressText = "oasis1qpkant39yhx59sagnzpc8v0sg8aerwa3jyqde3ge"
+
+var (
+	TestEntityAddressText, _ = TestEntity()
+
+	DstAddress        = unmarshalAddressOrPanic(DstAddressText)
+	TestEntityAddress = unmarshalAddressOrPanic(TestEntityAddressText)
+)
 
 func DumpJSON(v interface{}) string {
 	result, err := json.Marshal(v)
@@ -51,4 +58,11 @@ func TestEntity() (string, *keys.KeyPair) {
 	}
 
 	return address, kp
+}
+
+func unmarshalAddressOrPanic(addrText string) (addr api.Address) {
+	if err := addr.UnmarshalText([]byte(addrText)); err != nil {
+		panic(err)
+	}
+	return
 }

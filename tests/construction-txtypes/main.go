@@ -18,20 +18,14 @@ import (
 
 const dummyNonce = 3
 
-func main() {
-	testEntityAddress, _ := common.TestEntity()
-
-	var dstAddr api.Address
-	if err := dstAddr.UnmarshalText([]byte(common.DstAddress)); err != nil {
-		panic(err)
-	}
-	fee100Op1 := &types.Operation{
+var (
+	fee100Op1 = &types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: 0,
 		},
 		Type: services.OpTransfer,
 		Account: &types.AccountIdentifier{
-			Address: testEntityAddress,
+			Address: common.TestEntityAddressText,
 		},
 		Amount: &types.Amount{
 			Value:    "-100",
@@ -41,7 +35,7 @@ func main() {
 			services.FeeGasKey: 10001.,
 		},
 	}
-	fee100Op2 := &types.Operation{
+	fee100Op2 = &types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: 1,
 		},
@@ -59,11 +53,11 @@ func main() {
 			},
 		},
 	}
-	fee100 := &transaction.Fee{
+	fee100 = &transaction.Fee{
 		Amount: *quantity.NewFromUint64(100),
 		Gas:    10001,
 	}
-	opsTransfer := []*types.Operation{
+	opsTransfer = []*types.Operation{
 		fee100Op1,
 		fee100Op2,
 		{
@@ -72,7 +66,7 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: testEntityAddress,
+				Address: common.TestEntityAddressText,
 			},
 			Amount: &types.Amount{
 				Value:    "-1000",
@@ -85,7 +79,7 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: common.DstAddress,
+				Address: common.DstAddressText,
 			},
 			Amount: &types.Amount{
 				Value:    "1000",
@@ -98,16 +92,16 @@ func main() {
 			},
 		},
 	}
-	txTransfer := &transaction.Transaction{
+	txTransfer = &transaction.Transaction{
 		Nonce:  dummyNonce,
 		Fee:    fee100,
 		Method: api.MethodTransfer,
 		Body: cbor.Marshal(api.Transfer{
-			To:     dstAddr,
+			To:     common.DstAddress,
 			Amount: *quantity.NewFromUint64(1000),
 		}),
 	}
-	opsBurn := []*types.Operation{
+	opsBurn = []*types.Operation{
 		fee100Op1,
 		fee100Op2,
 		{
@@ -116,7 +110,7 @@ func main() {
 			},
 			Type: services.OpBurn,
 			Account: &types.AccountIdentifier{
-				Address: testEntityAddress,
+				Address: common.TestEntityAddressText,
 			},
 			Amount: &types.Amount{
 				Value:    "-1000",
@@ -124,7 +118,7 @@ func main() {
 			},
 		},
 	}
-	txBurn := &transaction.Transaction{
+	txBurn = &transaction.Transaction{
 		Nonce:  dummyNonce,
 		Fee:    fee100,
 		Method: api.MethodBurn,
@@ -132,7 +126,7 @@ func main() {
 			Amount: *quantity.NewFromUint64(1000),
 		}),
 	}
-	opsAddEscrow := []*types.Operation{
+	opsAddEscrow = []*types.Operation{
 		fee100Op1,
 		fee100Op2,
 		{
@@ -141,7 +135,7 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: testEntityAddress,
+				Address: common.TestEntityAddressText,
 			},
 			Amount: &types.Amount{
 				Value:    "-1000",
@@ -154,7 +148,7 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: common.DstAddress,
+				Address: common.DstAddressText,
 				SubAccount: &types.SubAccountIdentifier{
 					Address: services.SubAccountEscrow,
 				},
@@ -170,16 +164,16 @@ func main() {
 			},
 		},
 	}
-	txAddEscrow := &transaction.Transaction{
+	txAddEscrow = &transaction.Transaction{
 		Nonce:  dummyNonce,
 		Fee:    fee100,
 		Method: api.MethodAddEscrow,
 		Body: cbor.Marshal(api.Escrow{
-			Account: dstAddr,
+			Account: common.DstAddress,
 			Amount:  *quantity.NewFromUint64(1000),
 		}),
 	}
-	opsReclaimEscrow := []*types.Operation{
+	opsReclaimEscrow = []*types.Operation{
 		fee100Op1,
 		fee100Op2,
 		{
@@ -188,7 +182,7 @@ func main() {
 			},
 			Type: services.OpReclaimEscrow,
 			Account: &types.AccountIdentifier{
-				Address: testEntityAddress,
+				Address: common.TestEntityAddressText,
 			},
 		},
 		{
@@ -197,7 +191,7 @@ func main() {
 			},
 			Type: services.OpReclaimEscrow,
 			Account: &types.AccountIdentifier{
-				Address: common.DstAddress,
+				Address: common.DstAddressText,
 				SubAccount: &types.SubAccountIdentifier{
 					Address: services.SubAccountEscrow,
 				},
@@ -212,16 +206,18 @@ func main() {
 			},
 		},
 	}
-	txReclaimEscrow := &transaction.Transaction{
+	txReclaimEscrow = &transaction.Transaction{
 		Nonce:  dummyNonce,
 		Fee:    fee100,
 		Method: api.MethodReclaimEscrow,
 		Body: cbor.Marshal(api.ReclaimEscrow{
-			Account: dstAddr,
+			Account: common.DstAddress,
 			Shares:  *quantity.NewFromUint64(1000),
 		}),
 	}
+)
 
+func main() {
 	rc := client.NewAPIClient(client.NewConfiguration("http://localhost:8080", "rosetta-sdk-go", nil))
 
 	r1, re, err := rc.NetworkAPI.NetworkList(context.Background(), &types.MetadataRequest{})

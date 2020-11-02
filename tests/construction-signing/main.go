@@ -37,7 +37,7 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: common.DstAddress,
+				Address: common.DstAddressText,
 			},
 			Amount: &types.Amount{
 				Value:    "1000",
