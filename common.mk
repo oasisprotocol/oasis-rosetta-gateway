@@ -42,7 +42,7 @@ GIT_ORIGIN_REMOTE ?= origin
 RELEASE_BRANCH ?= master
 
 # Go binary to use for all Go commands.
-OASIS_GO ?= go
+export OASIS_GO ?= go
 
 # Go command prefix to use in all Go commands.
 GO := env -u GOPATH $(OASIS_GO)
