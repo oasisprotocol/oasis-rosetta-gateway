@@ -70,14 +70,12 @@ func (s *accountAPIService) AccountBalance(
 	ctx context.Context,
 	request *types.AccountBalanceRequest,
 ) (*types.AccountBalanceResponse, *types.Error) {
-	terr := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier)
-	if terr != nil {
-		loggerAcct.Error("AccountBalance: network validation failed", "err", terr.Message)
-		return nil, terr
+	if err := ValidateNetworkIdentifier(ctx, s.oasisClient, request.NetworkIdentifier); err != nil {
+		loggerAcct.Error("AccountBalance: network validation failed", "err", err.Message)
+		return nil, err
 	}
 
 	height := oasis.LatestHeight
-
 	if request.BlockIdentifier != nil {
 		if request.BlockIdentifier.Index != nil {
 			height = *request.BlockIdentifier.Index
@@ -93,16 +91,13 @@ func (s *accountAPIService) AccountBalance(
 	}
 
 	var owner staking.Address
-	err := owner.UnmarshalText([]byte(request.AccountIdentifier.Address))
-	if err != nil {
+	if err := owner.UnmarshalText([]byte(request.AccountIdentifier.Address)); err != nil {
 		loggerAcct.Error("AccountBalance: invalid account address", "err", err)
 		return nil, ErrInvalidAccountAddress
 	}
 
-	switch {
-	case request.AccountIdentifier.SubAccount == nil:
-	case request.AccountIdentifier.SubAccount.Address == SubAccountEscrow:
-	default:
+	if request.AccountIdentifier.SubAccount != nil &&
+		request.AccountIdentifier.SubAccount.Address != SubAccountEscrow {
 		loggerAcct.Error("AccountBalance: invalid subaccount", "sub_account", request.AccountIdentifier.SubAccount)
 		return nil, ErrMustSpecifySubAccount
 	}
@@ -110,7 +105,7 @@ func (s *accountAPIService) AccountBalance(
 	act, err := s.oasisClient.GetAccount(ctx, height, owner)
 	if err != nil {
 		loggerAcct.Error("AccountBalance: unable to get account",
-			"account_id", owner.String(),
+			"account_address", owner.String(),
 			"height", height,
 			"err", err,
 		)
@@ -130,10 +125,10 @@ func (s *accountAPIService) AccountBalance(
 	md[NonceKey] = act.General.Nonce
 
 	var value string
-	switch {
-	case request.AccountIdentifier.SubAccount == nil:
+
+	if request.AccountIdentifier.SubAccount == nil {
 		value = act.General.Balance.String()
-	case request.AccountIdentifier.SubAccount.Address == SubAccountEscrow:
+	} else {
 		// Total is Active + Debonding.
 		total := act.Escrow.Active.Balance.Clone()
 		if err := total.Add(&act.Escrow.Debonding.Balance); err != nil {
@@ -173,9 +168,6 @@ func (s *accountAPIService) AccountBalance(
 			return nil, ErrUnableToGetAccount
 		}
 		md[DebondingDelegationsKey] = debondingDelegations
-	default:
-		// This shouldn't happen, since we already check for this above.
-		return nil, ErrMustSpecifySubAccount
 	}
 
 	resp := &types.AccountBalanceResponse{
@@ -192,9 +184,9 @@ func (s *accountAPIService) AccountBalance(
 		Metadata: md,
 	}
 
-	jr, _ := json.Marshal(resp)
+	jsonResp, _ := json.Marshal(resp)
 	loggerAcct.Debug("AccountBalance OK",
-		"response", jr,
+		"response", jsonResp,
 		"account_id", owner.String(),
 		"sub_account", request.AccountIdentifier.SubAccount,
 	)
