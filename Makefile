@@ -25,6 +25,10 @@ build:
 	@$(ECHO) "$(CYAN)*** Building...$(OFF)"
 	@$(GO) build
 
+build-tests:
+	@$(ECHO) "$(CYAN)*** Building tests...$(OFF)"
+	@$(GO) build ./tests/...
+
 tests/oasis_core_release.tar.gz:
 	@$(ECHO) "$(MAGENTA)*** Downloading oasis-core release $(OASIS_RELEASE)...$(OFF)"
 	@$(DOWNLOAD) $@ https://github.com/oasisprotocol/oasis-core/releases/download/v$(OASIS_RELEASE)/oasis_core_$(OASIS_RELEASE)_linux_amd64.tar.gz
@@ -47,7 +51,7 @@ tests/rosetta-cli: tests/rosetta-cli.tar.gz
 	@cd tests/rosetta-cli-$(ROSETTA_CLI_RELEASE) && go build
 	@cp tests/rosetta-cli-$(ROSETTA_CLI_RELEASE)/rosetta-cli tests/.
 
-test: build tests/oasis-net-runner tests/oasis-node tests/rosetta-cli
+test: build build-tests tests/oasis-net-runner tests/oasis-node tests/rosetta-cli
 	@$(ECHO) "$(CYAN)*** Running tests...$(OFF)"
 	@$(ROOT)/tests/test.sh
 
@@ -92,7 +96,7 @@ nuke: clean
 
 # List of targets that are not actual files.
 .PHONY: \
-	all build \
+	all build build-tests \
 	fmt \
 	$(lint-targets) lint \
 	test \
