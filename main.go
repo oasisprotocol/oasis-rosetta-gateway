@@ -90,7 +90,26 @@ func NewOfflineBlockchainRouter(chainID string) (http.Handler, error) {
 	return server.NewRouter(constructionAPIController), nil
 }
 
+// Return the value of the given environment variable or exit if it is
+// empty (or unset).
+func getEnvVarOrExit(name string) string {
+	value := os.Getenv(name)
+	if value == "" {
+		logger.Error("environment variable missing",
+			"name", name,
+		)
+		os.Exit(1)
+	}
+	return value
+}
+
 func main() {
+	// Initialize logging.
+	if err := logging.Initialize(os.Stdout, logging.FmtLogfmt, logging.LevelDebug, nil); err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Unable to initialize logging: %v\n", err)
+		os.Exit(1)
+	}
+
 	// Get server port from environment variable or use the default.
 	port := os.Getenv(GatewayPortEnvVar)
 	if port == "" {
@@ -98,7 +117,10 @@ func main() {
 	}
 	nPort, err := strconv.Atoi(port)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: Malformed %s environment variable: %v\n", GatewayPortEnvVar, err)
+		logger.Error("malformed environment variable",
+			"err", err,
+			"name", GatewayPortEnvVar,
+		)
 		os.Exit(1)
 	}
 
@@ -106,46 +128,43 @@ func main() {
 	var oasisClient oasis.Client
 
 	// Check if we should run in offline mode.
-	var offlineMode bool
-	if os.Getenv(OfflineModeEnvVar) != "" {
-		offlineMode = true
+	offlineMode := os.Getenv(OfflineModeEnvVar) != ""
 
-		// Also get chain ID.
-		chainID = os.Getenv(services.OfflineModeChainIDEnvVar)
-		if chainID == "" {
-			fmt.Fprintf(os.Stderr, "ERROR: %s environment variable missing\n", services.OfflineModeChainIDEnvVar)
-			os.Exit(1)
-		}
-	}
+	switch offlineMode {
+	case true:
+		// Get chain ID.
+		chainID = getEnvVarOrExit(services.OfflineModeChainIDEnvVar)
 
-	if !offlineMode {
-		// Wait for the node socket to appear.
-		addr := os.Getenv(oasis.GrpcAddrEnvVar)
-		if addr == "" {
-			fmt.Fprintf(os.Stderr, "ERROR: %s environment variable missing\n", oasis.GrpcAddrEnvVar)
-			os.Exit(1)
-		}
+	case false:
+		// Get node's Unix socket.
+		addr := getEnvVarOrExit(oasis.GrpcAddrEnvVar)
+
 		if strings.HasPrefix(addr, "unix:") {
 			sock := strings.Split(addr, ":")[1]
-			_, grr := os.Stat(sock)
-			for os.IsNotExist(grr) {
+			// Wait for node's Unix socket to appear.
+			_, err2 := os.Stat(sock)
+			for os.IsNotExist(err2) {
 				logger.Info("waiting for node socket to appear...", "socket_path", sock)
 				time.Sleep(1 * time.Second)
-				_, grr = os.Stat(sock)
+				_, err2 = os.Stat(sock)
 			}
 		}
 
 		// Prepare a new Oasis gRPC client.
 		oasisClient, err = oasis.New()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "ERROR: Failed to prepare Oasis gRPC client: %v\n", err)
+			logger.Error("failed to create Oasis gRPC client",
+				"err", err,
+			)
 			os.Exit(1)
 		}
 
-		// Make a test request using the client to see if the node works.
+		// Get chain ID.
 		chainID, err = oasisClient.GetChainID(context.Background())
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "ERROR: Node connectivity error: %v\n", err)
+			logger.Error("failed to obtain chain ID from Oasis node",
+				"err", err,
+			)
 			os.Exit(1)
 		}
 	}
@@ -153,23 +172,15 @@ func main() {
 	// Set the chain context for preparing signing payloads.
 	signature.SetChainContext(chainID)
 
-	// Initialize logging.
-	err = logging.Initialize(os.Stdout, logging.FmtLogfmt, logging.LevelDebug, nil)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: Unable to initialize logging: %v\n", err)
-		os.Exit(1)
-	}
-
 	var router http.Handler
-	switch {
-	case offlineMode:
+	switch offlineMode {
+	case true:
 		logger.Info("running in offline mode", "chain_context", chainID)
 		router, err = NewOfflineBlockchainRouter(chainID)
-	default:
+	case false:
 		logger.Info("connected to Oasis node", "chain_context", chainID)
 		router, err = NewBlockchainRouter(oasisClient)
 	}
-
 	if err != nil {
 		logger.Error("unable to create Rosetta blockchain router", "err", err)
 		os.Exit(1)
@@ -179,7 +190,9 @@ func main() {
 	logger.Info("Oasis Rosetta Gateway listening", "port", nPort)
 	err = http.ListenAndServe(fmt.Sprintf(":%d", nPort), router)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Oasis Rosetta Gateway server exited with error: %v\n", err)
+		logger.Error("Oasis Rosetta Gateway server exited",
+			"err", err,
+		)
 		os.Exit(1)
 	}
 }
