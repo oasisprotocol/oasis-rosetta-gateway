@@ -32,23 +32,11 @@ func storageEncode(v interface{}) []byte {
 	return buf.Bytes()
 }
 
-func main() {
+func getRosettaConfig(ni *types.NetworkIdentifier) *configuration.Configuration {
 	// Create a configuration file for the local testnet.
 	config := configuration.DefaultConfiguration()
 
-	rc := client.NewAPIClient(client.NewConfiguration("http://localhost:8080", "rosetta-sdk-go", nil))
-	nlr, re, err := rc.NetworkAPI.NetworkList(context.Background(), &types.MetadataRequest{})
-	if err != nil {
-		panic(err)
-	}
-	if re != nil {
-		panic(re)
-	}
-	if len(nlr.NetworkIdentifiers) != 1 {
-		panic("len(nlr.NetworkIdentifiers)")
-	}
-	fmt.Println("network identifiers", common.DumpJSON(nlr.NetworkIdentifiers))
-	config.Network = nlr.NetworkIdentifiers[0]
+	config.Network = ni
 
 	config.DataDirectory = "/tmp/rosetta-cli-oasistests"
 
@@ -110,7 +98,27 @@ func main() {
 		},
 	}
 
-	if err := ioutil.WriteFile("rosetta-cli-config.json", []byte(common.DumpJSON(config)), 0o666); err != nil {
+	return config
+}
+
+func main() {
+	var err error
+
+	rc := client.NewAPIClient(client.NewConfiguration("http://localhost:8080", "rosetta-sdk-go", nil))
+	nlr, re, err := rc.NetworkAPI.NetworkList(context.Background(), &types.MetadataRequest{})
+	if err != nil {
+		panic(err)
+	}
+	if re != nil {
+		panic(re)
+	}
+	if len(nlr.NetworkIdentifiers) != 1 {
+		panic("len(nlr.NetworkIdentifiers)")
+	}
+	fmt.Println("network identifiers", common.DumpJSON(nlr.NetworkIdentifiers))
+
+	config := getRosettaConfig(nlr.NetworkIdentifiers[0])
+	if err = ioutil.WriteFile("rosetta-cli-config.json", []byte(common.DumpJSON(config)), 0o600); err != nil {
 		panic(err)
 	}
 
