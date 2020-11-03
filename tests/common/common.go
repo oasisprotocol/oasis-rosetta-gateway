@@ -12,6 +12,8 @@ import (
 	"github.com/oasisprotocol/ed25519"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/entity"
+	genesis "github.com/oasisprotocol/oasis-core/go/genesis/api"
+	cmdGenesis "github.com/oasisprotocol/oasis-core/go/oasis-node/cmd/common/genesis"
 	"github.com/oasisprotocol/oasis-core/go/staking/api"
 
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
@@ -24,6 +26,8 @@ var (
 
 	DstAddress        = unmarshalAddressOrPanic(DstAddressText)
 	TestEntityAddress = unmarshalAddressOrPanic(TestEntityAddressText)
+
+	TestEntityAmount = getTestEntityAmount()
 )
 
 func DumpJSON(v interface{}) string {
@@ -67,6 +71,27 @@ func unmarshalAddressOrPanic(addrText string) (addr api.Address) {
 		panic(err)
 	}
 	return
+}
+
+// NOTE: Consider exposing the test entity's general balance directly in Oasis
+// Core to avoid this manual extraction procedure.
+func getTestEntityAmount() *types.Amount {
+	genesisDoc := &genesis.Document{}
+	stakingState, err := cmdGenesis.NewAppendableStakingState()
+	if err != nil {
+		panic(err)
+	}
+	stakingState.DebugTestEntity = true
+	stakingState.State.TokenSymbol = "TEST"
+	if err := stakingState.AppendTo(genesisDoc); err != nil {
+		panic(err)
+	}
+
+	testEntityAccount := genesisDoc.Staking.Ledger[TestEntityAddress]
+	return &types.Amount{
+		Value:    testEntityAccount.General.Balance.String(),
+		Currency: services.OasisCurrency,
+	}
 }
 
 // NewRosettaClient returns a new Rosetta API Client for tests or panics.

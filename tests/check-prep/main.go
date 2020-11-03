@@ -136,10 +136,7 @@ func main() {
 			Block   *types.BlockIdentifier   `json:"block"`
 		}{
 			Account: &testEntityAccountIdentifier,
-			Amount: &types.Amount{
-				// https://github.com/oasisprotocol/oasis-core/blob/v20.8.2/go/oasis-node/cmd/genesis/genesis.go#L534
-				Value:    "100000000000",
-				Currency: services.OasisCurrency,
+			Amount:  common.TestEntityAmount,
 			},
 		})); err != nil {
 			panic(err)
