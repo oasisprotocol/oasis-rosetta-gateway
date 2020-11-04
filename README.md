@@ -1,35 +1,58 @@
-[![CI badge](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/workflows/Continuous%20integration/badge.svg)](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/actions?query=workflow%3A%22Continuous+integration%22+branch%3Amaster)
-
 # Oasis Gateway for Rosetta
 
-This repository implements the [Rosetta][1] server for the [Oasis][0] network.
-See the [Rosetta API docs][3] for information on how to use the API.
-Oasis-specific Rosetta API information is given in the "Oasis-specific
-information" subsection below.
+[![CI test status][github-ci-tests-badge]][github-ci-tests-link]
+[![CI lint status][github-ci-lint-badge]][github-ci-lint-link]
 
-## Building and testing
+<!-- markdownlint-disable line-length -->
+[github-ci-tests-badge]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/workflows/ci-tests/badge.svg
+[github-ci-tests-link]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/actions?query=workflow:ci-tests+branch:master
+[github-ci-lint-badge]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/workflows/ci-lint/badge.svg
+[github-ci-lint-link]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/actions?query=workflow:ci-lint+branch:master
+<!-- markdownlint-enable line-length -->
+
+This repository implements the [Rosetta] server for the [Oasis Network].
+See the [Rosetta API] docs for information on how to use the API.
+
+Oasis-specific Rosetta API information is given in the
+[Oasis-specific Information] subsection below.
+
+[Rosetta]: https://www.rosetta-api.org/
+[Oasis Network]: https://docs.oasis.dev/general/oasis-network/overview
+[Rosetta API]: https://www.rosetta-api.org/docs/welcome.html
+[Oasis-specific Information]: #oasis-specific-information
+
+## Building and Testing
 
 To build the server:
 
-	make
+```
+make
+```
 
 To run tests:
 
-	make test
+```
+make test
+```
 
 To clean-up:
 
-	make clean
+```
+make clean
+```
 
+`make test` will automatically download the [Oasis Node] and
+[Rosetta CLI], set up a test Oasis network, make some sample transactions,
+then run the gateway and validate it using `rosetta-cli`.
 
-`make test` will automatically download the [Oasis node][0] and [rosetta-cli][2],
-set up a test Oasis network, make some sample transactions, then run the
-gateway and validate it using `rosetta-cli`.
+[Oasis Node]: https://docs.oasis.dev/general/run-a-node/prerequisites/oasis-node
+[Rosetta CLI]: https://github.com/coinbase/rosetta-cli
 
-## Running the gateway
+## Running the Gateway
 
-The gateway connects to an Oasis node, so make sure you have a running node
-first.  If you don't have an Oasis node yet, follow the [instructions for running an Oasis node][4].
+The gateway connects to an Oasis Node, so make sure you have a running node
+first. For more details, see the [Run a Non-validator Node] doc of the general
+[Oasis Docs].
 
 Set the `OASIS_NODE_GRPC_ADDR` environment variable to the node's gRPC socket
 address (e.g. `unix:/path/to/node/internal.sock`).
@@ -39,39 +62,48 @@ port that you want the gateway to listen on (default is 8080).
 
 Start the gateway simply by running the executable `oasis-core-rosetta-gateway`.
 
-## Offline mode
+<!-- markdownlint-disable line-length -->
+[Run a Non-validator Node]:
+  https://docs.oasis.dev/general/run-a-node/set-up-your-node/run-non-validator#configuration
+[Oasis Docs]:
+  https://docs.oasis.dev/
+<!-- markdownlint-enable line-length -->
+
+## Offline Mode
 
 The gateway supports an "offline" mode, which enables only a subset of the
-Construction API and nothing else, but doesn't require a connection to an
-Oasis node.
+[Construction API] and nothing else, but doesn't require a connection to an
+Oasis Node.
 
 To enable it, set the environment variable `OASIS_ROSETTA_GATEWAY_OFFLINE_MODE`
 to a non-empty value.  You must also set the environment variable
-`OASIS_ROSETTA_GATEWAY_OFFLINE_MODE_CHAIN_ID` to the [genesis document hash][5]
+`OASIS_ROSETTA_GATEWAY_OFFLINE_MODE_CHAIN_ID` to the [genesis document's hash]
 of the network that you wish to construct transactions for.
-In online mode, the genesis document hash is fetched from the Oasis node, but
-in offline mode there is no connection to an Oasis node, so it has to be
+In online mode, the genesis document's hash is fetched from the Oasis Node, but
+in offline mode there is no connection to an Oasis Node, so it has to be
 specified manually.
 
 The only supported endpoints in offline mode are:
 
-	/construction/{combine,derive,hash,parse,payloads,preprocess}
+```
+/construction/{combine,derive,hash,parse,payloads,preprocess}
+```
 
+<!-- markdownlint-disable line-length -->
+[Construction API]:
+  https://www.rosetta-api.org/docs/construction_api_introduction.html
+[genesis document's hash]:
+  https://docs.oasis.dev/oasis-core/high-level-components/index/genesis#genesis-documents-hash
+<!-- markdownlint-enable line-length -->
 
-[0]: https://github.com/oasisprotocol/oasis-core
-[1]: https://github.com/coinbase/rosetta-sdk-go
-[2]: https://github.com/coinbase/rosetta-cli
-[3]: https://www.rosetta-api.org/
-[4]: https://docs.oasis.dev/general/operator-docs/running-a-node
-[5]: https://docs.oasis.dev/oasis-core/high-level-components/index/genesis#genesis-documents-hash
+## Oasis-specific Information
 
-
-
-## Oasis-specific information
 This section describes how Oasis fits into the Rosetta APIs.
 
-### Network identifier
-Rosetta reference: https://www.rosetta-api.org/docs/api_identifiers.html#network-identifier
+### Network Identifier
+
+[Rosetta API documentation](
+    https://www.rosetta-api.org/docs/api_identifiers.html#network-identifier)
 
 For Amber (at time of writing):
 
@@ -83,13 +115,18 @@ For Amber (at time of writing):
 }
 ```
 
-In general (e.g., for other testnets), the `.network` string is the lowercase hex encoded SHA-512/256 hash of the CBOR encoded genesis document.
+In general (e.g., for other testnets), the `.network` string is the lowercase
+hex encoded SHA-512/256 hash of the CBOR encoded genesis document.
 
-### Account identifier
-Rosetta reference: https://www.rosetta-api.org/docs/api_identifiers.html#account-identifier
+### Account Identifier
 
-#### General account
-For an account `account_addr`'s (e.g. `oasis1qzzd6khm3acqskpxlk9vd5044cmmcce78y5l6000`) general account:
+[Rosetta API documentation](
+    https://www.rosetta-api.org/docs/api_identifiers.html#account-identifier)
+
+#### General Account
+
+For an account `account_addr`'s (e.g.
+`oasis1qzzd6khm3acqskpxlk9vd5044cmmcce78y5l6000`) general account:
 
 ```js
 {
@@ -99,8 +136,10 @@ For an account `account_addr`'s (e.g. `oasis1qzzd6khm3acqskpxlk9vd5044cmmcce78y5
 }
 ```
 
-#### Escrow account
-For an account `account_addr`'s (e.g. `oasis1qzzd6khm3acqskpxlk9vd5044cmmcce78y5l6000`) escrow account:
+#### Escrow Account
+
+For an account `account_addr`'s (e.g.
+`oasis1qzzd6khm3acqskpxlk9vd5044cmmcce78y5l6000`) escrow account:
 
 ```js
 {
@@ -113,7 +152,8 @@ For an account `account_addr`'s (e.g. `oasis1qzzd6khm3acqskpxlk9vd5044cmmcce78y5
 }
 ```
 
-#### Common pool
+#### Common Pool
+
 For the common pool:
 
 ```js
@@ -124,7 +164,8 @@ For the common pool:
 }
 ```
 
-#### Fee accumulator
+#### Fee Accumulator
+
 For the fee accumulator:
 
 ```js
@@ -136,9 +177,12 @@ For the fee accumulator:
 ```
 
 ### Currency
-Rosetta reference: https://www.rosetta-api.org/docs/api_objects.html#currency
+
+[Rosetta API documentation](
+    https://www.rosetta-api.org/docs/api_objects.html#currency)
 
 #### ROSE
+
 For ROSE:
 
 ```js
@@ -149,14 +193,23 @@ For ROSE:
 }
 ```
 
-### Transaction intents
-Rosetta reference: https://www.rosetta-api.org/docs/ConstructionApi.html#constructionpreprocess and https://www.rosetta-api.org/docs/ConstructionApi.html#constructionpayloads
+### Transaction Intents
+
+<!-- markdownlint-disable line-length -->
+Rosetta API documentation on [/construction/preprocess](
+    https://www.rosetta-api.org/docs/ConstructionApi.html#constructionpreprocess)
+and [/construction/payloads](
+    https://www.rosetta-api.org/docs/ConstructionApi.html#constructionpayloads).
+<!-- markdownlint-enable line-length -->
 
 The first two operations in the listings are the gas fee payment.
-For zero-fee transactions, omit them and decrease the remaining operation identifier indices.
+For zero-fee transactions, omit them and decrease the remaining operation
+identifier indices.
 
-#### Staking transfer
-For transfer, `amount_bu` base units from `signer_addr` to `to_addr` with gas limit `gas_limit` and fee `fee_bu` base units:
+#### Staking Transfer
+
+For transfer, `amount_bu` base units from `signer_addr` to `to_addr` with gas
+limit `gas_limit` and fee `fee_bu` base units:
 
 ```js
 [
@@ -265,8 +318,10 @@ For transfer, `amount_bu` base units from `signer_addr` to `to_addr` with gas li
 ]
 ```
 
-#### Staking burn
-For burn, `amount_bu` base units from `signer_addr` with gas limit `gas_limit` and fee `fee_bu` base units:
+#### Staking Burn
+
+For burn, `amount_bu` base units from `signer_addr` with gas limit `gas_limit`
+and fee `fee_bu` base units:
 
 ```js
 [
@@ -350,8 +405,10 @@ For burn, `amount_bu` base units from `signer_addr` with gas limit `gas_limit` a
 ]
 ```
 
-#### Staking add escrow
-For add escrow, `amount_bu` base units from `signer_addr` to `escrow_addr` with gas limit `gas_limit` and fee `fee_bu` base units:
+#### Staking Add Escrow
+
+For add escrow, `amount_bu` base units from `signer_addr` to `escrow_addr` with
+gas limit `gas_limit` and fee `fee_bu` base units:
 
 ```js
 [
@@ -463,8 +520,10 @@ For add escrow, `amount_bu` base units from `signer_addr` to `escrow_addr` with 
 ]
 ```
 
-#### Staking reclaim escrow
-For transfer, `amount_sh` shares to `signer_addr` from `escrow_addr` with gas limit `gas_limit` and fee `fee_bu` base units:
+#### Staking Reclaim Escrow
+
+For transfer, `amount_sh` shares to `signer_addr` from `escrow_addr` with gas
+limit `gas_limit` and fee `fee_bu` base units:
 
 ```js
 [
@@ -563,33 +622,48 @@ For transfer, `amount_sh` shares to `signer_addr` from `escrow_addr` with gas li
 ```
 
 ### Block API
-Rosetta reference: https://www.rosetta-api.org/docs/BlockApi.html#block
 
-In a partial block identifier https://www.rosetta-api.org/docs/models/PartialBlockIdentifier.html:
+[Rosetta API documentation](
+    https://www.rosetta-api.org/docs/BlockApi.html#block)
+
+In a [partial block identifier]:
 
 * Set only the `index` field to the block height.
 
-In a block response https://www.rosetta-api.org/docs/models/BlockResponse.html:
+In a [block response]:
 
 * The `other_transactions` field is absent.
 
-In a block https://www.rosetta-api.org/docs/models/Block.html:
+In a [block]:
 
 * Block identifier `index` fields contain the height of the block.
 * Block identifier `hash` fields are lowercase hex encoded.
-* The `parent_block_identifier` field contains the block identifier of the previous block, except when querying for
-first block.
+* The `parent_block_identifier` field contains the block identifier of the
+  previous block, except when querying for first block.
 * The `metadata` field is absent.
 
-In a transaction https://www.rosetta-api.org/docs/models/Transaction.html:
+In a [transaction]:
 
 * The transaction identifier `hash` field is lowercase hex encoded.
-* The `operations` field contains the transaction intent with some modifications.
+* The `operations` field contains the transaction intent with some
+  modifications.
 * The `metadata` field is absent.
 
-In an operation https://www.rosetta-api.org/docs/models/Operation.html as compared to the corresponding operation from
-the transaction's intent:
+In an [operation] as compared to the corresponding operation from the
+transaction's intent:
 
 * The `related_operations` field may be set.
-* The `status` field is set to `OK` for successful transactions and `Failed` for failed transactions.
+* The `status` field is set to `OK` for successful transactions and `Failed` for
+  failed transactions.
 * The `metadata` field is absent.
+
+[partial block identifier]:
+  https://www.rosetta-api.org/docs/models/PartialBlockIdentifier.html
+[block response]:
+  https://www.rosetta-api.org/docs/models/BlockResponse.html
+[block]:
+  https://www.rosetta-api.org/docs/models/Block.html
+[transaction]:
+  https://www.rosetta-api.org/docs/models/Transaction.html
+[operation]:
+  https://www.rosetta-api.org/docs/models/Operation.html

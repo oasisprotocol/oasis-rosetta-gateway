@@ -1,26 +1,7 @@
-#!/usr/bin/env gmake
+include common.mk
 
 OASIS_RELEASE := 20.11.3
 ROSETTA_CLI_RELEASE := 0.4.0
-
-OASIS_GO ?= go
-GO := env -u GOPATH $(OASIS_GO)
-GOLINT := env -u GOPATH golangci-lint
-
-# Check if we're running in an interactive terminal.
-ISATTY := $(shell [ -t 0 ] && echo 1)
-
-ifdef ISATTY
-# Running in interactive terminal, OK to use colors!
-MAGENTA = \e[35;1m
-CYAN = \e[36;1m
-OFF = \e[0m
-else
-# Don't use colors if not running interactively.
-MAGENTA = ""
-CYAN = ""
-OFF = ""
-endif
 
 # Check which tool to use for downloading.
 HAVE_WGET := $(shell which wget > /dev/null && echo 1)
@@ -37,51 +18,72 @@ endif
 
 ROOT := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-.PHONY: all build clean fmt lint nuke test
-
 all: build
-	@printf "$(CYAN)*** Everything built successfully!$(OFF)\n"
+	@$(ECHO) "$(CYAN)*** Everything built successfully!$(OFF)"
 
 build:
-	@printf "$(CYAN)*** Building...$(OFF)\n"
+	@$(ECHO) "$(CYAN)*** Building...$(OFF)"
 	@$(GO) build
 
+build-tests:
+	@$(ECHO) "$(CYAN)*** Building tests...$(OFF)"
+	@$(GO) build ./tests/...
+
 tests/oasis_core_release.tar.gz:
-	@printf "$(MAGENTA)*** Downloading oasis-core release $(OASIS_RELEASE)...$(OFF)\n"
+	@$(ECHO) "$(MAGENTA)*** Downloading oasis-core release $(OASIS_RELEASE)...$(OFF)"
 	@$(DOWNLOAD) $@ https://github.com/oasisprotocol/oasis-core/releases/download/v$(OASIS_RELEASE)/oasis_core_$(OASIS_RELEASE)_linux_amd64.tar.gz
 
 tests/oasis-net-runner: tests/oasis_core_release.tar.gz
-	@printf "$(MAGENTA)*** Unpacking oasis-net-runner...$(OFF)\n"
+	@$(ECHO) "$(MAGENTA)*** Unpacking oasis-net-runner...$(OFF)"
 	@tar -xf $< -C tests --strip-components=1 oasis_core_$(OASIS_RELEASE)_linux_amd64/oasis-net-runner
 
 tests/oasis-node: tests/oasis_core_release.tar.gz
-	@printf "$(MAGENTA)*** Unpacking oasis-node...$(OFF)\n"
+	@$(ECHO) "$(MAGENTA)*** Unpacking oasis-node...$(OFF)"
 	@tar -xf $< -C tests --strip-components=1 oasis_core_$(OASIS_RELEASE)_linux_amd64/oasis-node
 
 tests/rosetta-cli.tar.gz:
-	@printf "$(MAGENTA)*** Downloading rosetta-cli release $(ROSETTA_CLI_RELEASE)...$(OFF)\n"
+	@$(ECHO) "$(MAGENTA)*** Downloading rosetta-cli release $(ROSETTA_CLI_RELEASE)...$(OFF)"
 	@$(DOWNLOAD) $@ https://github.com/coinbase/rosetta-cli/archive/v$(ROSETTA_CLI_RELEASE).tar.gz
 
 tests/rosetta-cli: tests/rosetta-cli.tar.gz
-	@printf "$(MAGENTA)*** Building rosetta-cli...$(OFF)\n"
+	@$(ECHO) "$(MAGENTA)*** Building rosetta-cli...$(OFF)"
 	@tar -xf $< -C tests
 	@cd tests/rosetta-cli-$(ROSETTA_CLI_RELEASE) && go build
 	@cp tests/rosetta-cli-$(ROSETTA_CLI_RELEASE)/rosetta-cli tests/.
 
-test: build tests/oasis-net-runner tests/oasis-node tests/rosetta-cli
-	@printf "$(CYAN)*** Running tests...$(OFF)\n"
+test: build build-tests tests/oasis-net-runner tests/oasis-node tests/rosetta-cli
+	@$(ECHO) "$(CYAN)*** Running tests...$(OFF)"
 	@$(ROOT)/tests/test.sh
 
+# Format code.
 fmt:
-	@printf "$(CYAN)*** Formatting code...$(OFF)\n"
-	@$(GO) fmt ./...
+	@$(ECHO) "$(CYAN)*** Running Go formatters...$(OFF)"
+	@gofumpt -s -w .
+	@gofumports -w -local github.com/oasisprotocol/oasis-core-rosetta-gateway .
 
-lint:
-	@printf "$(CYAN)*** Linting code...$(OFF)\n"
-	@$(GOLINT) run --timeout 1m
+# Lint code, commits and documentation.
+lint-targets := lint-go lint-docs lint-git lint-go-mod-tidy
+
+lint-go:
+	@$(ECHO) "$(CYAN)*** Running Go linters...$(OFF)"
+	@env -u GOPATH golangci-lint run
+
+lint-git:
+	@$(CHECK_GITLINT)
+
+lint-docs:
+	@$(ECHO) "$(CYAN)*** Runnint markdownlint-cli...$(OFF)"
+	@npx markdownlint-cli '**/*.md' --ignore .changelog/
+
+lint-go-mod-tidy:
+	@$(ECHO) "$(CYAN)*** Checking go mod tidy...$(OFF)"
+	@$(ENSURE_GIT_CLEAN)
+	@$(CHECK_GO_MOD_TIDY)
+
+lint: $(lint-targets)
 
 clean:
-	@printf "$(CYAN)*** Cleaning up...$(OFF)\n"
+	@$(ECHO) "$(CYAN)*** Cleaning up...$(OFF)"
 	@$(GO) clean
 	@-rm -f tests/oasis_core_release.tar.gz tests/oasis-net-runner tests/oasis-node
 	@-rm -rf tests/oasis-core
@@ -89,5 +91,13 @@ clean:
 	@-rm -rf tests/rosetta-cli-$(ROSETTA_CLI_RELEASE) tests/validator-data
 
 nuke: clean
-	@printf "$(CYAN)*** Cleaning up really well...$(OFF)\n"
+	@$(ECHO) "$(CYAN)*** Cleaning up really well...$(OFF)"
 	@$(GO) clean -cache -testcache -modcache
+
+# List of targets that are not actual files.
+.PHONY: \
+	all build build-tests \
+	fmt \
+	$(lint-targets) lint \
+	test \
+	clean nuke

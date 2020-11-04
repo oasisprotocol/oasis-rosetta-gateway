@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/coinbase/rosetta-sdk-go/client"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
@@ -18,20 +17,14 @@ import (
 
 const dummyNonce = 3
 
-func main() {
-	testEntityAddress, _ := common.TestEntity()
-
-	var dstAddr api.Address
-	if err := dstAddr.UnmarshalText([]byte(common.DstAddress)); err != nil {
-		panic(err)
-	}
-	fee100Op1 := &types.Operation{
+var (
+	fee100Op1 = &types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: 0,
 		},
 		Type: services.OpTransfer,
 		Account: &types.AccountIdentifier{
-			Address: testEntityAddress,
+			Address: common.TestEntityAddressText,
 		},
 		Amount: &types.Amount{
 			Value:    "-100",
@@ -41,7 +34,7 @@ func main() {
 			services.FeeGasKey: 10001.,
 		},
 	}
-	fee100Op2 := &types.Operation{
+	fee100Op2 = &types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: 1,
 		},
@@ -54,16 +47,16 @@ func main() {
 			Currency: services.OasisCurrency,
 		},
 		RelatedOperations: []*types.OperationIdentifier{
-			&types.OperationIdentifier{
+			{
 				Index: 0,
 			},
 		},
 	}
-	fee100 := &transaction.Fee{
+	fee100 = &transaction.Fee{
 		Amount: *quantity.NewFromUint64(100),
 		Gas:    10001,
 	}
-	opsTransfer := []*types.Operation{
+	opsTransfer = []*types.Operation{
 		fee100Op1,
 		fee100Op2,
 		{
@@ -72,7 +65,7 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: testEntityAddress,
+				Address: common.TestEntityAddressText,
 			},
 			Amount: &types.Amount{
 				Value:    "-1000",
@@ -85,29 +78,29 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: common.DstAddress,
+				Address: common.DstAddressText,
 			},
 			Amount: &types.Amount{
 				Value:    "1000",
 				Currency: services.OasisCurrency,
 			},
 			RelatedOperations: []*types.OperationIdentifier{
-				&types.OperationIdentifier{
+				{
 					Index: 2,
 				},
 			},
 		},
 	}
-	txTransfer := &transaction.Transaction{
+	txTransfer = &transaction.Transaction{
 		Nonce:  dummyNonce,
 		Fee:    fee100,
 		Method: api.MethodTransfer,
 		Body: cbor.Marshal(api.Transfer{
-			To:     dstAddr,
+			To:     common.DstAddress,
 			Amount: *quantity.NewFromUint64(1000),
 		}),
 	}
-	opsBurn := []*types.Operation{
+	opsBurn = []*types.Operation{
 		fee100Op1,
 		fee100Op2,
 		{
@@ -116,7 +109,7 @@ func main() {
 			},
 			Type: services.OpBurn,
 			Account: &types.AccountIdentifier{
-				Address: testEntityAddress,
+				Address: common.TestEntityAddressText,
 			},
 			Amount: &types.Amount{
 				Value:    "-1000",
@@ -124,7 +117,7 @@ func main() {
 			},
 		},
 	}
-	txBurn := &transaction.Transaction{
+	txBurn = &transaction.Transaction{
 		Nonce:  dummyNonce,
 		Fee:    fee100,
 		Method: api.MethodBurn,
@@ -132,7 +125,7 @@ func main() {
 			Amount: *quantity.NewFromUint64(1000),
 		}),
 	}
-	opsAddEscrow := []*types.Operation{
+	opsAddEscrow = []*types.Operation{
 		fee100Op1,
 		fee100Op2,
 		{
@@ -141,7 +134,7 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: testEntityAddress,
+				Address: common.TestEntityAddressText,
 			},
 			Amount: &types.Amount{
 				Value:    "-1000",
@@ -154,7 +147,7 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: common.DstAddress,
+				Address: common.DstAddressText,
 				SubAccount: &types.SubAccountIdentifier{
 					Address: services.SubAccountEscrow,
 				},
@@ -164,22 +157,22 @@ func main() {
 				Currency: services.OasisCurrency,
 			},
 			RelatedOperations: []*types.OperationIdentifier{
-				&types.OperationIdentifier{
+				{
 					Index: 2,
 				},
 			},
 		},
 	}
-	txAddEscrow := &transaction.Transaction{
+	txAddEscrow = &transaction.Transaction{
 		Nonce:  dummyNonce,
 		Fee:    fee100,
 		Method: api.MethodAddEscrow,
 		Body: cbor.Marshal(api.Escrow{
-			Account: dstAddr,
+			Account: common.DstAddress,
 			Amount:  *quantity.NewFromUint64(1000),
 		}),
 	}
-	opsReclaimEscrow := []*types.Operation{
+	opsReclaimEscrow = []*types.Operation{
 		fee100Op1,
 		fee100Op2,
 		{
@@ -188,7 +181,7 @@ func main() {
 			},
 			Type: services.OpReclaimEscrow,
 			Account: &types.AccountIdentifier{
-				Address: testEntityAddress,
+				Address: common.TestEntityAddressText,
 			},
 		},
 		{
@@ -197,7 +190,7 @@ func main() {
 			},
 			Type: services.OpReclaimEscrow,
 			Account: &types.AccountIdentifier{
-				Address: common.DstAddress,
+				Address: common.DstAddressText,
 				SubAccount: &types.SubAccountIdentifier{
 					Address: services.SubAccountEscrow,
 				},
@@ -206,36 +199,25 @@ func main() {
 				services.ReclaimEscrowSharesKey: "1000",
 			},
 			RelatedOperations: []*types.OperationIdentifier{
-				&types.OperationIdentifier{
+				{
 					Index: 2,
 				},
 			},
 		},
 	}
-	txReclaimEscrow := &transaction.Transaction{
+	txReclaimEscrow = &transaction.Transaction{
 		Nonce:  dummyNonce,
 		Fee:    fee100,
 		Method: api.MethodReclaimEscrow,
 		Body: cbor.Marshal(api.ReclaimEscrow{
-			Account: dstAddr,
+			Account: common.DstAddress,
 			Shares:  *quantity.NewFromUint64(1000),
 		}),
 	}
+)
 
-	rc := client.NewAPIClient(client.NewConfiguration("http://localhost:8080", "rosetta-sdk-go", nil))
-
-	r1, re, err := rc.NetworkAPI.NetworkList(context.Background(), &types.MetadataRequest{})
-	if err != nil {
-		panic(err)
-	}
-	if re != nil {
-		panic(re)
-	}
-	if len(r1.NetworkIdentifiers) != 1 {
-		panic("len(r1.NetworkIdentifiers)")
-	}
-	fmt.Println("network identifiers", common.DumpJSON(r1.NetworkIdentifiers))
-	ni := r1.NetworkIdentifiers[0]
+func main() {
+	rc, ni := common.NewRosettaClient()
 
 	for _, tt := range []struct {
 		name      string

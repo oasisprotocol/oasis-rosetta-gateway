@@ -37,6 +37,7 @@ export PATH="${PATH}:${ROOT}"
 start_network() {
 	local height=$1
 	${OASIS_NET_RUNNER} \
+	    --fixture.default.node.binary ${OASIS_NODE} \
 		--fixture.default.initial_height=${height} \
 		--fixture.default.setup_runtimes=false \
 		--fixture.default.num_entities=1 \
@@ -169,7 +170,7 @@ ${OASIS_ROSETTA_GW} &
 sleep 3
 
 printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
-go run ./check-prep
+${OASIS_GO} run ./check-prep
 ./rosetta-cli --configuration-file rosetta-cli-config.json check:data --end 42
 {
   # We'll cause a sigpipe on this process, so ignore the exit status.
@@ -179,10 +180,10 @@ go run ./check-prep
 rm -rf "${ROOT}/validator-data" /tmp/rosetta-cli*
 
 printf "${GRN}### Testing construction signing workflow...${OFF}\n"
-go run ./construction-signing
+${OASIS_GO} run ./construction-signing
 
 printf "${GRN}### Testing construction transaction types...${OFF}\n"
-go run ./construction-txtypes
+${OASIS_GO} run ./construction-txtypes
 
 # Now test if the initial block height change works on a new network.
 printf "${GRN}### Terminating existing test network...${OFF}\n"
@@ -219,7 +220,7 @@ wait_for_nodes
 
 
 printf "${GRN}### Validating Rosetta gateway implementation (again)...${OFF}\n"
-go run ./check-prep
+${OASIS_GO} run ./check-prep
 ./rosetta-cli --configuration-file rosetta-cli-config.json check:data --end 135
 
 # Clean up after a successful run.

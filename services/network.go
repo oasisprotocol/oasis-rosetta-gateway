@@ -10,17 +10,17 @@ import (
 
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
-	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
 )
 
 var loggerNet = logging.GetLogger("services/network")
 
 type networkAPIService struct {
-	oasisClient oc.OasisClient
+	oasisClient oasis.Client
 }
 
 // NewNetworkAPIService creates a new instance of a NetworkAPIService.
-func NewNetworkAPIService(oasisClient oc.OasisClient) server.NetworkAPIServicer {
+func NewNetworkAPIService(oasisClient oasis.Client) server.NetworkAPIServicer {
 	return &networkAPIService{
 		oasisClient: oasisClient,
 	}
@@ -39,7 +39,7 @@ func (s *networkAPIService) NetworkList(
 
 	resp := &types.NetworkListResponse{
 		NetworkIdentifiers: []*types.NetworkIdentifier{
-			&types.NetworkIdentifier{
+			{
 				Blockchain: OasisBlockchainName,
 				Network:    chainID,
 			},

@@ -10,17 +10,17 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
-	oc "github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis-client"
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
 )
 
 var loggerMempool = logging.GetLogger("services/mempool")
 
 type mempoolAPIService struct {
-	oasisClient oc.OasisClient
+	oasisClient oasis.Client
 }
 
 // NewMempoolAPIService creates a new instance of a NetworkAPIService.
-func NewMempoolAPIService(oasisClient oc.OasisClient) server.MempoolAPIServicer {
+func NewMempoolAPIService(oasisClient oasis.Client) server.MempoolAPIServicer {
 	return &mempoolAPIService{
 		oasisClient: oasisClient,
 	}
@@ -43,7 +43,7 @@ func (s *mempoolAPIService) Mempool(
 		return nil, ErrUnableToGetTxns
 	}
 
-	var tids []*types.TransactionIdentifier
+	tids := make([]*types.TransactionIdentifier, 0, len(txs))
 	for _, tx := range txs {
 		tids = append(tids, &types.TransactionIdentifier{
 			Hash: hash.NewFromBytes(tx).String(),

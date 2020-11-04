@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/coinbase/rosetta-sdk-go/client"
 	"github.com/coinbase/rosetta-sdk-go/keys"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -13,7 +12,7 @@ import (
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/tests/common"
 )
 
-func main() {
+func main() { //nolint:funlen
 	testEntityAddress, testEntityKeyPair := common.TestEntity()
 	rs := keys.SignerEdwards25519{KeyPair: testEntityKeyPair}
 
@@ -37,14 +36,14 @@ func main() {
 			},
 			Type: services.OpTransfer,
 			Account: &types.AccountIdentifier{
-				Address: common.DstAddress,
+				Address: common.DstAddressText,
 			},
 			Amount: &types.Amount{
 				Value:    "1000",
 				Currency: services.OasisCurrency,
 			},
 			RelatedOperations: []*types.OperationIdentifier{
-				&types.OperationIdentifier{
+				{
 					Index: 0,
 				},
 			},
@@ -52,20 +51,7 @@ func main() {
 	}
 	fmt.Println("operations", common.DumpJSON(ops))
 
-	rc := client.NewAPIClient(client.NewConfiguration("http://localhost:8080", "rosetta-sdk-go", nil))
-
-	r1, re, err := rc.NetworkAPI.NetworkList(context.Background(), &types.MetadataRequest{})
-	if err != nil {
-		panic(err)
-	}
-	if re != nil {
-		panic(re)
-	}
-	if len(r1.NetworkIdentifiers) != 1 {
-		panic("len(r1.NetworkIdentifiers)")
-	}
-	fmt.Println("network identifiers", common.DumpJSON(r1.NetworkIdentifiers))
-	ni := r1.NetworkIdentifiers[0]
+	rc, ni := common.NewRosettaClient()
 
 	r2, re, err := rc.ConstructionAPI.ConstructionPreprocess(context.Background(), &types.ConstructionPreprocessRequest{
 		NetworkIdentifier: ni,
@@ -129,14 +115,14 @@ func main() {
 		panic(fmt.Errorf("unsigned transaction parsed wrong"))
 	}
 
-	var sigs []*types.Signature
+	sigs := make([]*types.Signature, 0, len(r4.Payloads))
 	for i, sp := range r4.Payloads {
 		if sp.Address != testEntityAddress {
 			panic(i)
 		}
-		sig, err := rs.Sign(sp, sp.SignatureType)
-		if err != nil {
-			panic(err)
+		sig, err2 := rs.Sign(sp, sp.SignatureType)
+		if err2 != nil {
+			panic(err2)
 		}
 		sigs = append(sigs, sig)
 	}

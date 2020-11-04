@@ -1,0 +1,89 @@
+# golangci-lint configuration.
+
+# For more information, see:
+# https://golangci-lint.run/usage/configuration/.
+
+linters:
+  # Disable all linters except the ones explicitly listed below.
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - errcheck
+    - exhaustive
+    - exportloopref
+    - funlen
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - gofumpt
+    - goheader
+    - goimports
+    - golint
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+    - lll
+    - maligned
+    - misspell
+    - nakedret
+    - nestif
+    - noctx
+    - nolintlint
+    - prealloc
+    - rowserrcheck
+    - scopelint
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - sqlclosecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - whitespace
+    # Don't enable:
+    # - gochecknoglobals
+    # - goerr113
+    # - gofmt
+    # - gomnd
+    # - testpackage
+    # - wsl
+
+linters-settings:
+  exhaustive:
+    # Switch statements are to be considered exhaustive if a 'default' case is
+    # present, even if all enum members aren't listed in the switch.
+    default-signifies-exhaustive: true
+  funlen:
+    # Increase default line length and number of statements limit similar to
+    # what golangci-lint upstream uses for its codebase.
+    # Reference: https://github.com/golangci/golangci-lint/blob/0b24526/.golangci.yml#L12-L14.
+    lines: 125
+    statements: 50
+  govet:
+    # Enabled checking for shadowed variables.
+    check-shadowing: true
+  maligned:
+    # Print the suggested struct structure with a more effective memory layout.
+    suggest-new: true
+
+run:
+  skip-dirs:
+    # golang-ci-lint requires that files compile for certain linters
+    # to run, and Go plugins do not compile unless `-buildmode=plugin`
+    # is set, which linters do not do.
+    - ledger-signer
