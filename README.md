@@ -237,7 +237,7 @@ limit `gas_limit` and fee `fee_bu` base units:
         },
         /* no coin_change */
         "metadata": {
-            "fee_gas": gas_limit.toString()
+            "fee_gas": gas_limit
         }
     },
     {
@@ -349,7 +349,7 @@ and fee `fee_bu` base units:
         },
         /* no coin_change */
         "metadata": {
-            "fee_gas": gas_limit.toString()
+            "fee_gas": gas_limit
         }
     },
     {
@@ -436,7 +436,7 @@ gas limit `gas_limit` and fee `fee_bu` base units:
         },
         /* no coin_change */
         "metadata": {
-            "fee_gas": gas_limit.toString()
+            "fee_gas": gas_limit
         }
     },
     {
@@ -551,7 +551,7 @@ limit `gas_limit` and fee `fee_bu` base units:
         },
         /* no coin_change */
         "metadata": {
-            "fee_gas": gas_limit.toString()
+            "fee_gas": gas_limit
         }
     },
     {
