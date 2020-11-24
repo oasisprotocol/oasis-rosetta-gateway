@@ -77,3 +77,21 @@ define CHECK_GITLINT =
 	$(ECHO) "$(CYAN)*** Running gitlint for commits from $$BRANCH ($${COMMIT_SHA:0:7})... $(OFF)"; \
 	gitlint --commits $$BRANCH..HEAD
 endef
+
+# List of non-trivial Change Log fragments.
+CHANGELOG_FRAGMENTS_NON_TRIVIAL := $(filter-out $(wildcard .changelog/*trivial*.md),$(wildcard .changelog/[0-9]*.md))
+
+# Helper that checks Change Log fragments with markdownlint-cli and gitlint.
+# NOTE: Non-zero exit status is recorded but only set at the end so that all
+# markdownlint or gitlint errors can be seen at once.
+define CHECK_CHANGELOG_FRAGMENTS =
+	exit_status=0; \
+	$(ECHO) "$(CYAN)*** Running markdownlint-cli for Change Log fragments... $(OFF)"; \
+	npx markdownlint-cli --config .changelog/.markdownlint.yml .changelog/ || exit_status=$$?; \
+	$(ECHO) "$(CYAN)*** Running gitlint for Change Log fragments: $(OFF)"; \
+	for fragment in $(CHANGELOG_FRAGMENTS_NON_TRIVIAL); do \
+		$(ECHO) "- $$fragment"; \
+		gitlint --msg-filename $$fragment -c title-max-length.line-length=78 || exit_status=$$?; \
+	done; \
+	exit $$exit_status
+endef

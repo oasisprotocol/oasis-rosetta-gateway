@@ -62,7 +62,7 @@ fmt:
 	@gofumports -w -local github.com/oasisprotocol/oasis-core-rosetta-gateway .
 
 # Lint code, commits and documentation.
-lint-targets := lint-go lint-docs lint-git lint-go-mod-tidy
+lint-targets := lint-go lint-docs lint-changelog lint-git lint-go-mod-tidy
 
 lint-go:
 	@$(ECHO) "$(CYAN)*** Running Go linters...$(OFF)"
@@ -74,6 +74,9 @@ lint-git:
 lint-docs:
 	@$(ECHO) "$(CYAN)*** Runnint markdownlint-cli...$(OFF)"
 	@npx markdownlint-cli '**/*.md' --ignore .changelog/
+
+lint-changelog:
+	@$(CHECK_CHANGELOG_FRAGMENTS)
 
 lint-go-mod-tidy:
 	@$(ECHO) "$(CYAN)*** Checking go mod tidy...$(OFF)"
