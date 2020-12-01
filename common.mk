@@ -3,6 +3,16 @@
 # appropriately.
 SHELL := bash
 
+# Path to the directory of this Makefile.
+# NOTE: Prepend all relative paths in this Makefile with this variable to ensure
+# they are properly resolved when this Makefile is included from Makefiles in
+# other directories.
+SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+
+# Function for comparing two strings for equality.
+# NOTE: This will also return false if both strings are empty.
+eq = $(and $(findstring $(1),$(2)), $(findstring $(2),$(1)))
+
 # Check if we're running in an interactive terminal.
 ISATTY := $(shell [ -t 0 ] && echo 1)
 
@@ -40,6 +50,76 @@ GIT_ORIGIN_REMOTE ?= origin
 
 # Name of the branch where to tag the next release.
 RELEASE_BRANCH ?= master
+
+# Determine project's version from git.
+# NOTE: This computes the project's version from the latest version tag
+# reachable from the given $(RELEASE_BRANCH) and does not search for version
+# tags across the whole $(GIT_ORIGIN_REMOTE) repository.
+GIT_VERSION := $(subst v,,$(shell \
+	git describe --tags --match 'v*' --abbrev=0 2>/dev/null $(GIT_ORIGIN_REMOTE)/$(RELEASE_BRANCH) || \
+	echo undefined \
+))
+
+PUNCH_CONFIG_FILE := $(abspath $(SELF_DIR).punch_config.py)
+PUNCH_VERSION_FILE := $(abspath $(SELF_DIR).punch_version.py)
+# Obtain project's version as tracked by the Punch tool.
+# NOTE: The Punch tool doesn't have the ability fo print project's version to
+# stdout yet.
+# For more details, see: https://github.com/lgiordani/punch/issues/42.
+PUNCH_VERSION := $(shell \
+	python3 -c "exec(open('$(PUNCH_VERSION_FILE)').read()); \
+		print(f'{major}.{minor}.{patch}')" \
+)
+
+# Determine project's version.
+# If the current git commit is exactly a tag and it equals the Punch version,
+# then the project's version is that.
+# Else, the project version is the Punch version appended with git commit and
+# dirty state info.
+GIT_COMMIT_EXACT_TAG := $(shell \
+	git describe --tags --match 'v*' --exact-match &>/dev/null $(GIT_ORIGIN_REMOTE)/$(RELEASE_BRANCH) && echo YES || echo NO \
+)
+VERSION := $(or \
+	$(and $(call eq,$(GIT_COMMIT_EXACT_TAG),YES), $(call eq,$(GIT_VERSION),$(PUNCH_VERSION))), \
+	$(PUNCH_VERSION)-git$(shell git describe --always --match '' --dirty=+dirty 2>/dev/null) \
+)
+
+# Helper that bumps project's version with the Punch tool.
+define PUNCH_BUMP_VERSION =
+	if [[ "$(RELEASE_BRANCH)" == master ]]; then \
+		if [[ -n "$(CHANGELOG_FRAGMENTS_BREAKING)" ]]; then \
+			PART=major; \
+		else \
+			PART=minor; \
+		fi; \
+	elif [[ "$(RELEASE_BRANCH)" == stable/* ]]; then \
+		if [[ -n "$(CHANGELOG_FRAGMENTS_BREAKING)" ]]; then \
+	        $(ECHO) "$(RED)Error: There shouldn't be breaking changes in a release on a stable branch.$(OFF)"; \
+			$(ECHO) "List of detected breaking changes:"; \
+			for fragment in "$(CHANGELOG_FRAGMENTS_BREAKING)"; do \
+				$(ECHO) "- $$fragment"; \
+			done; \
+			exit 1; \
+		else \
+			PART=patch; \
+		fi; \
+    else \
+	    $(ECHO) "$(RED)Error: Unsupported release branch: '$(RELEASE_BRANCH)'.$(OFF)"; \
+		exit 1; \
+	fi; \
+	punch --config-file $(PUNCH_CONFIG_FILE) --version-file $(PUNCH_VERSION_FILE) --part $$PART --quiet
+endef
+
+# Helper that ensures project's version determined from git equals project's
+# version as tracked by the Punch tool.
+define ENSURE_GIT_VERSION_EQUALS_PUNCH_VERSION =
+	if [[ "$(GIT_VERSION)" != "$(PUNCH_VERSION)" ]]; then \
+		$(ECHO) "$(RED)Error: Project's version for $(GIT_ORIGIN_REMOTE)/$(RELEASE_BRANCH) \
+			determined from git ($(GIT_VERSION)) doesn't equal project's version in \
+			$(PUNCH_VERSION_FILE) ($(PUNCH_VERSION)).$(OFF)"; \
+		exit 1; \
+	fi
+endef
 
 # Go binary to use for all Go commands.
 export OASIS_GO ?= go
@@ -80,6 +160,9 @@ endef
 
 # List of non-trivial Change Log fragments.
 CHANGELOG_FRAGMENTS_NON_TRIVIAL := $(filter-out $(wildcard .changelog/*trivial*.md),$(wildcard .changelog/[0-9]*.md))
+
+# List of breaking Change Log fragments.
+CHANGELOG_FRAGMENTS_BREAKING := $(wildcard .changelog/*breaking*.md)
 
 # Helper that checks Change Log fragments with markdownlint-cli and gitlint.
 # NOTE: Non-zero exit status is recorded but only set at the end so that all
