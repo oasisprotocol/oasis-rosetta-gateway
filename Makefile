@@ -85,6 +85,34 @@ lint-go-mod-tidy:
 
 lint: $(lint-targets)
 
+# Fetch all the latest changes (including tags) from the canonical upstream git
+# repository.
+fetch-git:
+	@$(ECHO) "Fetching the latest changes (including tags) from $(GIT_ORIGIN_REMOTE) remote..."
+	@git fetch $(GIT_ORIGIN_REMOTE) --tags
+
+# Private target for bumping project's version using the Punch tool.
+# NOTE: It should not be invoked directly.
+_version-bump: fetch-git
+	@$(ENSURE_VALID_RELEASE_BRANCH_NAME)
+	@$(PUNCH_BUMP_VERSION)
+	@git add $(PUNCH_VERSION_FILE)
+
+# Private target for assembling the Change Log.
+# NOTE: It should not be invoked directly.
+_changelog:
+	@$(ECHO) "$(CYAN)*** Generating Change Log for version $(PUNCH_VERSION)...$(OFF)"
+	@$(BUILD_CHANGELOG)
+	@$(ECHO) "Next, review the staged changes, commit them and make a pull request."
+	@$(WARN_BREAKING_CHANGES)
+
+# Assemble Change Log.
+# NOTE: We need to call Make recursively since _version-bump target updates
+# Punch's version and hence we need Make to re-evaluate the PUNCH_VERSION
+# variable.
+changelog: _version-bump
+	@$(MAKE) --no-print-directory _changelog
+
 clean:
 	@$(ECHO) "$(CYAN)*** Cleaning up...$(OFF)"
 	@$(GO) clean
@@ -100,7 +128,9 @@ nuke: clean
 # List of targets that are not actual files.
 .PHONY: \
 	all build build-tests \
+	test \
 	fmt \
 	$(lint-targets) lint \
-	test \
+	fetch-git \
+	_version-bump _changelog changelog \
 	clean nuke
