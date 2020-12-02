@@ -178,3 +178,21 @@ define CHECK_CHANGELOG_FRAGMENTS =
 	done; \
 	exit $$exit_status
 endef
+
+# Helper that builds the Change Log.
+define BUILD_CHANGELOG =
+	if [[ $(ASSUME_YES) != 1 ]]; then \
+		towncrier build --version $(PUNCH_VERSION); \
+	else \
+		towncrier build --version $(PUNCH_VERSION) --yes; \
+	fi
+endef
+
+# Helper that prints a warning when breaking changes are indicated by Change Log
+# fragments.
+define WARN_BREAKING_CHANGES =
+	if [[ -n "$(CHANGELOG_FRAGMENTS_BREAKING)" ]]; then \
+		$(ECHO) "$(RED)Warning: This release contains breaking changes.$(OFF)"; \
+		$(ECHO) "$(RED)         Make sure the version is bumped appropriately.$(OFF)"; \
+	fi
+endef
