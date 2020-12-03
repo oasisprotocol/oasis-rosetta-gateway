@@ -119,6 +119,23 @@ func getEnvVarOrExit(name string) string {
 	return value
 }
 
+// Return the server port that should be used or exit if it is malformed.
+func getPortOrExit() int {
+	portStr := os.Getenv(GatewayPortEnvVar)
+	if portStr == "" {
+		portStr = "8080"
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		logger.Error("malformed environment variable",
+			"err", err,
+			"name", GatewayPortEnvVar,
+		)
+		os.Exit(1)
+	}
+	return port
+}
+
 // Print version information.
 func printVersionInfo() {
 	fmt.Printf("Software version: %s\n", common.SoftwareVersion)
@@ -140,22 +157,12 @@ func main() {
 		return
 	}
 
-	// Get server port from environment variable or use the default.
-	port := os.Getenv(GatewayPortEnvVar)
-	if port == "" {
-		port = "8080"
-	}
-	nPort, err := strconv.Atoi(port)
-	if err != nil {
-		logger.Error("malformed environment variable",
-			"err", err,
-			"name", GatewayPortEnvVar,
-		)
-		os.Exit(1)
-	}
+	// Get server port.
+	port := getPortOrExit()
 
 	var chainID string
 	var oasisClient oasis.Client
+	var err error
 
 	// Check if we should run in offline mode.
 	offlineMode := os.Getenv(OfflineModeEnvVar) != ""
@@ -217,8 +224,8 @@ func main() {
 	}
 
 	// Start the server.
-	logger.Info("Oasis Rosetta Gateway listening", "port", nPort)
-	err = http.ListenAndServe(fmt.Sprintf(":%d", nPort), router)
+	logger.Info("Oasis Rosetta Gateway listening", "port", port)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", port), router)
 	if err != nil {
 		logger.Error("Oasis Rosetta Gateway server exited",
 			"err", err,
