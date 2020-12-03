@@ -16,6 +16,11 @@ $(error Please install wget or curl)
 endif
 endif
 
+# Check if Go's linkers flags are set in common.mk and add them as extra flags.
+ifneq ($(GOLDFLAGS),)
+	GO_EXTRA_FLAGS += -ldflags $(GOLDFLAGS)
+endif
+
 ROOT := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 all: build
@@ -23,11 +28,11 @@ all: build
 
 build:
 	@$(ECHO) "$(CYAN)*** Building...$(OFF)"
-	@$(GO) build
+	@$(GO) build $(GOFLAGS) $(GO_EXTRA_FLAGS)
 
 build-tests:
 	@$(ECHO) "$(CYAN)*** Building tests...$(OFF)"
-	@$(GO) build ./tests/...
+	@$(GO) build $(GOFLAGS) $(GO_EXTRA_FLAGS) ./tests/...
 
 tests/oasis_core_release.tar.gz:
 	@$(ECHO) "$(MAGENTA)*** Downloading oasis-core release $(OASIS_RELEASE)...$(OFF)"
