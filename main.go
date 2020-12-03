@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/common"
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
 )
@@ -30,7 +32,11 @@ const GatewayPortEnvVar = "OASIS_ROSETTA_GATEWAY_PORT"
 // Don't forget to set services.OfflineModeChainIDEnvVar as well.
 const OfflineModeEnvVar = "OASIS_ROSETTA_GATEWAY_OFFLINE_MODE"
 
-var logger = logging.GetLogger("oasis-rosetta-gateway")
+var (
+	logger = logging.GetLogger("oasis-rosetta-gateway")
+
+	versionFlag = flag.Bool("version", false, "Print version and exit")
+)
 
 // NewBlockchainRouter returns a Mux http.Handler from a collection of
 // Rosetta service controllers.
@@ -113,11 +119,25 @@ func getEnvVarOrExit(name string) string {
 	return value
 }
 
+// Print version information.
+func printVersionInfo() {
+	fmt.Printf("Software version: %s\n", common.SoftwareVersion)
+	fmt.Printf("Rosetta API version: %s\n", common.RosettaAPIVersion)
+	fmt.Printf("Go toolchain version: %s\n", common.ToolchainVersion)
+}
+
 func main() {
 	// Initialize logging.
 	if err := logging.Initialize(os.Stdout, logging.FmtLogfmt, logging.LevelDebug, nil); err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: Unable to initialize logging: %v\n", err)
 		os.Exit(1)
+	}
+
+	// Print version info if -version flag is passed.
+	flag.Parse()
+	if *versionFlag {
+		printVersionInfo()
+		return
 	}
 
 	// Get server port from environment variable or use the default.
