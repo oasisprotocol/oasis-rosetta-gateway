@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/common"
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
 )
@@ -30,7 +32,11 @@ const GatewayPortEnvVar = "OASIS_ROSETTA_GATEWAY_PORT"
 // Don't forget to set services.OfflineModeChainIDEnvVar as well.
 const OfflineModeEnvVar = "OASIS_ROSETTA_GATEWAY_OFFLINE_MODE"
 
-var logger = logging.GetLogger("oasis-rosetta-gateway")
+var (
+	logger = logging.GetLogger("oasis-rosetta-gateway")
+
+	versionFlag = flag.Bool("version", false, "Print version and exit")
+)
 
 // NewBlockchainRouter returns a Mux http.Handler from a collection of
 // Rosetta service controllers.
@@ -113,19 +119,13 @@ func getEnvVarOrExit(name string) string {
 	return value
 }
 
-func main() {
-	// Initialize logging.
-	if err := logging.Initialize(os.Stdout, logging.FmtLogfmt, logging.LevelDebug, nil); err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: Unable to initialize logging: %v\n", err)
-		os.Exit(1)
+// Return the server port that should be used or exit if it is malformed.
+func getPortOrExit() int {
+	portStr := os.Getenv(GatewayPortEnvVar)
+	if portStr == "" {
+		portStr = "8080"
 	}
-
-	// Get server port from environment variable or use the default.
-	port := os.Getenv(GatewayPortEnvVar)
-	if port == "" {
-		port = "8080"
-	}
-	nPort, err := strconv.Atoi(port)
+	port, err := strconv.Atoi(portStr)
 	if err != nil {
 		logger.Error("malformed environment variable",
 			"err", err,
@@ -133,9 +133,36 @@ func main() {
 		)
 		os.Exit(1)
 	}
+	return port
+}
+
+// Print version information.
+func printVersionInfo() {
+	fmt.Printf("Software version: %s\n", common.SoftwareVersion)
+	fmt.Printf("Rosetta API version: %s\n", common.RosettaAPIVersion)
+	fmt.Printf("Go toolchain version: %s\n", common.ToolchainVersion)
+}
+
+func main() {
+	// Initialize logging.
+	if err := logging.Initialize(os.Stdout, logging.FmtLogfmt, logging.LevelDebug, nil); err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Unable to initialize logging: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Print version info if -version flag is passed.
+	flag.Parse()
+	if *versionFlag {
+		printVersionInfo()
+		return
+	}
+
+	// Get server port.
+	port := getPortOrExit()
 
 	var chainID string
 	var oasisClient oasis.Client
+	var err error
 
 	// Check if we should run in offline mode.
 	offlineMode := os.Getenv(OfflineModeEnvVar) != ""
@@ -197,8 +224,8 @@ func main() {
 	}
 
 	// Start the server.
-	logger.Info("Oasis Rosetta Gateway listening", "port", nPort)
-	err = http.ListenAndServe(fmt.Sprintf(":%d", nPort), router)
+	logger.Info("Oasis Rosetta Gateway listening", "port", port)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", port), router)
 	if err != nil {
 		logger.Error("Oasis Rosetta Gateway server exited",
 			"err", err,

@@ -10,6 +10,7 @@ import (
 
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
+	"github.com/oasisprotocol/oasis-core-rosetta-gateway/common"
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
 )
 
@@ -132,7 +133,7 @@ func (s *networkAPIService) NetworkOptions(
 
 	return &types.NetworkOptionsResponse{
 		Version: &types.Version{
-			RosettaVersion: "1.4.0",
+			RosettaVersion: common.RosettaAPIVersion,
 			NodeVersion:    status.SoftwareVersion,
 		},
 		Allow: &types.Allow{

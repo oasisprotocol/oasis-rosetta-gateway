@@ -127,6 +127,16 @@ export OASIS_GO ?= go
 # Go command prefix to use in all Go commands.
 GO := env -u GOPATH $(OASIS_GO)
 
+# NOTE: The -trimpath flag strips all host dependent filesystem paths from
+# binaries which is required for deterministic builds.
+GOFLAGS ?= -trimpath -v
+
+# Project's version as the linker's string value definition.
+export GOLDFLAGS_VERSION := -X github.com/oasisprotocol/oasis-core-rosetta-gateway/common.SoftwareVersion=$(VERSION)
+
+# Go's linker flags.
+export GOLDFLAGS ?= "$(GOLDFLAGS_VERSION)"
+
 # Helper that ensures the git workspace is clean.
 define ENSURE_GIT_CLEAN =
 	if [[ ! -z `git status --porcelain` ]]; then \
