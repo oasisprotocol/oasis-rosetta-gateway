@@ -3,8 +3,14 @@ package common
 
 import (
 	"runtime"
+	"runtime/debug"
 	"strings"
+
+	ocVersion "github.com/oasisprotocol/oasis-core/go/common/version"
 )
+
+// VersionUnknown represents an unknown version.
+const VersionUnknown = "unknown"
 
 var (
 	// SoftwareVersion represents the Oasis Core Rosetta Gateway's version and
@@ -18,3 +24,21 @@ var (
 	// ToolchainVersion is the version of the Go compiler/standard library.
 	ToolchainVersion = strings.TrimPrefix(runtime.Version(), "go")
 )
+
+// GetOasisCoreVersion returns the version of the Oasis Core dependency or
+// unknown if it can't be obtained.
+func GetOasisCoreVersion() string {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		return VersionUnknown
+	}
+
+	for _, dep := range bi.Deps {
+		if dep.Path == "github.com/oasisprotocol/oasis-core/go" {
+			// Convert Go Modules compatible version to Oasis Core's canonical
+			// version.
+			return ocVersion.ConvertGoModulesVersion(dep.Version)
+		}
+	}
+	return VersionUnknown
+}
