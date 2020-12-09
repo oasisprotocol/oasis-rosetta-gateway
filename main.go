@@ -139,6 +139,8 @@ func getPortOrExit() int {
 // Print version information.
 func printVersionInfo() {
 	fmt.Printf("Software version: %s\n", common.SoftwareVersion)
+	fmt.Printf("Oasis Core:\n")
+	fmt.Printf("  Software version: %s\n", common.GetOasisCoreVersion())
 	fmt.Printf("Rosetta API version: %s\n", common.RosettaAPIVersion)
 	fmt.Printf("Go toolchain version: %s\n", common.ToolchainVersion)
 }
