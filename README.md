@@ -48,6 +48,20 @@ then run the gateway and validate it using `rosetta-cli`.
 [Oasis Node]: https://docs.oasis.dev/general/run-a-node/prerequisites/oasis-node
 [Rosetta CLI]: https://github.com/coinbase/rosetta-cli
 
+## Contributing
+
+### Versioning
+
+See our [Versioning] document.
+
+[Versioning]: docs/versioning.md
+
+### Release Process
+
+See our [Release Process] document.
+
+[Release Process]: docs/release-process.md
+
 ## Running the Gateway
 
 The gateway connects to an Oasis Node, so make sure you have a running node
