@@ -80,10 +80,3 @@ linters-settings:
   maligned:
     # Print the suggested struct structure with a more effective memory layout.
     suggest-new: true
-
-run:
-  skip-dirs:
-    # golang-ci-lint requires that files compile for certain linters
-    # to run, and Go plugins do not compile unless `-buildmode=plugin`
-    # is set, which linters do not do.
-    - ledger-signer
