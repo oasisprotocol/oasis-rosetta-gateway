@@ -2,12 +2,15 @@
 
 [![CI test status][github-ci-tests-badge]][github-ci-tests-link]
 [![CI lint status][github-ci-lint-badge]][github-ci-lint-link]
+[![Release status][github-release-badge]][github-release-link]
 
 <!-- markdownlint-disable line-length -->
 [github-ci-tests-badge]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/workflows/ci-tests/badge.svg
 [github-ci-tests-link]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/actions?query=workflow:ci-tests+branch:master
 [github-ci-lint-badge]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/workflows/ci-lint/badge.svg
 [github-ci-lint-link]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/actions?query=workflow:ci-lint+branch:master
+[github-release-badge]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/workflows/release/badge.svg
+[github-release-link]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/actions?query=workflow:release
 <!-- markdownlint-enable line-length -->
 
 This repository implements the [Rosetta] server for the [Oasis Network].
