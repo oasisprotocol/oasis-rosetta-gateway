@@ -12,3 +12,5 @@ tests/rosetta-cli*
 tests/validator-data
 # Ignore Python cache directories.
 __pycache__/
+# Ignore GoReleaser-created release artifacts.
+/dist/

@@ -206,3 +206,114 @@ define WARN_BREAKING_CHANGES =
 		$(ECHO) "$(RED)         Make sure the version is bumped appropriately.$(OFF)"; \
 	fi
 endef
+
+# Helper that ensures the origin's release branch's HEAD doesn't contain any
+# Change Log fragments.
+define ENSURE_NO_CHANGELOG_FRAGMENTS =
+	if ! CHANGELOG_FILES=`git ls-tree -r --name-only $(GIT_ORIGIN_REMOTE)/$(RELEASE_BRANCH) .changelog`; then \
+		$(ECHO) "$(RED)Error: Could not obtain Change Log fragments for $(GIT_ORIGIN_REMOTE)/$(RELEASE_BRANCH) branch.$(OFF)"; \
+		exit 1; \
+	fi; \
+	if CHANGELOG_FRAGMENTS=`echo "$$CHANGELOG_FILES" | grep --invert-match --extended-regexp '(README.md|template.md.j2|.markdownlint.yml)'`; then \
+		$(ECHO) "$(RED)Error: Found the following Change Log fragments on $(GIT_ORIGIN_REMOTE)/$(RELEASE_BRANCH) branch:"; \
+		$(ECHO) "$${CHANGELOG_FRAGMENTS}$(OFF)"; \
+		exit 1; \
+	fi
+endef
+
+# Helper that ensures the origin's release branch's HEAD contains a Change Log
+# section for the next release.
+define ENSURE_NEXT_RELEASE_IN_CHANGELOG =
+	if ! ( git show $(GIT_ORIGIN_REMOTE)/$(RELEASE_BRANCH):CHANGELOG.md | \
+			grep --quiet '^## $(PUNCH_VERSION) (.*)' ); then \
+		$(ECHO) "$(RED)Error: Could not locate Change Log section for release $(PUNCH_VERSION) on $(GIT_ORIGIN_REMOTE)/$(RELEASE_BRANCH) branch.$(OFF)"; \
+		exit 1; \
+	fi
+endef
+
+# Git tag of the next release.
+RELEASE_TAG := v$(PUNCH_VERSION)
+
+# Helper that ensures the new release's tag doesn't already exist on the origin
+# remote.
+define ENSURE_RELEASE_TAG_EXISTS =
+	if ! git ls-remote --exit-code --tags $(GIT_ORIGIN_REMOTE) $(RELEASE_TAG) 1>/dev/null; then \
+		$(ECHO) "$(RED)Error: Tag '$(RELEASE_TAG)' doesn't exist on $(GIT_ORIGIN_REMOTE) remote.$(OFF)"; \
+		exit 1; \
+	fi
+endef
+
+# Helper that ensures the new release's tag doesn't already exist on the origin
+# remote.
+define ENSURE_RELEASE_TAG_DOES_NOT_EXIST =
+	if git ls-remote --exit-code --tags $(GIT_ORIGIN_REMOTE) $(RELEASE_TAG) 1>/dev/null; then \
+		$(ECHO) "$(RED)Error: Tag '$(RELEASE_TAG)' already exists on $(GIT_ORIGIN_REMOTE) remote.$(OFF)"; \
+		exit 1; \
+	fi; \
+	if git show-ref --quiet --tags $(RELEASE_TAG); then \
+		$(ECHO) "$(RED)Error: Tag '$(RELEASE_TAG)' already exists locally.$(OFF)"; \
+		exit 1; \
+	fi
+endef
+
+# Name of the stable release branch (if the current version is appropriate).
+STABLE_BRANCH := $(shell \
+	python3 -c "exec(open('$(PUNCH_VERSION_FILE)').read()); \
+		print(f'stable/{major}.{minor}.x') if patch == 0 else print('undefined')")
+
+# Helper that ensures the stable branch name is valid.
+define ENSURE_VALID_STABLE_BRANCH =
+	if [[ "$(STABLE_BRANCH)" == "undefined" ]]; then \
+		$(ECHO) "$(RED)Error: Cannot create a stable release branch for version $(PUNCH_VERSION).$(OFF)"; \
+		exit 1; \
+	fi
+endef
+
+# Helper that ensures the new stable branch doesn't already exist on the origin
+# remote.
+define ENSURE_STABLE_BRANCH_DOES_NOT_EXIST =
+	if git ls-remote --exit-code --heads $(GIT_ORIGIN_REMOTE) $(STABLE_BRANCH) 1>/dev/null; then \
+		$(ECHO) "$(RED)Error: Branch '$(STABLE_BRANCH)' already exists on $(GIT_ORIGIN_REMOTE) remote.$(OFF)"; \
+		exit 1; \
+	fi; \
+	if git show-ref --quiet --heads $(STABLE_BRANCH); then \
+		$(ECHO) "$(RED)Error: Branch '$(STABLE_BRANCH)' already exists locally.$(OFF)"; \
+		exit 1; \
+	fi
+endef
+
+# Helper that ensures $(RELEASE_BRANCH) variable contains a valid release branch
+# name.
+define ENSURE_VALID_RELEASE_BRANCH_NAME =
+	if [[ ! $(RELEASE_BRANCH) =~ ^(master|(stable/[0-9]+\.[0-9]+\.x$$)) ]]; then \
+		$(ECHO) "$(RED)Error: Invalid release branch name: '$(RELEASE_BRANCH)'."; \
+		exit 1; \
+	fi
+endef
+
+# Auxiliary variable that defines a new line for later substitution.
+define newline
+
+
+endef
+
+# GitHub release text in Markdown format.
+define RELEASE_TEXT =
+For a list of changes in this release, see the [Change Log].
+
+*NOTE: If you are upgrading from an earlier release, please **carefully review**
+the [Change Log] for **Removals and Breaking changes**.*
+
+[Change Log]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/blob/v$(VERSION)/CHANGELOG.md
+
+endef
+
+# Instruct GoReleaser to create a "snapshot" release by default.
+GORELEASER_ARGS ?= release --snapshot --rm-dist
+# If the appropriate environment variable is set, create a real release.
+ifeq ($(OASIS_CORE_ROSETTA_GATEWAY_REAL_RELEASE), true)
+# Create temporary file with GitHub release's text.
+_RELEASE_NOTES_FILE := $(shell mktemp /tmp/oasis-core-rosetta-gateway.XXXXX)
+_ := $(shell printf "$(subst ",\",$(subst $(newline),\n,$(RELEASE_TEXT)))" > $(_RELEASE_NOTES_FILE))
+GORELEASER_ARGS = release --release-notes $(_RELEASE_NOTES_FILE)
+endif

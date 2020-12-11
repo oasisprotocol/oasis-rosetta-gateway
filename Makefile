@@ -130,6 +130,41 @@ nuke: clean
 	@$(ECHO) "$(CYAN)*** Cleaning up really well...$(OFF)"
 	@$(GO) clean -cache -testcache -modcache
 
+# Tag the next release.
+release-tag: fetch-git
+	@$(ECHO) "Checking if we can tag version $(PUNCH_VERSION) as the next release..."
+	@$(ENSURE_VALID_RELEASE_BRANCH_NAME)
+	@$(ENSURE_RELEASE_TAG_DOES_NOT_EXIST)
+	@$(ENSURE_NO_CHANGELOG_FRAGMENTS)
+	@$(ENSURE_NEXT_RELEASE_IN_CHANGELOG)
+	@$(ECHO) "All checks have passed. Proceeding with tagging the $(GIT_ORIGIN_REMOTE)/$(RELEASE_BRANCH)'s HEAD with tag '$(RELEASE_TAG)'."
+	@$(CONFIRM_ACTION)
+	@$(ECHO) "If this appears to be stuck, you might need to touch your security key for GPG sign operation."
+	@git tag --sign --message="Version $(PUNCH_VERSION)" $(RELEASE_TAG) $(GIT_ORIGIN_REMOTE)/$(RELEASE_BRANCH)
+	@git push $(GIT_ORIGIN_REMOTE) $(RELEASE_TAG)
+	@$(ECHO) "$(CYAN)*** Tag '$(RELEASE_TAG)' has been successfully pushed to $(GIT_ORIGIN_REMOTE) remote.$(OFF)"
+
+# Create and push a stable branch for the current release.
+release-stable-branch: fetch-git
+	@$(ECHO) "Checking if we can create a stable release branch for version $(PUNCH_VERSION)...$(OFF)"
+	@$(ENSURE_VALID_STABLE_BRANCH)
+	@$(ENSURE_RELEASE_TAG_EXISTS)
+	@$(ENSURE_STABLE_BRANCH_DOES_NOT_EXIST)
+	@$(ECHO) "All checks have passed. Proceeding with creating the '$(STABLE_BRANCH)' branch on $(GIT_ORIGIN_REMOTE) remote."
+	@$(CONFIRM_ACTION)
+	@git branch $(STABLE_BRANCH) $(RELEASE_TAG)
+	@git push $(GIT_ORIGIN_REMOTE) $(STABLE_BRANCH)
+	@$(ECHO) "$(CYAN)*** Branch '$(STABLE_BRANCH)' has been sucessfully pushed to $(GIT_ORIGIN_REMOTE) remote.$(OFF)"
+
+# Build and publish the next release.
+release-build:
+	@$(ENSURE_VALID_RELEASE_BRANCH_NAME)
+ifeq ($(OASIS_CORE_ROSETTA_GATEWAY_REAL_RELEASE), true)
+	@$(ENSURE_GIT_VERSION_EQUALS_PUNCH_VERSION)
+endif
+	@$(ECHO) "$(CYAN)*** Creating release for version $(PUNCH_VERSION)...$(OFF)"
+	@goreleaser $(GORELEASER_ARGS)
+
 # List of targets that are not actual files.
 .PHONY: \
 	all build build-tests \
@@ -138,4 +173,5 @@ nuke: clean
 	$(lint-targets) lint \
 	fetch-git \
 	_version-bump _changelog changelog \
-	clean nuke
+	clean nuke \
+	release-tag release-stable-branch release-build
