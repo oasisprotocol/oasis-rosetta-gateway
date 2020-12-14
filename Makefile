@@ -78,7 +78,7 @@ lint-git:
 
 lint-docs:
 	@$(ECHO) "$(CYAN)*** Runnint markdownlint-cli...$(OFF)"
-	@npx markdownlint-cli '**/*.md' --ignore .changelog/
+	@npx markdownlint-cli '**/*.md' --ignore .changelog/ --ignore tests/rosetta-cli-*/
 
 lint-changelog:
 	@$(CHECK_CHANGELOG_FRAGMENTS)

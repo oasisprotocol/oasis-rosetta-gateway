@@ -1,4 +1,4 @@
-# Oasis Gateway for Rosetta
+# Oasis Core Rosetta Gateway
 
 [![CI test status][github-ci-tests-badge]][github-ci-tests-link]
 [![CI lint status][github-ci-lint-badge]][github-ci-lint-link]
