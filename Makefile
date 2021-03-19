@@ -1,6 +1,6 @@
 include common.mk
 
-OASIS_RELEASE := 20.12.3
+OASIS_RELEASE := 21.0
 ROSETTA_CLI_RELEASE := 0.4.0
 
 # Check which tool to use for downloading.

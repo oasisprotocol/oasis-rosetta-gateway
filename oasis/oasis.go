@@ -249,7 +249,7 @@ func (c *grpcClient) GetDelegations(
 		return nil, err
 	}
 	client := staking.NewStakingClient(conn)
-	return client.Delegations(ctx, &staking.OwnerQuery{
+	return client.DelegationsFor(ctx, &staking.OwnerQuery{
 		Height: height,
 		Owner:  owner,
 	})
@@ -265,7 +265,7 @@ func (c *grpcClient) GetDebondingDelegations(
 		return nil, err
 	}
 	client := staking.NewStakingClient(conn)
-	return client.DebondingDelegations(ctx, &staking.OwnerQuery{
+	return client.DebondingDelegationsFor(ctx, &staking.OwnerQuery{
 		Height: height,
 		Owner:  owner,
 	})
