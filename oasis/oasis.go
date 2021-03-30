@@ -170,12 +170,11 @@ func (c *grpcClient) GetChainID(ctx context.Context) (string, error) {
 	defer c.Unlock()
 
 	client := consensus.NewConsensusClient(conn)
-	genesis, err := client.GetGenesisDocument(ctx)
+	c.chainID, err = client.GetChainContext(ctx)
 	if err != nil {
-		logger.Debug("GetChainID: failed to get genesis document", "err", err)
+		logger.Debug("GetChainID: failed to get chain context", "err", err)
 		return "", err
 	}
-	c.chainID = genesis.ChainContext()
 	return c.chainID, nil
 }
 
