@@ -12,6 +12,10 @@ import (
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
 )
 
+// EpochKey is the name of the key in the Metadata map inside the response of a block request.
+// The value in the map is the epoch number of the returned block.
+const EpochKey = "epoch"
+
 var loggerBlk = logging.GetLogger("services/block")
 
 type blockAPIService struct {
@@ -111,6 +115,9 @@ func (s *blockAPIService) Block(
 		},
 		Timestamp:    blk.Timestamp,
 		Transactions: td.Transactions(),
+		Metadata: map[string]interface{}{
+			EpochKey: blk.Epoch,
+		},
 	}
 
 	resp := &types.BlockResponse{
