@@ -91,6 +91,7 @@ type Block struct {
 	Timestamp    int64  // UNIX time, converted to milliseconds.
 	ParentHeight int64  // Height of parent block.
 	ParentHash   string // Hash of parent block.
+	Epoch        uint64 // Epoch.
 }
 
 // grpcClient is an implementation of Client using gRPC.
@@ -209,12 +210,18 @@ func (c *grpcClient) GetBlock(ctx context.Context, height int64) (*Block, error)
 	parentHeight = parentBlk.Height
 	parentHash = parentBlk.Hash
 
+	epoch, err := client.Beacon().GetEpoch(ctx, height)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Block{
 		Height:       blk.Height,
 		Hash:         hex.EncodeToString(blk.Hash),
 		Timestamp:    blk.Time.UnixNano() / 1000000, // ms
 		ParentHeight: parentHeight,
 		ParentHash:   hex.EncodeToString(parentHash),
+		Epoch:        uint64(epoch),
 	}, nil
 }
 
