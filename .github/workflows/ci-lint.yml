@@ -81,6 +81,7 @@ jobs:
         with:
           # NOTE: The version must be specified without the patch version.
           version: v1.39
+          skip-go-installation: true
         # Always run this step so that all linting errors can be seen at once.
         if: always()
       - name: Ensure a clean code checkout
