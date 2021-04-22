@@ -97,6 +97,7 @@ Add a table with important versions just below the next version's heading:
 | Name         | Version   |
 |:-------------|:---------:|
 | Rosetta API  | <VERSION> |
+| Oasis Core   | <VERSION> |
 ```
 
 where `<VERSION>` strings are replaced with appropriate versions.
@@ -106,6 +107,7 @@ For example:
 | Name         | Version   |
 |:-------------|:---------:|
 | Rosetta API  | 1.4.1     |
+| Oasis Core   | 21.1      |
 
 After you are content with the changes, commit them, push them to the origin
 and make a pull request.
