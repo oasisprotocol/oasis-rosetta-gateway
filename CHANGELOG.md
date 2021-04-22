@@ -21,6 +21,50 @@ The format is inspired by [Keep a Changelog].
 
 <!-- TOWNCRIER -->
 
+## 1.1.0 (2021-04-22)
+
+| Name         | Version   |
+|:-------------|:---------:|
+| Rosetta API  | 1.4.1     |
+| Oasis Core   | 21.1      |
+
+### Features
+
+- Add epoch number to block metadata
+  ([#188](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/188))
+
+### Documentation Improvements
+
+- Add Oasis Core version to important versions listed in the Change Log
+  ([#191](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/191))
+
+### Internal Changes
+
+- ci: bump actions/setup-node from v2.1.2 to v2.1.3
+  ([#139](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/139))
+
+- ci: bump actions/setup-node from v2.1.3 to v2.1.5
+  ([#166](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/166))
+
+- oasis: Use GetChainContext method instead of fetching genesis document
+  ([#180](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/180))
+
+- ci: bump golangci/golangci-lint-action from v2.3.0 to v2.5.2
+  ([#183](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/183))
+
+- go: bump google.golang.org/grpc from 1.36.0 to 1.37.0
+  ([#185](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/185))
+
+- ci: bump actions/setup-python from v2.1.4 to v2.2.2
+  ([#186](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/186))
+
+- Bump Oasis Core version to 21.1
+  ([#175](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/175),
+   [#187](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/187))
+
+- ci: Bump golangci-lint version in _ci-lint_ GitHub Actions workflow to 1.39
+  ([#190](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/190))
+
 ## 1.0.0 (2020-12-14)
 
 | Name         | Version   |
