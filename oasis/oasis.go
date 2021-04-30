@@ -334,11 +334,7 @@ func (c *grpcClient) GetStatus(ctx context.Context) (*control.Status, error) {
 		return nil, err
 	}
 	client := control.NewNodeControllerClient(conn)
-	status, err := client.GetStatus(ctx)
-	if err != nil {
-		c.genesisHeight = status.Consensus.GenesisHeight
-	}
-	return status, err
+	return client.GetStatus(ctx)
 }
 
 // New creates a new Oasis gRPC client.
