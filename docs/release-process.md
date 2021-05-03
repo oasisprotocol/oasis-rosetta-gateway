@@ -164,12 +164,12 @@ back-port some fixes (e.g. a security fix) and (backwards compatible) changes
 from an upcoming release and release them without also releasing all the other
 (potentially breaking) changes.
 
-To make the following steps easier, set the `RELEASE_BRANCH` environment
-variable to the name of the stable branch of the `MAJOR.MINOR` release you want
-to back-port the changes to, e.g. `stable/1.5.x`:
+Set the `RELEASE_BRANCH` environment variable to the name of the stable branch
+of the `MAJOR.MINOR` release you want to back-port the changes to, e.g.
+`stable/1.5.x`, and export it:
 
 ```bash
-RELEASE_BRANCH="stable/1.5.x"
+export RELEASE_BRANCH="stable/1.5.x"
 ```
 
 ### Back-port Changes
