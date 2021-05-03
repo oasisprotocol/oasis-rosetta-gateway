@@ -90,16 +90,8 @@ make changelog
 Review the staged changes and make appropriate adjustment to the Change Log
 (e.g. re-order entries, make formatting/spelling fixes, ...).
 
-Add a table with important versions just below the next version's heading:
-
-```
-| Name         | Version   |
-|:-------------|:---------:|
-| Rosetta API  | <VERSION> |
-| Oasis Core   | <VERSION> |
-```
-
-where `<VERSION>` strings are replaced with appropriate versions.
+Replace the `<VERSION>` strings in the important versions table just below the
+next version's heading with appropriate versions.
 
 For example:
 
@@ -205,6 +197,9 @@ make changelog
 
 *NOTE: The `changelog` Make target will bump the `PATCH` part of the version
 automatically.*
+
+Replace the `<VERSION>` strings in the important versions table just below the
+next version's heading with appropriate versions.
 
 After reviewing the staged changes, commit them, push the changes to the origin
 and make a pull request against the `${RELEASE_BRANCH}` branch.
