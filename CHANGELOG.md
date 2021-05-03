@@ -21,6 +21,31 @@ The format is inspired by [Keep a Changelog].
 
 <!-- TOWNCRIER -->
 
+## 1.1.1 (2021-05-03)
+
+| Name         | Version   |
+|:-------------|:---------:|
+| Rosetta API  | 1.4.1     |
+| Oasis Core   | 21.1      |
+
+### Bug Fixes
+
+- Fix possible nil pointer dereference in GetStatus
+  ([#196](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/196))
+
+### Documentation Improvements
+
+- Note that `RELEASE_BRANCH` variable needs to be exported in [Release Process]
+  ([#198](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/198),
+   [#200](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/200))
+
+  [Release Process]: docs/release-process.md
+
+### Internal Changes
+
+- changelog: Automatically add important versions table
+  ([#198](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/198))
+
 ## 1.1.0 (2021-04-22)
 
 | Name         | Version   |
