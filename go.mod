@@ -11,5 +11,5 @@ require (
 	github.com/oasisprotocol/ed25519 v0.0.0-20210127160119-f7017427c1ea
 	github.com/oasisprotocol/oasis-core/go v0.2101.0
 	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1
-	google.golang.org/grpc v1.37.0
+	google.golang.org/grpc v1.38.0
 )
