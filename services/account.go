@@ -65,6 +65,31 @@ func NewAccountAPIService(oasisClient oasis.Client) server.AccountAPIServicer {
 	}
 }
 
+// AccountCoins implements the /account/coins endpoint. just forward this to /account/balance for now
+func (s *accountAPIService) AccountCoins(ctx context.Context,
+	request *types.AccountCoinsRequest,
+) (*types.AccountCoinsResponse, *types.Error) {
+	account_balance_req := types.AccountBalanceRequest{
+		NetworkIdentifier: request.NetworkIdentifier,
+		AccountIdentifier: request.AccountIdentifier,
+	}
+	rose_balance, err := s.AccountBalance(ctx, &account_balance_req)
+	if err != nil {
+		return nil, err
+	}
+	res := types.AccountCoinsResponse{
+		BlockIdentifier: rose_balance.BlockIdentifier,
+		Coins: []*types.Coin{&types.Coin{
+			CoinIdentifier: &types.CoinIdentifier{Identifier: OasisCurrency.Symbol},
+			Amount: &types.Amount{
+				Value:    rose_balance.Balances[0].Value,
+				Currency: OasisCurrency,
+			},
+		}},
+	}
+	return &res, nil
+}
+
 // AccountBalance implements the /account/balance endpoint.
 func (s *accountAPIService) AccountBalance(
 	ctx context.Context,

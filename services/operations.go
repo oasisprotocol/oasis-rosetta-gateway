@@ -41,7 +41,7 @@ var SupportedOperationTypes = []string{
 	OpReclaimEscrow,
 }
 
-const (
+var (
 	// OpStatusOK is the operation status for successful operations.
 	OpStatusOK = "OK"
 	// OpStatusFailed is the operation status for failed operations.
@@ -171,7 +171,7 @@ func appendOp(
 			Index: opIndex,
 		},
 		Type:   kind,
-		Status: OpStatusOK,
+		Status: &OpStatusOK,
 		Account: &types.AccountIdentifier{
 			Address:    acct,
 			SubAccount: subacct,
@@ -605,7 +605,7 @@ func newOperationToTransactionMapper(ops []*types.Operation) *operationToTransac
 type transactionToOperationMapper struct {
 	tx              *transaction.Transaction
 	txSignerAddress string
-	status          string
+	status          *string
 
 	ops []*types.Operation
 }
@@ -861,7 +861,7 @@ func newTransactionToOperationMapper(
 	return &transactionToOperationMapper{
 		tx:              tx,
 		txSignerAddress: txSignerAddress,
-		status:          status,
+		status:          &status,
 		ops:             ops,
 	}
 }
