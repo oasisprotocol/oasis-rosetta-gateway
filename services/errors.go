@@ -165,13 +165,13 @@ var (
 // NewDetailedError returns a new Rosetta error Code, Message, and Retriable
 // set from proto and Details[CauseKey] set from cause.
 func NewDetailedError(proto *types.Error, cause error) *types.Error {
-	module, code := errors.Code(cause)
+	module, code, msg := errors.Code(cause)
 	detailedError := *proto
 	detailedError.Details = map[string]interface{}{
 		CauseKey: map[string]interface{}{
 			ModuleKey: module,
 			CodeKey:   code,
-			MsgKey:    cause.Error(),
+			MsgKey:    msg,
 		},
 	}
 	return &detailedError
