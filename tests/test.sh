@@ -124,6 +124,44 @@ gen_burn() {
 		--genesis.file "${TEST_BASE_DIR}/net-runner/network/genesis.json"
 }
 
+# Helper function that generates an add escrow transaction.
+gen_add_escrow() {
+	local tx=$1
+	local amount=$2
+	local dst=$3
+	${OASIS_NODE} stake account gen_escrow \
+		--assume_yes \
+		--stake.amount $amount \
+		--stake.escrow.account $dst \
+		--transaction.file "$tx" \
+		--transaction.nonce ${NONCE} \
+		--transaction.fee.amount 1 \
+		--transaction.fee.gas 10000 \
+		--debug.dont_blame_oasis \
+		--debug.test_entity \
+		--debug.allow_test_keys \
+		--genesis.file "${TEST_BASE_DIR}/net-runner/network/genesis.json"
+}
+
+# Helper function that generates a reclaim escrow transaction.
+gen_reclaim_escrow() {
+	local tx=$1
+	local amount=$2
+	local src=$3
+	${OASIS_NODE} stake account gen_reclaim_escrow \
+		--assume_yes \
+		--stake.shares $amount \
+		--stake.escrow.account $src \
+		--transaction.file "$tx" \
+		--transaction.nonce ${NONCE} \
+		--transaction.fee.amount 1 \
+		--transaction.fee.gas 10000 \
+		--debug.dont_blame_oasis \
+		--debug.test_entity \
+		--debug.allow_test_keys \
+		--genesis.file "${TEST_BASE_DIR}/net-runner/network/genesis.json"
+}
+
 printf "${GRN}### Waiting for the validator to register...${OFF}\n"
 ${OASIS_NODE} debug control wait-nodes \
 	--address ${OASIS_NODE_GRPC_ADDR} \
@@ -154,6 +192,14 @@ submit_tx "${TEST_BASE_DIR}/tx2.json"
 printf "${GRN}### Transferring tokens (3)...${OFF}\n"
 gen_transfer "${TEST_BASE_DIR}/tx3.json" 456 "${DST}"
 submit_tx "${TEST_BASE_DIR}/tx3.json"
+
+printf "${GRN}### Escrowing tokens...${OFF}\n"
+gen_add_escrow "${TEST_BASE_DIR}/tx4.json" 100 "${DST}"
+submit_tx "${TEST_BASE_DIR}/tx4.json"
+
+printf "${GRN}### Reclaiming escrowed tokens...${OFF}\n"
+gen_reclaim_escrow "${TEST_BASE_DIR}/tx5.json" 100 "${DST}"
+submit_tx "${TEST_BASE_DIR}/tx5.json"
 
 advance_epoch 4
 wait_for_nodes
