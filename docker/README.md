@@ -1,5 +1,10 @@
 # Running Oasis Node and Rosetta Gateway in Docker
 
+_NOTE: Oasis recommends using binaries from the [official GitHub Releases].
+The versions of [Rosetta API] and [Oasis Core] that are supported for a given
+release are indicated in a release's Change Log (e.g. [Change Log for 1.1.1]
+release)._
+
 This directory contains a Dockerfile that builds an image containing both
 the [Oasis Node] and the [Oasis Rosetta gateway], as instructed by the
 [Rosetta Docker Deployment] doc.
@@ -35,6 +40,12 @@ The final image is around 87MB in size.  You can remove the intermediary build
 image to save disk space.
 
 <!-- markdownlint-disable line-length -->
+[official GitHub Releases]:
+  https://github.com/oasisprotocol/oasis-core-rosetta-gateway/releases/
+[Change Log for 1.1.1]:
+  https://github.com/oasisprotocol/oasis-core-rosetta-gateway/blob/v1.1.1/CHANGELOG.md
+[Rosetta API]: https://www.rosetta-api.org/docs/welcome.html
+[Oasis Core]: https://github.com/oasisprotocol/oasis-core
 [Oasis Node]:
   https://docs.oasis.dev/general/run-a-node/prerequisites/oasis-node
 [Oasis Rosetta Gateway]:
