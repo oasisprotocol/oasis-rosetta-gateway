@@ -1,0 +1,74 @@
+# NOTE: This name appears in GitHub's Checks API and in workflow's status badge.
+name: docker
+
+# NOTE: The purpose of this workflow is only to test if Docker images build
+# successfully.
+# Oasis recommends using binaries from the official GitHub releases as described
+# in repo's docker/README.md.
+
+# Trigger the workflow when:
+on:
+  # A push occurs to one of the matched branches.
+  push:
+    # XXX: ideally on master branches we would build the image only if there are changes in the
+    # 'docker/' directory (as we do in pull_requests). However, this doesn't work when pushing a new
+    # 'stable/*' branch - the build on a new branch does not trigger unless there are changes
+    # compared to master on the filtered path.
+    # If this is ever fixed, or per branch filters are possible, bring back the path filter to only
+    # build the image when there are changes within 'docker/' directory.
+    branches:
+      - master
+      - stable/*
+  # Or when a pull request event occurs for a pull request against one of the matched branches and at least
+  # one modified file matches the configured paths.
+  #
+  # NOTE: We use this to be able to easily test Docker image changes.
+  pull_request:
+    branches:
+      - master
+      - stable/*
+    paths:
+      - docker/**
+  # Or every day at 04:00 UTC (for the default/master branch).
+  schedule:
+    - cron: "0 4 * * *"
+
+jobs:
+
+  build-images:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: build-images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Determine tag name
+        id: determine_tag
+        shell: bash
+        run: |
+          if [[ -z $GITHUB_BASE_REF ]]; then
+            # On master/stable branches.
+            branch=${GITHUB_REF#refs/heads/}
+          else
+            # On pull request branches.
+            branch=pr-$(git describe --always --match '' --abbrev=7)
+          fi
+          branch=${branch//\//-}
+          echo "::set-output name=tag::${branch}"
+          echo "::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: "Rebuild oasisprotocol/oasis-core-rosetta-gateway:${{ steps.determine_tag.outputs.tag }}"
+        uses: docker/build-push-action@v2.5.0
+        with:
+          context: docker
+          file: docker/Dockerfile
+          tags: oasisprotocol/oasis-core-rosetta-gateway:${{ steps.determine_tag.outputs.tag }}
+          pull: true
+          labels: |
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}
+            org.opencontainers.image.created=${{ steps.determine_tag.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
