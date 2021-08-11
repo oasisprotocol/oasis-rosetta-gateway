@@ -21,6 +21,58 @@ The format is inspired by [Keep a Changelog].
 
 <!-- TOWNCRIER -->
 
+## 1.2.0 (2021-08-11)
+
+| Name         | Version   |
+|:-------------|:---------:|
+| Rosetta API  | 1.4.1     |
+| Oasis Core   | 21.2      |
+
+### Features
+
+- Bump Oasis Core to 21.2.8
+  ([#217](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/217),
+   [#232](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/232))
+
+### Bug Fixes
+
+- Fix possible `nil` pointer dereference in `GetStatus`
+  ([#196](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/196))
+
+### Documentation Improvements
+
+- Note that `RELEASE_BRANCH` variable needs to be exported in [Release Process]
+  ([#198](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/198),
+   [#200](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/200))
+
+  [Release Process]: docs/release-process.md
+
+### Internal Changes
+
+- changelog: Automatically add important versions table
+  ([#198](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/198))
+
+- go: bump github.com/vmihailenco/msgpack/v5 from 5.0.0-beta.1 to 5.3.4
+  ([#210](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/210))
+
+- docker: Improve build steps and ignore everything in .dockerignore
+  ([#222](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/222))
+
+- github: Add [docker workflow] for testing building Docker images
+  ([#222](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/222))
+
+  [docker workflow]:
+    https://github.com/oasisprotocol/oasis-core/actions?query=workflow:docker
+
+- ci: bump docker/build-push-action from 2.5.0 to 2.6.1
+  ([#223](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/223))
+
+- ci: bump actions/setup-node from 2.1.5 to 2.4.0
+  ([#229](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/229))
+
+- go: bump google.golang.org/grpc from 1.38.0 to 1.39.1
+  ([#230](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/230))
+
 ## 1.1.0 (2021-04-22)
 
 | Name         | Version   |
