@@ -21,7 +21,7 @@ func storageEncode(v interface{}) []byte {
 	var buf bytes.Buffer
 	enc := msgpack.GetEncoder()
 	enc.Reset(&buf)
-	enc.UseJSONTag(true)
+	enc.SetCustomStructTag("json")
 	if err := enc.Encode(v); err != nil {
 		panic(err)
 	}
