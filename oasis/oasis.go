@@ -2,7 +2,6 @@ package oasis
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"sync"
@@ -10,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 
+	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
 	cmnGrpc "github.com/oasisprotocol/oasis-core/go/common/grpc"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
@@ -195,7 +195,7 @@ func (c *grpcClient) GetBlock(ctx context.Context, height int64) (*Block, error)
 	}
 
 	parentHeight := blk.Height - 1
-	var parentHash []byte
+	var parentHash hash.Hash
 	if parentHeight <= 0 {
 		parentHeight = 1
 	}
@@ -217,10 +217,10 @@ func (c *grpcClient) GetBlock(ctx context.Context, height int64) (*Block, error)
 
 	return &Block{
 		Height:       blk.Height,
-		Hash:         hex.EncodeToString(blk.Hash),
+		Hash:         blk.Hash.Hex(),
 		Timestamp:    blk.Time.UnixNano() / 1000000, // ms
 		ParentHeight: parentHeight,
-		ParentHash:   hex.EncodeToString(parentHash),
+		ParentHash:   parentHash.Hex(),
 		Epoch:        uint64(epoch),
 	}, nil
 }

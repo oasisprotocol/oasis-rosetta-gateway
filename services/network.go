@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
@@ -79,7 +78,7 @@ func (s *networkAPIService) NetworkStatus(
 
 	var genesisBlockIdentifierHash string
 	if len(status.Consensus.GenesisHash) > 0 {
-		genesisBlockIdentifierHash = hex.EncodeToString(status.Consensus.GenesisHash)
+		genesisBlockIdentifierHash = status.Consensus.GenesisHash.Hex()
 	} else {
 		// If the block is pruned, fill in a dummy value so that users can still get
 		// other network status instead of erroring out completely.
@@ -90,14 +89,14 @@ func (s *networkAPIService) NetworkStatus(
 	if len(status.Consensus.LastRetainedHash) > 0 {
 		oldestBlockIdentifier = &types.BlockIdentifier{
 			Index: status.Consensus.LastRetainedHeight,
-			Hash:  hex.EncodeToString(status.Consensus.LastRetainedHash),
+			Hash:  status.Consensus.LastRetainedHash.Hex(),
 		}
 	}
 
 	resp := &types.NetworkStatusResponse{
 		CurrentBlockIdentifier: &types.BlockIdentifier{
 			Index: status.Consensus.LatestHeight,
-			Hash:  hex.EncodeToString(status.Consensus.LatestHash),
+			Hash:  status.Consensus.LatestHash.Hex(),
 		},
 		CurrentBlockTimestamp: status.Consensus.LatestTime.UnixNano() / 1000000, // ms
 		GenesisBlockIdentifier: &types.BlockIdentifier{
