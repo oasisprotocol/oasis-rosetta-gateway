@@ -21,6 +21,28 @@ The format is inspired by [Keep a Changelog].
 
 <!-- TOWNCRIER -->
 
+## 1.3.0 (2021-11-03)
+
+| Name         | Version   |
+|:-------------|:---------:|
+| Rosetta API  | 1.4.1     |
+| Oasis Core   | 21.3      |
+
+### Features
+
+- Bump Oasis Core to 21.3.5
+  ([#241](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/241))
+
+### Internal Changes
+
+- go: bump github.com/ethereum/go-ethereum to 1.10.9
+  ([#241](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/241))
+
+  It fixes a DoS issue via a maliciously crafted p2p message.
+  For more details, see [GHSA-59hh-656j-3p7v].
+
+  [GHSA-59hh-656j-3p7v]: https://github.com/advisories/GHSA-59hh-656j-3p7v
+
 ## 1.2.0 (2021-08-11)
 
 | Name         | Version   |
