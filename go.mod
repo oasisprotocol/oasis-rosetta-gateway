@@ -10,7 +10,7 @@ require (
 	github.com/dgraph-io/badger v1.6.2
 	github.com/ethereum/go-ethereum v1.10.9 // indirect
 	github.com/oasisprotocol/ed25519 v0.0.0-20210127160119-f7017427c1ea
-	github.com/oasisprotocol/oasis-core/go v0.2103.5
+	github.com/oasisprotocol/oasis-core/go v0.2103.6
 	github.com/vmihailenco/msgpack/v5 v5.3.4
 	google.golang.org/grpc v1.41.0
 )
