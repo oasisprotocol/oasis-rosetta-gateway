@@ -8,10 +8,10 @@
 #
 # Build stage
 #
-FROM golang:1.16-alpine3.13 AS build
+FROM golang:1.16-bullseye AS build
 
 # Install prerequisites.
-RUN rm -f /var/cache/apk/*; apk --no-cache add bash git make gcc g++ libressl-dev libseccomp-dev linux-headers
+RUN apt-get update && apt-get install -y bzip2 libseccomp-dev
 
 ARG CORE_BRANCH=v21.3.5
 ARG CORE_GITHUB=https://github.com/oasisprotocol/oasis-core
@@ -57,8 +57,7 @@ RUN git clone --single-branch --branch $GATEWAY_BRANCH ${GATEWAY_GITHUB} /usr/lo
 #
 # Execution stage
 #
-FROM alpine:3.13
-RUN rm -f /var/cache/apk/*; apk --no-cache add bash libressl libseccomp
+FROM ubuntu:focal
 COPY --from=build /usr/bin/oasis-node /usr/bin/
 COPY --from=build /usr/bin/oasis-core-rosetta-gateway /usr/bin/
 
