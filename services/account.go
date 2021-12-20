@@ -193,3 +193,13 @@ func (s *accountAPIService) AccountBalance(
 
 	return resp, nil
 }
+
+func (s *accountAPIService) AccountCoins(
+	ctx context.Context,
+	request *types.AccountCoinsRequest,
+) (*types.AccountCoinsResponse, *types.Error) {
+	// https://www.rosetta-api.org/docs/AccountApi.html#accountcoins
+	// If your implementation does not support coins (i.e. it is for an account-based blockchain), you do not need to
+	// implement this endpoint.
+	return nil, ErrNotImplemented
+}
