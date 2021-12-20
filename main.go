@@ -55,6 +55,9 @@ func NewBlockchainRouter(oasisClient oasis.Client) (http.Handler, error) {
 				Network:    chainID,
 			},
 		},
+		nil,
+		false,
+		"",
 	)
 	if err != nil {
 		return nil, err
@@ -96,6 +99,9 @@ func NewOfflineBlockchainRouter(chainID string) (http.Handler, error) {
 				Network:    chainID,
 			},
 		},
+		nil,
+		false,
+		"",
 	)
 	if err != nil {
 		return nil, err
