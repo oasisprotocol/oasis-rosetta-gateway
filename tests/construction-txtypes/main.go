@@ -270,7 +270,7 @@ func main() {
 			panic(fmt.Errorf("%s parse: %v", tt.name, re))
 		}
 		fmt.Println(tt.name, "parsed operations", common.DumpJSON(r3.Operations))
-		fmt.Println(tt.name, "parsed signers", common.DumpJSON(r3.Signers))
+		fmt.Println(tt.name, "parsed signers", common.DumpJSON(r3.AccountIdentifierSigners))
 		fmt.Println(tt.name, "parsed metadata", common.DumpJSON(r3.Metadata))
 
 		if !reflect.DeepEqual(r3.Operations, tt.ops) {

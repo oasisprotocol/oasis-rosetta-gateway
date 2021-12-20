@@ -103,7 +103,7 @@ func main() { //nolint:funlen
 		panic(re)
 	}
 	fmt.Println("unsigned operations", common.DumpJSON(r4p.Operations))
-	fmt.Println("unsigned signers", common.DumpJSON(r4p.Signers))
+	fmt.Println("unsigned signers", common.DumpJSON(r4p.AccountIdentifierSigners))
 	fmt.Println("unsigned metadata", common.DumpJSON(r4p.Metadata))
 	r4pRef := &types.ConstructionParseResponse{
 		Operations: ops,
@@ -117,7 +117,7 @@ func main() { //nolint:funlen
 
 	sigs := make([]*types.Signature, 0, len(r4.Payloads))
 	for i, sp := range r4.Payloads {
-		if sp.Address != testEntityAddress {
+		if sp.AccountIdentifier.Address != testEntityAddress {
 			panic(i)
 		}
 		sig, err2 := rs.Sign(sp, sp.SignatureType)
@@ -152,12 +152,16 @@ func main() { //nolint:funlen
 		panic(re)
 	}
 	fmt.Println("signed operations", common.DumpJSON(r5p.Operations))
-	fmt.Println("signed signers", common.DumpJSON(r5p.Signers))
+	fmt.Println("signed signers", common.DumpJSON(r5p.AccountIdentifierSigners))
 	fmt.Println("signed metadata", common.DumpJSON(r5p.Metadata))
 	r5pRef := &types.ConstructionParseResponse{
 		Operations: ops,
-		Signers:    []string{testEntityAddress},
-		Metadata:   r3.Metadata,
+		AccountIdentifierSigners: []*types.AccountIdentifier{{
+			Address:    testEntityAddress,
+			SubAccount: nil,
+			Metadata:   nil,
+		}},
+		Metadata: r3.Metadata,
 	}
 	if !reflect.DeepEqual(r5p, r5pRef) {
 		fmt.Println("signed transaction parsed", common.DumpJSON(r5p))
