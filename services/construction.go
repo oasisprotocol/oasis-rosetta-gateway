@@ -359,7 +359,7 @@ func (s *constructionAPIService) ConstructionParse(
 		from = unsignedTx.Signer
 	}
 
-	om := newTransactionToOperationMapper(&tx, from, "", []*types.Operation{})
+	om := newTransactionToOperationMapper(&tx, from, nil, []*types.Operation{})
 	om.EmitFeeOps()
 	if err := om.EmitTxOps(); err != nil {
 		loggerCons.Error("ConstructionParse: malformed transaction",
