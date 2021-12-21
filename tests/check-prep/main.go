@@ -7,7 +7,6 @@ import (
 	"github.com/coinbase/rosetta-cli/configuration"
 	"github.com/coinbase/rosetta-sdk-go/storage/modules"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/oasisprotocol/oasis-core/go/staking/api"
 
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
 	"github.com/oasisprotocol/oasis-core-rosetta-gateway/tests/common"
@@ -35,61 +34,7 @@ func getRosettaConfig(ni *types.NetworkIdentifier) *configuration.Configuration 
 				Currency:  services.OasisCurrency,
 			},
 		},
-	}
-
-	config.Construction.Scenario = []*types.Operation{
-		{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: 0,
-			},
-			Type: services.OpTransfer,
-			Account: &types.AccountIdentifier{
-				Address: "{{ SENDER }}",
-			},
-			Amount: &types.Amount{
-				Value:    "-100",
-				Currency: services.OasisCurrency,
-			},
-		},
-		{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: 1,
-			},
-			Type: services.OpTransfer,
-			Account: &types.AccountIdentifier{
-				Address: services.StringFromAddress(api.FeeAccumulatorAddress),
-			},
-			Amount: &types.Amount{
-				Value:    "100",
-				Currency: services.OasisCurrency,
-			},
-		},
-		{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: 2,
-			},
-			Type: services.OpTransfer,
-			Account: &types.AccountIdentifier{
-				Address: "{{ SENDER }}",
-			},
-			Amount: &types.Amount{
-				Value:    "{{ SENDER_VALUE }}",
-				Currency: services.OasisCurrency,
-			},
-		},
-		{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: 3,
-			},
-			Type: services.OpTransfer,
-			Account: &types.AccountIdentifier{
-				Address: "{{ RECIPIENT }}",
-			},
-			Amount: &types.Amount{
-				Value:    "{{ RECIPIENT_VALUE }}",
-				Currency: services.OasisCurrency,
-			},
-		},
+		ConstructorDSLFile: "oasis.ros",
 	}
 
 	return config

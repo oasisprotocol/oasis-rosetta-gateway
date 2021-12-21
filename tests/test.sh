@@ -217,6 +217,8 @@ sleep 3
 
 printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
 ${OASIS_GO} run ./check-prep
+OASIS_ROSETTA_NETWORK_LIST=$(curl -f -X POST -d '{}' http://localhost:8080/network/list)
+export OASIS_ROSETTA_NETWORK_LIST
 ./rosetta-cli --configuration-file rosetta-cli-config.json check:data --end 42
 {
   # We'll cause a sigpipe on this process, so ignore the exit status.
