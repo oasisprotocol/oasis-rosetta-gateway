@@ -219,7 +219,7 @@ printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
 ${OASIS_GO} run ./check-prep
 OASIS_ROSETTA_NETWORK_LIST=$(curl -f -X POST -d '{}' http://localhost:8080/network/list)
 export OASIS_ROSETTA_NETWORK_LIST
-./rosetta-cli --configuration-file rosetta-cli-config.json check:data --end 42
+./rosetta-cli --configuration-file rosetta-cli-config.json check:data
 {
   # We'll cause a sigpipe on this process, so ignore the exit status.
   # The downstream awk will exit with nonzero status if this test actually fails without confirming any transactions.
@@ -269,7 +269,7 @@ wait_for_nodes
 
 printf "${GRN}### Validating Rosetta gateway implementation (again)...${OFF}\n"
 ${OASIS_GO} run ./check-prep
-./rosetta-cli --configuration-file rosetta-cli-config.json check:data --end 135
+./rosetta-cli --configuration-file rosetta-cli-config.json check:data
 
 # Clean up after a successful run.
 printf "${GRN}### Terminating existing test network...${OFF}\n"

@@ -36,6 +36,10 @@ func getRosettaConfig(ni *types.NetworkIdentifier) *configuration.Configuration 
 		},
 		ConstructorDSLFile: "oasis.ros",
 	}
+	dataEndTip := true
+	config.Data.EndConditions = &configuration.DataEndConditions{
+		Tip: &dataEndTip,
+	}
 
 	return config
 }
