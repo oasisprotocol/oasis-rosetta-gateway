@@ -220,11 +220,7 @@ ${OASIS_GO} run ./check-prep
 OASIS_ROSETTA_NETWORK_LIST=$(curl -f -X POST -d '{}' http://localhost:8080/network/list)
 export OASIS_ROSETTA_NETWORK_LIST
 ./rosetta-cli --configuration-file rosetta-cli-config.json check:data
-{
-  # We'll cause a sigpipe on this process, so ignore the exit status.
-  # The downstream awk will exit with nonzero status if this test actually fails without confirming any transactions.
-  ./rosetta-cli --configuration-file rosetta-cli-config.json check:construction || true
-} | stdbuf -oL awk '{ print $0 }; $1 == "[STATS]" && $4 >= 42 { confirmed = 1; exit }; END { exit !confirmed }'
+./rosetta-cli --configuration-file rosetta-cli-config.json check:construction
 rm -rf "${ROOT}/validator-data" /tmp/rosetta-cli*
 
 printf "${GRN}### Testing construction signing workflow...${OFF}\n"

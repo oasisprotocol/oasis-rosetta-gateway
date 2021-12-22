@@ -35,6 +35,9 @@ func getRosettaConfig(ni *types.NetworkIdentifier) *configuration.Configuration 
 			},
 		},
 		ConstructorDSLFile: "oasis.ros",
+		EndConditions: map[string]int{
+			"transfer": 42,
+		},
 	}
 	dataHistoricalBalanceEnabled := true
 	config.Data.HistoricalBalanceEnabled = &dataHistoricalBalanceEnabled
