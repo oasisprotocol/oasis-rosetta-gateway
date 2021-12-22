@@ -2,6 +2,23 @@
 // also uses an accounts based model.
 // https://github.com/coinbase/rosetta-ethereum/blob/master/rosetta-cli-conf/testnet/ethereum.ros
 
+create_account(1){
+	create{
+		network_list = load_env("OASIS_ROSETTA_NETWORK_LIST");
+		network = {{network_list.network_identifiers.0}};
+		key = generate_key({"curve_type": "edwards25519"});
+		account = derive({
+			"network_identifier": {{network}},
+			"public_key": {{key.public_key}}
+		});
+
+		save_account({
+			"account_identifier": {{account.account_identifier}},
+			"keypair": {{key}}
+		});
+	}
+}
+
 transfer(10){
 	transfer{
 		network_list = load_env("OASIS_ROSETTA_NETWORK_LIST");
