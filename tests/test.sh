@@ -289,7 +289,7 @@ OUTPUT=$(curl -s -H 'Content-Type: application/json' -X POST \
 	http://localhost:8080/construction/derive \
 	| \
 	fgrep 'oasis1qp7cahykn900m3pxsnq7xw0zgvcuul0wtcpyrlp6')
-if [[ "${OUTPUT}" != '{"address":"oasis1qp7cahykn900m3pxsnq7xw0zgvcuul0wtcpyrlp6"}' ]]; then
+if [[ "${OUTPUT}" != '{"address":"oasis1qp7cahykn900m3pxsnq7xw0zgvcuul0wtcpyrlp6","account_identifier":{"address":"oasis1qp7cahykn900m3pxsnq7xw0zgvcuul0wtcpyrlp6"}}' ]]; then
 	printf "${RED}FAILURE${OFF}\n"
 	exit 1
 else
