@@ -98,7 +98,7 @@ func (d *transactionsDecoder) DecodeTx(rawTx []byte, result *results.Result) err
 		default:
 			status = OpStatusFailed
 		}
-		t2o := newTransactionToOperationMapper(&tx, txSignerAddress, status, rosettaTx.Operations)
+		t2o := newTransactionToOperationMapper(&tx, txSignerAddress, &status, rosettaTx.Operations)
 
 		// If no fee operations were emitted, emit some now.
 		if !o2t.HasFee() {
@@ -166,12 +166,13 @@ func appendOp(
 	amt string,
 ) []*types.Operation {
 	opIndex := int64(len(ops))
+	status := OpStatusOK
 	op := &types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opIndex,
 		},
 		Type:   kind,
-		Status: OpStatusOK,
+		Status: &status,
 		Account: &types.AccountIdentifier{
 			Address:    acct,
 			SubAccount: subacct,
@@ -605,7 +606,7 @@ func newOperationToTransactionMapper(ops []*types.Operation) *operationToTransac
 type transactionToOperationMapper struct {
 	tx              *transaction.Transaction
 	txSignerAddress string
-	status          string
+	status          *string
 
 	ops []*types.Operation
 }
@@ -855,7 +856,7 @@ func (m *transactionToOperationMapper) EmitTxOps() error {
 func newTransactionToOperationMapper(
 	tx *transaction.Transaction,
 	txSignerAddress string,
-	status string,
+	status *string,
 	ops []*types.Operation,
 ) *transactionToOperationMapper {
 	return &transactionToOperationMapper{

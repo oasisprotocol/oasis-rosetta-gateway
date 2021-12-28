@@ -217,12 +217,10 @@ sleep 3
 
 printf "${GRN}### Validating Rosetta gateway implementation...${OFF}\n"
 ${OASIS_GO} run ./check-prep
-./rosetta-cli --configuration-file rosetta-cli-config.json check:data --end 42
-{
-  # We'll cause a sigpipe on this process, so ignore the exit status.
-  # The downstream awk will exit with nonzero status if this test actually fails without confirming any transactions.
-  ./rosetta-cli --configuration-file rosetta-cli-config.json check:construction || true
-} | stdbuf -oL awk '{ print $0 }; $1 == "[STATS]" && $4 >= 42 { confirmed = 1; exit }; END { exit !confirmed }'
+OASIS_ROSETTA_NETWORK_LIST=$(curl -f -X POST -d '{}' http://localhost:8080/network/list)
+export OASIS_ROSETTA_NETWORK_LIST
+./rosetta-cli --configuration-file rosetta-cli-config.json check:data
+./rosetta-cli --configuration-file rosetta-cli-config.json check:construction
 rm -rf "${ROOT}/validator-data" /tmp/rosetta-cli*
 
 printf "${GRN}### Testing construction signing workflow...${OFF}\n"
@@ -267,7 +265,7 @@ wait_for_nodes
 
 printf "${GRN}### Validating Rosetta gateway implementation (again)...${OFF}\n"
 ${OASIS_GO} run ./check-prep
-./rosetta-cli --configuration-file rosetta-cli-config.json check:data --end 135
+./rosetta-cli --configuration-file rosetta-cli-config.json check:data
 
 # Clean up after a successful run.
 printf "${GRN}### Terminating existing test network...${OFF}\n"
@@ -291,7 +289,7 @@ OUTPUT=$(curl -s -H 'Content-Type: application/json' -X POST \
 	http://localhost:8080/construction/derive \
 	| \
 	fgrep 'oasis1qp7cahykn900m3pxsnq7xw0zgvcuul0wtcpyrlp6')
-if [[ "${OUTPUT}" != '{"address":"oasis1qp7cahykn900m3pxsnq7xw0zgvcuul0wtcpyrlp6"}' ]]; then
+if [[ "${OUTPUT}" != '{"address":"oasis1qp7cahykn900m3pxsnq7xw0zgvcuul0wtcpyrlp6","account_identifier":{"address":"oasis1qp7cahykn900m3pxsnq7xw0zgvcuul0wtcpyrlp6"}}' ]]; then
 	printf "${RED}FAILURE${OFF}\n"
 	exit 1
 else

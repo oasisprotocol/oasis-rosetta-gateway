@@ -210,7 +210,12 @@ func (s *constructionAPIService) ConstructionDerive(
 	}
 
 	resp := &types.ConstructionDeriveResponse{
-		Address: StringFromAddress(staking.NewAddress(pk)),
+		AccountIdentifier: &types.AccountIdentifier{
+			Address:    StringFromAddress(staking.NewAddress(pk)),
+			SubAccount: nil,
+			Metadata:   nil,
+		},
+		Metadata: nil,
 	}
 
 	jr, _ := json.Marshal(resp)
@@ -312,7 +317,7 @@ func (s *constructionAPIService) ConstructionParse(
 
 	var tx transaction.Transaction
 	var from string
-	var signers []string
+	var signers []*types.AccountIdentifier
 	switch request.Signed {
 	case true:
 		var signedTx transaction.SignedTransaction
@@ -331,7 +336,11 @@ func (s *constructionAPIService) ConstructionParse(
 			return nil, ErrMalformedValue
 		}
 		from = StringFromAddress(staking.NewAddress(signedTx.Signature.PublicKey))
-		signers = []string{from}
+		signers = []*types.AccountIdentifier{{
+			Address:    from,
+			SubAccount: nil,
+			Metadata:   nil,
+		}}
 	case false:
 		var unsignedTx UnsignedTransaction
 		if err = cbor.Unmarshal(rawTx, &unsignedTx); err != nil {
@@ -350,7 +359,7 @@ func (s *constructionAPIService) ConstructionParse(
 		from = unsignedTx.Signer
 	}
 
-	om := newTransactionToOperationMapper(&tx, from, "", []*types.Operation{})
+	om := newTransactionToOperationMapper(&tx, from, nil, []*types.Operation{})
 	om.EmitFeeOps()
 	if err := om.EmitTxOps(); err != nil {
 		loggerCons.Error("ConstructionParse: malformed transaction",
@@ -360,8 +369,8 @@ func (s *constructionAPIService) ConstructionParse(
 	}
 
 	resp := &types.ConstructionParseResponse{
-		Operations: om.Operations(),
-		Signers:    signers,
+		Operations:               om.Operations(),
+		AccountIdentifierSigners: signers,
 		Metadata: map[string]interface{}{
 			NonceKey: tx.Nonce,
 		},
@@ -482,7 +491,11 @@ func (s *constructionAPIService) ConstructionPayloads(
 		UnsignedTransaction: base64.StdEncoding.EncodeToString(utCBOR),
 		Payloads: []*types.SigningPayload{
 			{
-				Address:       signWithAddr,
+				AccountIdentifier: &types.AccountIdentifier{
+					Address:    signWithAddr,
+					SubAccount: nil,
+					Metadata:   nil,
+				},
 				Bytes:         txMessage,
 				SignatureType: types.Ed25519,
 			},
