@@ -9,5 +9,5 @@ require (
 	github.com/coinbase/rosetta-sdk-go v0.7.2
 	github.com/oasisprotocol/ed25519 v0.0.0-20210127160119-f7017427c1ea
 	github.com/oasisprotocol/oasis-core/go v0.2103.7
-	google.golang.org/grpc v1.41.0
+	google.golang.org/grpc v1.43.0
 )
