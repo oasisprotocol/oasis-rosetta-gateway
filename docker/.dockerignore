@@ -1,4 +1,4 @@
-# Ignore everything to prevent accidentially copying any files from the context
+# Ignore everything to prevent accidentally copying any files from the context
 # directory.
 # NOTE: This is a requirement for Rosetta API Docker Deployment:
 # https://www.rosetta-api.org/docs/node_deployment.html#build-anywhere
