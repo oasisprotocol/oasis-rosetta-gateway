@@ -13,8 +13,12 @@ The node should be configured as described in [Run a Non-validator Node] doc
 of the general [Oasis Docs].
 
 The `/node` directory in the instructions is equivalent to the `/data`
-mountpoint of the Docker image.
+directory of the Docker image.
+We recommend creating a volume mount for `/data` so that you can manage the
+directory across version upgrades.
 
+When using a volume mount for `/data`, you must provide a `config.yml` file
+and a `genesis.json` file.
 You can use the `config.yml` file included in this directory and get the
 `genesis.json` file from the instructions above.
 
@@ -36,8 +40,8 @@ docker run -v /path/to/your/data:/data -it oasis-core-rosetta-gateway
 When run, the Docker image starts the Oasis node and the Oasis Rosetta gateway
 and exposes TCP ports 8080 (gateway) and 26656 (node).
 
-The final image is around 87MB in size.  You can remove the intermediary build
-image to save disk space.
+The final image is around 156MB in size.  You can remove the intermediary
+build  image to save disk space.
 
 <!-- markdownlint-disable line-length -->
 [official GitHub Releases]:

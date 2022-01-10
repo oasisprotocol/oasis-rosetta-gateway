@@ -1,0 +1,25 @@
+##
+# Oasis Node Configuration
+##
+
+datadir: /data
+
+log:
+  level:
+    # Per-module log levels. Longest prefix match will be taken. Fallback to
+    # "default", if no match.
+    default: info
+    tendermint: info
+    tendermint/context: error
+  format: JSON
+
+# Path to the genesis file for the current version of the network.
+genesis:
+  file: /data/etc/genesis-testnet.json
+
+# Tendermint backend configuration.
+consensus:
+  tendermint:
+    p2p:
+      seed:
+        - "05EAC99BB37F6DAAD4B13386FF5E087ACBDDC450@34.86.165.6:26656"

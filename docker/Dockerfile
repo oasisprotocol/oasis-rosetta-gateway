@@ -22,6 +22,12 @@ ARG GATEWAY_GITHUB=https://github.com/oasisprotocol/oasis-core-rosetta-gateway
 ARG JEMALLOC_VERSION=5.2.1
 ARG JEMALLOC_CHECKSUM=34330e5ce276099e2e8950d9335db5a875689a4c6a56751ef3b1d8c537f887f6
 
+ARG GENESIS_MAINNET_URL=https://github.com/oasisprotocol/mainnet-artifacts/releases/download/2021-04-28/genesis.json
+ARG GENESIS_MAINNET_FILE_CHECKSUM=8ae33cffe67e3df1be392dddde332a73f207cede5992c93600b0ae65c22af2a2
+
+ARG GENESIS_TESTNET_URL=https://github.com/oasisprotocol/testnet-artifacts/releases/download/2021-04-13/genesis.json
+ARG GENESIS_TESTNET_FILE_CHECKSUM=ccac45fdf81f572c63e915a2dcb90b4281443020229a0df38d76018b55674489
+
 # Fetch and build jemalloc (used by BadgerDB).
 RUN wget -O jemalloc.tar.bz2 \
     https://github.com/jemalloc/jemalloc/releases/download/${JEMALLOC_VERSION}/jemalloc-${JEMALLOC_VERSION}.tar.bz2 && \
@@ -50,8 +56,21 @@ RUN git clone --single-branch --branch $GATEWAY_BRANCH ${GATEWAY_GITHUB} /usr/lo
     cd /usr/local/build-gateway && \
     make && \
     cp oasis-core-rosetta-gateway /usr/bin/ && \
+    mkdir -p /data/etc && \
+    cp docker/config.yml /data/etc/ && \
+    cp docker/config-testnet.yml /data/etc/ && \
     make nuke && \
     cd / && rm -rf /usr/local/build-gateway
+
+# Fetch Oasis genesis documents.
+RUN wget -O /data/etc/genesis.json \
+    "$GENESIS_MAINNET_URL" && \
+    # Ensure checksum matches.
+    echo "$GENESIS_MAINNET_FILE_CHECKSUM /data/etc/genesis.json" | sha256sum -c && \
+    wget -O /data/etc/genesis-testnet.json \
+    "$GENESIS_TESTNET_URL" && \
+    # Ensure checksum matches.
+    echo "$GENESIS_TESTNET_FILE_CHECKSUM /data/etc/genesis-testnet.json" | sha256sum -c
 
 
 #
@@ -60,13 +79,19 @@ RUN git clone --single-branch --branch $GATEWAY_BRANCH ${GATEWAY_GITHUB} /usr/lo
 FROM ubuntu:focal
 COPY --from=build /usr/bin/oasis-node /usr/bin/
 COPY --from=build /usr/bin/oasis-core-rosetta-gateway /usr/bin/
+RUN mkdir -m700 /data /data/etc /data/data
+COPY --from=build /data/etc/genesis.json /data/etc/
+COPY --from=build /data/etc/genesis-testnet.json /data/etc/
+COPY --from=build /data/etc/config.yml /data/etc/
+COPY --from=build /data/etc/config-testnet.yml /data/etc/
 
 VOLUME /data
 WORKDIR /data
 ENV OASIS_NODE_GRPC_ADDR="unix:/data/internal.sock"
+ENV OASIS_NODE_CONFIG="/data/etc/config.yml"
 
 # Start the node and the rosetta-gateway.
-CMD oasis-node --config /data/etc/config.yml & oasis-core-rosetta-gateway
+CMD oasis-node --config "$OASIS_NODE_CONFIG" & oasis-core-rosetta-gateway
 
 # Expose gateway and node ports.
 EXPOSE 8080/tcp
