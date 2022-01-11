@@ -56,21 +56,24 @@ RUN git clone --single-branch --branch $GATEWAY_BRANCH ${GATEWAY_GITHUB} /usr/lo
     cd /usr/local/build-gateway && \
     make && \
     cp oasis-core-rosetta-gateway /usr/bin/ && \
-    mkdir -p /data/etc && \
-    cp docker/config.yml /data/etc/ && \
-    cp docker/config-testnet.yml /data/etc/ && \
+    mkdir -p /usr/local/misc-gateway && \
+    cp -r \
+        docker/service \
+        docker/config.yml \
+        docker/config-testnet.yml \
+        /usr/local/misc-gateway/ && \
     make nuke && \
     cd / && rm -rf /usr/local/build-gateway
 
 # Fetch Oasis genesis documents.
-RUN wget -O /data/etc/genesis.json \
+RUN wget -O /usr/local/misc-gateway/genesis.json \
     "$GENESIS_MAINNET_URL" && \
     # Ensure checksum matches.
-    echo "$GENESIS_MAINNET_FILE_CHECKSUM /data/etc/genesis.json" | sha256sum -c && \
-    wget -O /data/etc/genesis-testnet.json \
+    echo "$GENESIS_MAINNET_FILE_CHECKSUM /usr/local/misc-gateway/genesis.json" | sha256sum -c && \
+    wget -O /usr/local/misc-gateway/genesis-testnet.json \
     "$GENESIS_TESTNET_URL" && \
     # Ensure checksum matches.
-    echo "$GENESIS_TESTNET_FILE_CHECKSUM /data/etc/genesis-testnet.json" | sha256sum -c
+    echo "$GENESIS_TESTNET_FILE_CHECKSUM /usr/local/misc-gateway/genesis-testnet.json" | sha256sum -c
 
 
 #
@@ -79,11 +82,14 @@ RUN wget -O /data/etc/genesis.json \
 FROM ubuntu:focal
 COPY --from=build /usr/bin/oasis-node /usr/bin/
 COPY --from=build /usr/bin/oasis-core-rosetta-gateway /usr/bin/
-RUN mkdir -m700 /data /data/etc /data/data
-COPY --from=build /data/etc/genesis.json /data/etc/
-COPY --from=build /data/etc/genesis-testnet.json /data/etc/
-COPY --from=build /data/etc/config.yml /data/etc/
-COPY --from=build /data/etc/config-testnet.yml /data/etc/
+RUN mkdir -m700 /data /data/etc /data/data && \
+    mkdir -p /etc/service && \
+    apt-get update && apt-get install -y runit
+COPY --from=build /usr/local/misc-gateway/genesis.json /data/etc/
+COPY --from=build /usr/local/misc-gateway/genesis-testnet.json /data/etc/
+COPY --from=build /usr/local/misc-gateway/config.yml /data/etc/
+COPY --from=build /usr/local/misc-gateway/config-testnet.yml /data/etc/
+COPY --from=build /usr/local/misc-gateway/service /etc/service/
 
 VOLUME /data
 WORKDIR /data
@@ -91,7 +97,7 @@ ENV OASIS_NODE_GRPC_ADDR="unix:/data/internal.sock"
 ENV OASIS_NODE_CONFIG="/data/etc/config.yml"
 
 # Start the node and the rosetta-gateway.
-CMD oasis-node --config "$OASIS_NODE_CONFIG" & oasis-core-rosetta-gateway
+CMD runsvdir /etc/service
 
 # Expose gateway and node ports.
 EXPOSE 8080/tcp
