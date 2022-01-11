@@ -34,7 +34,7 @@ docker build -t oasis-core-rosetta-gateway .
 To run the Docker image, run:
 
 ```bash
-docker run -v /path/to/your/data:/data -it oasis-core-rosetta-gateway
+docker run -v /path/to/your/data:/data -p 8080:8080 -it oasis-core-rosetta-gateway
 ```
 
 When run, the Docker image starts the Oasis node and the Oasis Rosetta gateway
