@@ -2,14 +2,12 @@ package common
 
 import (
 	"context"
-	"crypto/sha512"
 	"encoding/json"
 	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/client"
 	"github.com/coinbase/rosetta-sdk-go/keys"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/oasisprotocol/ed25519"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/entity"
 	genesis "github.com/oasisprotocol/oasis-core/go/genesis/api"
@@ -43,21 +41,13 @@ func TestEntity() (string, *keys.KeyPair) {
 	if err != nil {
 		panic(err)
 	}
-	address := services.StringFromAddress(api.NewAddress(signer.Public()))
+	pub := signer.Public()
+	address := services.StringFromAddress(api.NewAddress(pub))
+	priv := signer.(signature.UnsafeSigner).UnsafeBytes()
 
-	seed := sha512.Sum512_256([]byte("ekiden test entity key seed"))
-	priv := ed25519.NewKeyFromSeed(seed[:])
-	pub := priv.Public().(ed25519.PublicKey)
-	var pub2 signature.PublicKey
-	if err = pub2.UnmarshalBinary(pub); err != nil {
-		panic(err)
-	}
-	if pub2 != signer.Public() {
-		panic(fmt.Sprintf("public key mismatch %s %s", pub2, signer.Public()))
-	}
 	kp := &keys.KeyPair{
 		PublicKey: &types.PublicKey{
-			Bytes:     pub,
+			Bytes:     pub[:],
 			CurveType: types.Edwards25519,
 		},
 		PrivateKey: priv[:32],
