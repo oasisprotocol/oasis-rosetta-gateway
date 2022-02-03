@@ -43,32 +43,37 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Determine tag name
-        id: determine_tag
+      - name: Determine branch and tag name
+        id: branch_tag
         shell: bash
         run: |
           if [[ -z $GITHUB_BASE_REF ]]; then
             # On master/stable branches.
-            branch=${GITHUB_REF#refs/heads/}
+            branch=${GITHUB_REF_NAME}
+            tag=${GITHUB_REF_NAME}
           else
             # On pull request branches.
-            branch=pr-$(git describe --always --match '' --abbrev=7)
+            branch=${GITHUB_HEAD_REF}
+            tag=pr-$(git describe --always --match '' --abbrev=7)
           fi
-          branch=${branch//\//-}
-          echo "::set-output name=tag::${branch}"
+          tag=${tag//\//-}
+          echo "::set-output name=branch::${branch}"
+          echo "::set-output name=tag::${tag}"
           echo "::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: "Rebuild oasisprotocol/oasis-core-rosetta-gateway:${{ steps.determine_tag.outputs.tag }}"
+      - name: "Rebuild oasisprotocol/oasis-core-rosetta-gateway:${{ steps.branch_tag.outputs.tag }}"
         uses: docker/build-push-action@v2.6.1
         with:
           context: docker
           file: docker/Dockerfile
-          tags: oasisprotocol/oasis-core-rosetta-gateway:${{ steps.determine_tag.outputs.tag }}
+          build-args: |
+            GATEWAY_BRANCH=${{ steps.branch_tag.outputs.branch }}
+          tags: oasisprotocol/oasis-core-rosetta-gateway:${{ steps.branch_tag.outputs.tag }}
           pull: true
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
-            org.opencontainers.image.created=${{ steps.determine_tag.outputs.created }}
+            org.opencontainers.image.created=${{ steps.branch_tag.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
