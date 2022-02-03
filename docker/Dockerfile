@@ -8,12 +8,12 @@
 #
 # Build stage
 #
-FROM golang:1.16-alpine3.13 AS build
+FROM golang:1.16-bullseye AS build
 
 # Install prerequisites.
-RUN rm -f /var/cache/apk/*; apk --no-cache add bash git make gcc g++ libressl-dev libseccomp-dev linux-headers
+RUN apt-get update && apt-get install -y bzip2 libseccomp-dev
 
-ARG CORE_BRANCH=v21.3.5
+ARG CORE_BRANCH=v21.3.9
 ARG CORE_GITHUB=https://github.com/oasisprotocol/oasis-core
 
 ARG GATEWAY_BRANCH=master
@@ -21,6 +21,12 @@ ARG GATEWAY_GITHUB=https://github.com/oasisprotocol/oasis-core-rosetta-gateway
 
 ARG JEMALLOC_VERSION=5.2.1
 ARG JEMALLOC_CHECKSUM=34330e5ce276099e2e8950d9335db5a875689a4c6a56751ef3b1d8c537f887f6
+
+ARG GENESIS_MAINNET_URL=https://github.com/oasisprotocol/mainnet-artifacts/releases/download/2021-04-28/genesis.json
+ARG GENESIS_MAINNET_FILE_CHECKSUM=8ae33cffe67e3df1be392dddde332a73f207cede5992c93600b0ae65c22af2a2
+
+ARG GENESIS_TESTNET_URL=https://github.com/oasisprotocol/testnet-artifacts/releases/download/2021-04-13/genesis.json
+ARG GENESIS_TESTNET_FILE_CHECKSUM=ccac45fdf81f572c63e915a2dcb90b4281443020229a0df38d76018b55674489
 
 # Fetch and build jemalloc (used by BadgerDB).
 RUN wget -O jemalloc.tar.bz2 \
@@ -50,24 +56,48 @@ RUN git clone --single-branch --branch $GATEWAY_BRANCH ${GATEWAY_GITHUB} /usr/lo
     cd /usr/local/build-gateway && \
     make && \
     cp oasis-core-rosetta-gateway /usr/bin/ && \
+    mkdir -p /usr/local/misc-gateway && \
+    cp -r \
+        docker/service \
+        docker/config.yml \
+        docker/config-testnet.yml \
+        /usr/local/misc-gateway/ && \
     make nuke && \
     cd / && rm -rf /usr/local/build-gateway
+
+# Fetch Oasis genesis documents.
+RUN wget -O /usr/local/misc-gateway/genesis.json \
+    "$GENESIS_MAINNET_URL" && \
+    # Ensure checksum matches.
+    echo "$GENESIS_MAINNET_FILE_CHECKSUM /usr/local/misc-gateway/genesis.json" | sha256sum -c && \
+    wget -O /usr/local/misc-gateway/genesis-testnet.json \
+    "$GENESIS_TESTNET_URL" && \
+    # Ensure checksum matches.
+    echo "$GENESIS_TESTNET_FILE_CHECKSUM /usr/local/misc-gateway/genesis-testnet.json" | sha256sum -c
 
 
 #
 # Execution stage
 #
-FROM alpine:3.13
-RUN rm -f /var/cache/apk/*; apk --no-cache add bash libressl libseccomp
+FROM ubuntu:focal
 COPY --from=build /usr/bin/oasis-node /usr/bin/
 COPY --from=build /usr/bin/oasis-core-rosetta-gateway /usr/bin/
+RUN mkdir -m700 /data /data/etc /data/data && \
+    mkdir -p /etc/service && \
+    apt-get update && apt-get install -y runit
+COPY --from=build /usr/local/misc-gateway/genesis.json /data/etc/
+COPY --from=build /usr/local/misc-gateway/genesis-testnet.json /data/etc/
+COPY --from=build /usr/local/misc-gateway/config.yml /data/etc/
+COPY --from=build /usr/local/misc-gateway/config-testnet.yml /data/etc/
+COPY --from=build /usr/local/misc-gateway/service /etc/service/
 
 VOLUME /data
 WORKDIR /data
 ENV OASIS_NODE_GRPC_ADDR="unix:/data/internal.sock"
+ENV OASIS_NODE_CONFIG="/data/etc/config.yml"
 
 # Start the node and the rosetta-gateway.
-CMD oasis-node --config /data/etc/config.yml & oasis-core-rosetta-gateway
+CMD runsvdir /etc/service
 
 # Expose gateway and node ports.
 EXPOSE 8080/tcp
