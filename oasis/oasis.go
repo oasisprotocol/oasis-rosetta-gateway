@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
 	cmnGrpc "github.com/oasisprotocol/oasis-core/go/common/grpc"
@@ -133,7 +134,7 @@ func (c *grpcClient) connect(ctx context.Context) (*grpc.ClientConn, error) {
 	// Establish new gRPC connection.
 	var err error
 	logger.Debug("Establishing connection", "grpc_addr", grpcAddr)
-	c.grpcConn, err = cmnGrpc.Dial(grpcAddr, grpc.WithInsecure())
+	c.grpcConn, err = cmnGrpc.Dial(grpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Debug("Failed to establish connection",
 			"grpc_addr", grpcAddr,
