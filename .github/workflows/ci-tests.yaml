@@ -23,10 +23,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set up Go 1.15
+      - name: Set up Go 1.17
         uses: actions/setup-go@v2.1.3
         with:
-          go-version: "1.15.x"
+          go-version: "1.17.x"
       - name: Cache Go dependencies
         uses: actions/cache@v2
         with:
