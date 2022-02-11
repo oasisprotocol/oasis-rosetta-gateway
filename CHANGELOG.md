@@ -136,7 +136,7 @@ The format is inspired by [Keep a Changelog].
   ([#175](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/175),
    [#187](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/187))
 
-- ci: Bump golangci-lint version in _ci-lint_ GitHub Actions workflow to 1.39
+- ci: Bump golangci-lint version in *ci-lint* GitHub Actions workflow to 1.39
   ([#190](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/190))
 
 ## 1.0.0 (2020-12-14)
