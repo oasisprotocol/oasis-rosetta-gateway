@@ -1,3 +1,8 @@
 #!/bin/sh -eu
+# If this is deployed as an offline signer, skip running the node
+# so that we don't waste time attempting to connect.
+if [ -n "${OASIS_ROSETTA_GATEWAY_OFFLINE_MODE-}" ]; then
+  exec sleep inf
+fi
 cd /data
 exec oasis-node --config "$OASIS_NODE_CONFIG"
