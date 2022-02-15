@@ -6,6 +6,7 @@ import (
 	"runtime/debug"
 	"strings"
 
+	rosettaTypes "github.com/coinbase/rosetta-sdk-go/types"
 	ocVersion "github.com/oasisprotocol/oasis-core/go/common/version"
 )
 
@@ -19,7 +20,7 @@ var (
 
 	// RosettaAPIVersion represents the Rosetta API version with which the
 	// Oasis Core Rosetta Gateway is guaranteed to be compatible with.
-	RosettaAPIVersion = "1.4.1"
+	RosettaAPIVersion = rosettaTypes.RosettaAPIVersion
 
 	// ToolchainVersion is the version of the Go compiler/standard library.
 	ToolchainVersion = strings.TrimPrefix(runtime.Version(), "go")
