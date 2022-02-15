@@ -20,7 +20,8 @@ builds:
       # NOTE: At the moment, GoReleaser produces different binaries when
       # releases are built from different git paths, unless -buildid= is added
       # to ldflags.
-      # For more details, see: https://github.com/oasislabs/goreleaser/issues/1.
+      # For more details, see:
+      # https://github.com/oasisprotocol/oasis-core/issues/4124.
       - -buildid=
       - "{{.Env.GOLDFLAGS_VERSION}}"
     goos:
