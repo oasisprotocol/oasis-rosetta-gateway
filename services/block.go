@@ -9,7 +9,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/oasis"
 )
 
 // EpochKey is the name of the key in the Metadata map inside the response of a block request.

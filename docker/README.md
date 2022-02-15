@@ -28,13 +28,13 @@ the `/data` mountpoint, as well as its subdirectories and files!
 To build the Docker image, run:
 
 ```bash
-docker build -t oasis-core-rosetta-gateway .
+docker build -t oasis-rosetta-gateway .
 ```
 
 To run the Docker image, run:
 
 ```bash
-docker run -v /path/to/your/data:/data -p 8080:8080 -it oasis-core-rosetta-gateway
+docker run -v /path/to/your/data:/data -p 8080:8080 -it oasis-rosetta-gateway
 ```
 
 When run, the Docker image starts the Oasis node and the Oasis Rosetta gateway
@@ -45,15 +45,15 @@ build  image to save disk space.
 
 <!-- markdownlint-disable line-length -->
 [official GitHub Releases]:
-  https://github.com/oasisprotocol/oasis-core-rosetta-gateway/releases/
+  https://github.com/oasisprotocol/oasis-rosetta-gateway/releases/
 [Change Log for 1.1.1]:
-  https://github.com/oasisprotocol/oasis-core-rosetta-gateway/blob/v1.1.1/CHANGELOG.md
+  https://github.com/oasisprotocol/oasis-rosetta-gateway/blob/v1.1.1/CHANGELOG.md
 [Rosetta API]: https://www.rosetta-api.org/docs/welcome.html
 [Oasis Core]: https://github.com/oasisprotocol/oasis-core
 [Oasis Node]:
   https://docs.oasis.dev/general/run-a-node/prerequisites/oasis-node
 [Oasis Rosetta Gateway]:
-  https://github.com/oasisprotocol/oasis-core-rosetta-gateway
+  https://github.com/oasisprotocol/oasis-rosetta-gateway
 [Rosetta Docker Deployment]:
   https://www.rosetta-api.org/docs/node_deployment.html
 [Run a Non-validator Node]:

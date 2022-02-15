@@ -12,7 +12,7 @@ GRN=$'\e[32;1m'
 OFF=$'\e[0m'
 
 # Paths to various binaries and config files that we need.
-OASIS_ROSETTA_GW="${ROOT}/../oasis-core-rosetta-gateway"
+OASIS_ROSETTA_GW="${ROOT}/../oasis-rosetta-gateway"
 OASIS_NET_RUNNER="${ROOT}/oasis-net-runner"
 OASIS_NODE="${ROOT}/oasis-node"
 

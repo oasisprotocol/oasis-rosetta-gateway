@@ -1,6 +1,6 @@
 #
 # The docker image is built in two stages.  First stage builds the
-# oasis-node and oasis-core-rosetta-gateway binaries.
+# oasis-node and oasis-rosetta-gateway binaries.
 # Second stage prepares the execution environment and copies the
 # two binaries over.
 #
@@ -17,7 +17,7 @@ ARG CORE_BRANCH=v21.3.9
 ARG CORE_GITHUB=https://github.com/oasisprotocol/oasis-core
 
 ARG GATEWAY_BRANCH=master
-ARG GATEWAY_GITHUB=https://github.com/oasisprotocol/oasis-core-rosetta-gateway
+ARG GATEWAY_GITHUB=https://github.com/oasisprotocol/oasis-rosetta-gateway
 
 ARG JEMALLOC_VERSION=5.2.1
 ARG JEMALLOC_CHECKSUM=34330e5ce276099e2e8950d9335db5a875689a4c6a56751ef3b1d8c537f887f6
@@ -51,11 +51,11 @@ RUN git clone --single-branch --branch $CORE_BRANCH ${CORE_GITHUB} /usr/local/bu
     make clean && go clean -cache -testcache -modcache && \
     cd / && rm -rf /usr/local/build-core
 
-# Fetch and build Oasis Core Rosetta Gateway.
+# Fetch and build Oasis Rosetta Gateway.
 RUN git clone --single-branch --branch $GATEWAY_BRANCH ${GATEWAY_GITHUB} /usr/local/build-gateway && \
     cd /usr/local/build-gateway && \
     make && \
-    cp oasis-core-rosetta-gateway /usr/bin/ && \
+    cp oasis-rosetta-gateway /usr/bin/ && \
     mkdir -p /usr/local/misc-gateway && \
     cp -r \
         docker/service \
@@ -81,7 +81,7 @@ RUN wget -O /usr/local/misc-gateway/genesis.json \
 #
 FROM ubuntu:focal
 COPY --from=build /usr/bin/oasis-node /usr/bin/
-COPY --from=build /usr/bin/oasis-core-rosetta-gateway /usr/bin/
+COPY --from=build /usr/bin/oasis-rosetta-gateway /usr/bin/
 RUN mkdir -m700 /data /data/etc /data/data && \
     mkdir -p /etc/service && \
     apt-get update && apt-get install -y runit

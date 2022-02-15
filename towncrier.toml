@@ -10,7 +10,7 @@ check_ignore_files = [
   # Punch's version file.
   ".punch_version.py",
 ]
-issue_format = "[#{issue}](https://github.com/oasisprotocol/oasis-core-rosetta-gateway/issues/{issue})"
+issue_format = "[#{issue}](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/{issue})"
 start_string = "<!-- TOWNCRIER -->\n"
 # Custom Jinja2 template for preparing a new section of the Change Log.
 template = ".changelog/template.md.j2"

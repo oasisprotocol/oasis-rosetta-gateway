@@ -7,7 +7,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/oasis"
 )
 
 // OasisBlockchainName is the name of the Oasis blockchain.

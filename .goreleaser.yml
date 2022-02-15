@@ -5,15 +5,15 @@
 # NOTE: The GoReleaser is not meant to be run directly, but rather through
 # Make's release-build target.
 
-project_name: Oasis Core Rosetta Gateway
+project_name: Oasis Rosetta Gateway
 
 env:
   # Require use of Go modules.
   - GO111MODULE=on
 
 builds:
-  - id: oasis-core-rosetta-gateway
-    binary: oasis-core-rosetta-gateway
+  - id: oasis-rosetta-gateway
+    binary: oasis-rosetta-gateway
     flags:
       - -trimpath
     ldflags:

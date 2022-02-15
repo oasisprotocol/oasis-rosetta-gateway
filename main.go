@@ -16,9 +16,9 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/common"
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/common"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/oasis"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/services"
 )
 
 // GatewayPortEnvVar is the name of the environment variable that specifies

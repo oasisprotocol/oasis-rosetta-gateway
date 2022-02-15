@@ -64,7 +64,7 @@ test: build build-tests tests/oasis-net-runner tests/oasis-node tests/rosetta-cl
 fmt:
 	@$(ECHO) "$(CYAN)*** Running Go formatters...$(OFF)"
 	@gofumpt -s -w .
-	@gofumports -w -local github.com/oasisprotocol/oasis-core-rosetta-gateway .
+	@gofumports -w -local github.com/oasisprotocol/oasis-rosetta-gateway .
 
 # Lint code, commits and documentation.
 lint-targets := lint-go lint-docs lint-changelog lint-git lint-go-mod-tidy
@@ -159,7 +159,7 @@ release-stable-branch: fetch-git
 # Build and publish the next release.
 release-build:
 	@$(ENSURE_VALID_RELEASE_BRANCH_NAME)
-ifeq ($(OASIS_CORE_ROSETTA_GATEWAY_REAL_RELEASE), true)
+ifeq ($(OASIS_ROSETTA_GATEWAY_REAL_RELEASE), true)
 	@$(ENSURE_GIT_VERSION_EQUALS_PUNCH_VERSION)
 endif
 	@$(ECHO) "$(CYAN)*** Creating release for version $(PUNCH_VERSION)...$(OFF)"

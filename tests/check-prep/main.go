@@ -8,8 +8,8 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/storage/modules"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/tests/common"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/services"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/tests/common"
 )
 
 func getRosettaConfig(ni *types.NetworkIdentifier) *configuration.Configuration {

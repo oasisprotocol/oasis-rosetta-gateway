@@ -132,7 +132,7 @@ GO := env -u GOPATH $(OASIS_GO)
 GOFLAGS ?= -trimpath -v
 
 # Project's version as the linker's string value definition.
-export GOLDFLAGS_VERSION := -X github.com/oasisprotocol/oasis-core-rosetta-gateway/common.SoftwareVersion=$(VERSION)
+export GOLDFLAGS_VERSION := -X github.com/oasisprotocol/oasis-rosetta-gateway/common.SoftwareVersion=$(VERSION)
 
 # Go's linker flags.
 export GOLDFLAGS ?= "$(GOLDFLAGS_VERSION)"
@@ -304,16 +304,16 @@ For a list of changes in this release, see the [Change Log].
 *NOTE: If you are upgrading from an earlier release, please **carefully review**
 the [Change Log] for **Removals and Breaking changes**.*
 
-[Change Log]: https://github.com/oasisprotocol/oasis-core-rosetta-gateway/blob/v$(VERSION)/CHANGELOG.md
+[Change Log]: https://github.com/oasisprotocol/oasis-rosetta-gateway/blob/v$(VERSION)/CHANGELOG.md
 
 endef
 
 # Instruct GoReleaser to create a "snapshot" release by default.
 GORELEASER_ARGS ?= release --snapshot --rm-dist
 # If the appropriate environment variable is set, create a real release.
-ifeq ($(OASIS_CORE_ROSETTA_GATEWAY_REAL_RELEASE), true)
+ifeq ($(OASIS_ROSETTA_GATEWAY_REAL_RELEASE), true)
 # Create temporary file with GitHub release's text.
-_RELEASE_NOTES_FILE := $(shell mktemp /tmp/oasis-core-rosetta-gateway.XXXXX)
+_RELEASE_NOTES_FILE := $(shell mktemp /tmp/oasis-rosetta-gateway.XXXXX)
 _ := $(shell printf "$(subst ",\",$(subst $(newline),\n,$(RELEASE_TEXT)))" > $(_RELEASE_NOTES_FILE))
 GORELEASER_ARGS = release --release-notes $(_RELEASE_NOTES_FILE)
 endif

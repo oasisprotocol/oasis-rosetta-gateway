@@ -18,7 +18,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/oasis"
 )
 
 // OptionsIDKey is the name of the key in the Options map inside a
