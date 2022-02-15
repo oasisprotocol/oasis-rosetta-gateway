@@ -36,8 +36,8 @@ func GetOasisCoreVersion() string {
 
 	for _, dep := range bi.Deps {
 		if dep.Path == "github.com/oasisprotocol/oasis-core/go" {
-			// Convert Go Modules compatible version to Oasis Core's canonical
-			// version.
+			// Convert Go Modules compatible version to Oasis Core's
+			// canonical version.
 			return ocVersion.ConvertGoModulesVersion(dep.Version)
 		}
 	}
