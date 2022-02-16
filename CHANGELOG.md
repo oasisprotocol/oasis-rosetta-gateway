@@ -21,6 +21,75 @@ The format is inspired by [Keep a Changelog].
 
 <!-- TOWNCRIER -->
 
+## 2.0.0 (2022-02-16)
+
+| Name         | Version   |
+|:-------------|:---------:|
+| Rosetta API  | 1.4.12    |
+| Oasis Core   | 21.3      |
+
+### Removals and Breaking Changes
+
+- Bring Rosetta dependencies up to date
+  ([#261](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/261),
+   [#277](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/277))
+
+  We're updating our Rosetta dependencies, including the
+  Go SDK, the CLI, and along with those, the Rosetta API
+  specifications.
+
+  - Rosetta CLI: 0.4.0 -> 0.7.3
+  - Rosetta Go SDK: 0.3.3 -> 0.7.3
+  - Rosetta API: 1.4.1 -> 1.4.12
+
+  Updating the Rosetta API along with its Go SDK is a
+  significant update and may have introduced breaking
+  changes.
+
+- Rename project to Oasis Rosetta Gateway
+  ([#281](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/281))
+
+  Previous name was quite long and we were already shortening it in some places.
+  Take the opportunity of doing a breaking 2.0.0 release to shorten the name to
+  Oasis Rosetta Gateway.
+
+### Features
+
+- docker: Change Dockerfile to Ubuntu base
+  ([#257](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/257))
+
+  <!-- markdownlint-disable line-length -->
+  The Rosetta ecosystem prefers this:
+  [Rosetta's guidance on Docker deployment](https://www.rosetta-api.org/docs/node_deployment.html#ubuntu-image-compatibility).
+  <!-- markdownlint-enable line-length -->
+
+- docker: Skip running node if offline var is set
+  ([#278](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/278))
+
+  This is only an optimization.
+  We recommend that users don't rely on software configuration to operate
+  offline.
+
+### Internal Changes
+
+- common: Obtain `RosettaAPIVersion` from [rosetta-sdk-go/types] package
+  ([#129](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/129))
+
+  [rosetta-sdk-go/types]:
+    https://pkg.go.dev/github.com/coinbase/rosetta-sdk-go/types#pkg-constants
+
+- Bump Go to version 1.17
+  ([#251](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/251))
+
+- Make: Build `rosetta-cli` with the correct version of Go
+  ([#251](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/251))
+
+- go: bump google.golang.org/grpc from 1.41.0 to 1.44.0
+  ([#270](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/270))
+
+- github: For PRs, build docker image with the PR's branch of Rosetta Gateway
+  ([#273](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/273))
+
 ## 1.3.0 (2021-11-03)
 
 | Name         | Version   |
