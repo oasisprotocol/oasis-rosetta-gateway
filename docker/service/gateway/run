@@ -1,4 +1,4 @@
 #!/bin/sh -eu
 sv start node
 cd /data
-exec oasis-core-rosetta-gateway
+exec oasis-rosetta-gateway

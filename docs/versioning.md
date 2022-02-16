@@ -1,6 +1,6 @@
 # Versioning
 
-Oasis Core Rosetta Gateway uses [Semantic Versioning 2.0.0] with the following
+Oasis Rosetta Gateway uses [Semantic Versioning 2.0.0] with the following
 format:
 
 ```text

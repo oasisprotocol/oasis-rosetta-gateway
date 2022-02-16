@@ -9,8 +9,8 @@ import (
 
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/common"
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/common"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/oasis"
 )
 
 var loggerNet = logging.GetLogger("services/network")

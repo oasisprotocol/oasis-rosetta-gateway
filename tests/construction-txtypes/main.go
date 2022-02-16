@@ -11,8 +11,8 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	"github.com/oasisprotocol/oasis-core/go/staking/api"
 
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/tests/common"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/services"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/tests/common"
 )
 
 const dummyNonce = 3

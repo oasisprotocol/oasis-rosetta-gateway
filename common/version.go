@@ -1,4 +1,4 @@
-// Package common implements common things for Oasis Core Rosetta Gateway.
+// Package common implements common things for Oasis Rosetta Gateway.
 package common
 
 import (
@@ -14,12 +14,12 @@ import (
 const VersionUnknown = "unknown"
 
 var (
-	// SoftwareVersion represents the Oasis Core Rosetta Gateway's version and
+	// SoftwareVersion represents the Oasis Rosetta Gateway's version and
 	// should be set by the linker.
 	SoftwareVersion = "0.0.0-unset"
 
 	// RosettaAPIVersion represents the Rosetta API version with which the
-	// Oasis Core Rosetta Gateway is guaranteed to be compatible with.
+	// Oasis Rosetta Gateway is guaranteed to be compatible with.
 	RosettaAPIVersion = rosettaTypes.RosettaAPIVersion
 
 	// ToolchainVersion is the version of the Go compiler/standard library.
@@ -36,8 +36,8 @@ func GetOasisCoreVersion() string {
 
 	for _, dep := range bi.Deps {
 		if dep.Path == "github.com/oasisprotocol/oasis-core/go" {
-			// Convert Go Modules compatible version to Oasis Core's canonical
-			// version.
+			// Convert Go Modules compatible version to Oasis Core's
+			// canonical version.
 			return ocVersion.ConvertGoModulesVersion(dep.Version)
 		}
 	}

@@ -14,7 +14,7 @@ import (
 	cmdGenesis "github.com/oasisprotocol/oasis-core/go/oasis-node/cmd/common/genesis"
 	"github.com/oasisprotocol/oasis-core/go/staking/api"
 
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/services"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/services"
 )
 
 const DstAddressText = "oasis1qpkant39yhx59sagnzpc8v0sg8aerwa3jyqde3ge"

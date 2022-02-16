@@ -6,7 +6,7 @@ on:
   # A push occurs to one of the matched tags.
   push:
     tags:
-      # Pattern that roughly matches Oasis Core Rosetta Gateway's version tags.
+      # Pattern that roughly matches Oasis Rosetta Gateway's version tags.
       # For more details on GitHub Actions' pattern match syntax, see:
       # https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#patterns-to-match-branches-and-tags.
       - 'v[0-9]+.[0-9]+*'
@@ -59,7 +59,7 @@ jobs:
           make release-build
         env:
           # Instruct Make to create a real release.
-          OASIS_CORE_ROSETTA_GATEWAY_REAL_RELEASE: "true"
+          OASIS_ROSETTA_GATEWAY_REAL_RELEASE: "true"
           # Pass automatically created GitHub App installation token to the action.
           # For more info, see:
           # https://help.github.com/en/actions/automating-your-workflow-with-github-actions/authenticating-with-the-github_token.

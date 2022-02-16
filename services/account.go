@@ -10,7 +10,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
-	"github.com/oasisprotocol/oasis-core-rosetta-gateway/oasis"
+	"github.com/oasisprotocol/oasis-rosetta-gateway/oasis"
 )
 
 // SubAccountEscrow specifies the name of the escrow subaccount.

@@ -52,7 +52,7 @@ Note that all above targets depend on the `fetch-git` target which fetches the
 latest changes (including tags) from the git origin remote to ensure the
 computed next version and other things are always up-to-date.
 
-The version of the Oasis Core Rosetta Gateway's release is computed
+The version of the Oasis Rosetta Gateway's release is computed
 automatically using the [Punch] utility according to the project's [Versioning]
 scheme.
 
@@ -126,7 +126,7 @@ the GitHub Actions [Release manager workflow] is triggered which uses the
 [GoReleaser] tool to automatically build the binaries, prepare archives and
 checksums, and publish a GitHub Release that accompanies the versioned git tag.
 
-Browse to [Oasis Core Rosetta Gateway's releases page] and make sure the new
+Browse to [Oasis Rosetta Gateway's releases page] and make sure the new
 release is properly published.
 
 ### Create `stable/MAJOR.MINOR.x` Branch
@@ -143,11 +143,11 @@ This command will perform sanity checks to prevent common errors.
 After those checks have passed, it will ask for confirmation before proceeding.
 
 [canonical git repository]:
-  https://github.com/oasisprotocol/oasis-core-rosetta-gateway
+  https://github.com/oasisprotocol/oasis-rosetta-gateway
 [Release manager workflow]: ../.github/workflows/release.yml
 [GoReleaser]: https://goreleaser.com/
-[Oasis Core Rosetta Gateway's releases page]:
-  https://github.com/oasisprotocol/oasis-core-rosetta-gateway/releases
+[Oasis Rosetta Gateway's releases page]:
+  https://github.com/oasisprotocol/oasis-rosetta-gateway/releases
 
 ## Preparing a Bugfix/Stable Release
 
@@ -224,5 +224,5 @@ Similar to a regular release, after the tag with the next release is pushed to
 the [canonical git repository], the GitHub Actions [Release manager workflow] is
 triggered which uses the [GoReleaser] tool to automatically build a new release.
 
-Browse to [Oasis Core Rosetta Gateway's releases page] and make sure the new
+Browse to [Oasis Rosetta Gateway's releases page] and make sure the new
 bugfix/stable release is properly published.

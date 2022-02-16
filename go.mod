@@ -1,4 +1,4 @@
-module github.com/oasisprotocol/oasis-core-rosetta-gateway
+module github.com/oasisprotocol/oasis-rosetta-gateway
 
 go 1.17
 
