@@ -1,4 +1,4 @@
-// https://djr6hkgq2tjcs.cloudfront.net/docs/construction_api_introduction.html
+// https://www.rosetta-api.org/docs/construction_api_introduction.html
 package services
 
 import (
