@@ -13,7 +13,7 @@ FROM golang:1.17-bullseye AS build
 # Install prerequisites.
 RUN apt-get update && apt-get install -y bzip2 libseccomp-dev
 
-ARG CORE_BRANCH=v21.3.9
+ARG CORE_BRANCH=v22.0
 ARG CORE_GITHUB=https://github.com/oasisprotocol/oasis-core
 
 ARG GATEWAY_BRANCH=master
@@ -25,8 +25,8 @@ ARG JEMALLOC_CHECKSUM=34330e5ce276099e2e8950d9335db5a875689a4c6a56751ef3b1d8c537
 ARG GENESIS_MAINNET_URL=https://github.com/oasisprotocol/mainnet-artifacts/releases/download/2021-04-28/genesis.json
 ARG GENESIS_MAINNET_FILE_CHECKSUM=8ae33cffe67e3df1be392dddde332a73f207cede5992c93600b0ae65c22af2a2
 
-ARG GENESIS_TESTNET_URL=https://github.com/oasisprotocol/testnet-artifacts/releases/download/2021-04-13/genesis.json
-ARG GENESIS_TESTNET_FILE_CHECKSUM=ccac45fdf81f572c63e915a2dcb90b4281443020229a0df38d76018b55674489
+ARG GENESIS_TESTNET_URL=https://github.com/oasisprotocol/testnet-artifacts/releases/download/2022-03-03/genesis.json
+ARG GENESIS_TESTNET_FILE_CHECKSUM=4c3d271253d2a324816de3b9a048261b674471e7d4f9a02995a769489bd41984
 
 # Fetch and build jemalloc (used by BadgerDB).
 RUN wget -O jemalloc.tar.bz2 \
