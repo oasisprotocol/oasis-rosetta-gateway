@@ -7,8 +7,8 @@ replace github.com/tendermint/tendermint => github.com/oasisprotocol/tendermint 
 require (
 	github.com/coinbase/rosetta-cli v0.7.3
 	github.com/coinbase/rosetta-sdk-go v0.7.3
-	github.com/oasisprotocol/oasis-core/go v0.2200.0
-	google.golang.org/grpc v1.44.0
+	github.com/oasisprotocol/oasis-core/go v0.2201.0
+	google.golang.org/grpc v1.45.0
 )
 
 require (
@@ -42,6 +42,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/ipfs/go-log/v2 v2.5.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
@@ -71,8 +72,10 @@ require (
 	github.com/tidwall/sjson v1.2.3 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
-	github.com/whyrusleeping/go-logging v0.0.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
+	go.uber.org/multierr v1.7.0 // indirect
+	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20210915214749-c084706c2272 // indirect
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
