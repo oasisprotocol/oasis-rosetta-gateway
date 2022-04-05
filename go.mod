@@ -5,8 +5,8 @@ go 1.17
 replace github.com/tendermint/tendermint => github.com/oasisprotocol/tendermint v0.34.9-oasis2
 
 require (
-	github.com/coinbase/rosetta-cli v0.7.3
-	github.com/coinbase/rosetta-sdk-go v0.7.3
+	github.com/coinbase/rosetta-cli v0.7.4
+	github.com/coinbase/rosetta-sdk-go v0.7.7
 	github.com/oasisprotocol/oasis-core/go v0.2200.0
 	google.golang.org/grpc v1.44.0
 )
@@ -23,7 +23,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/coinbase/kryptology v1.5.5 // indirect
+	github.com/coinbase/kryptology v1.8.0 // indirect
 	github.com/consensys/gnark-crypto v0.5.3 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
@@ -31,7 +31,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/eapache/channels v1.1.0 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
-	github.com/ethereum/go-ethereum v1.10.13 // indirect
+	github.com/ethereum/go-ethereum v1.10.16 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.4.0 // indirect
@@ -49,7 +49,6 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/neilotoole/errgroup v0.1.6 // indirect
-	github.com/nixberg/chacha-rng-go v0.1.0 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20211219162838-e9a669f65da9 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -65,10 +64,10 @@ require (
 	github.com/spf13/viper v1.10.1 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/tendermint/tendermint v0.34.15 // indirect
-	github.com/tidwall/gjson v1.12.0 // indirect
+	github.com/tidwall/gjson v1.14.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
-	github.com/tidwall/sjson v1.2.3 // indirect
+	github.com/tidwall/sjson v1.2.4 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/whyrusleeping/go-logging v0.0.1 // indirect
