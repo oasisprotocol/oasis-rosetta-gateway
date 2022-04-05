@@ -13,7 +13,7 @@ FROM golang:1.17-bullseye AS build
 # Install prerequisites.
 RUN apt-get update && apt-get install -y bzip2 libseccomp-dev
 
-ARG CORE_BRANCH=v22.0
+ARG CORE_BRANCH=v22.1.2
 ARG CORE_GITHUB=https://github.com/oasisprotocol/oasis-core
 
 ARG GATEWAY_BRANCH=master
