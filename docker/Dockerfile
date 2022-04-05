@@ -91,6 +91,9 @@ COPY --from=build /usr/local/misc-gateway/config.yml /data/etc/
 COPY --from=build /usr/local/misc-gateway/config-testnet.yml /data/etc/
 COPY --from=build /usr/local/misc-gateway/service /etc/service/
 
+# Prepare for non-root oasis-node.
+RUN chown -R www-data:www-data /data
+
 VOLUME /data
 WORKDIR /data
 ENV OASIS_NODE_GRPC_ADDR="unix:/data/internal.sock"

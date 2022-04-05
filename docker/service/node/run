@@ -5,4 +5,4 @@ if [ -n "${OASIS_ROSETTA_GATEWAY_OFFLINE_MODE-}" ]; then
   exec sleep inf
 fi
 cd /data
-exec oasis-node --config "$OASIS_NODE_CONFIG"
+exec chpst -u www-data oasis-node --config "$OASIS_NODE_CONFIG"
