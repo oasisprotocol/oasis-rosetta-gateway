@@ -21,6 +21,44 @@ The format is inspired by [Keep a Changelog].
 
 <!-- TOWNCRIER -->
 
+## 2.2.0 (2022-04-06)
+
+| Name         | Version |
+|:-------------|:-------:|
+| Rosetta API  | 1.4.12  |
+| Oasis Core   |  22.1   |
+
+### Features
+
+- Bump Oasis Core to 22.1.2
+  ([#312](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/312))
+
+### Internal Changes
+
+- ci: bump golangci/golangci-lint-action from 2.5.2 to 3.1.0
+  ([#286](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/286))
+
+- ci: bump actions/setup-go from 2.1.3 to 3
+  ([#287](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/287))
+
+- go: bump google.golang.org/grpc from 1.44.0 to 1.45.0
+  ([#293](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/293))
+
+- ci: bump docker/build-push-action from 2.6.1 to 2.10.0
+  ([#295](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/295))
+
+- ci: bump actions/setup-python from 2.2.2 to 3.1.0
+  ([#304](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/304))
+
+- ci: bump actions/setup-node from 2.4.0 to 3.1.0
+  ([#305](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/305))
+
+- ci: bump actions/cache from 2 to 3.0.1
+  ([#311](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/311))
+
+- ci: bump actions/checkout from 2 to 3
+  ([#314](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/314))
+
 ## 2.1.0 (2022-03-07)
 
 | Name         | Version |
