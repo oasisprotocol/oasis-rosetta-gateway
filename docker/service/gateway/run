@@ -1,4 +1,4 @@
 #!/bin/sh -eu
 sv start node
 cd /data
-exec oasis-rosetta-gateway
+exec chpst -u www-data oasis-rosetta-gateway
