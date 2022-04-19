@@ -39,8 +39,8 @@ func getRosettaConfig(ni *types.NetworkIdentifier) *configuration.Configuration 
 			"transfer": 42,
 		},
 	}
-	dataHistoricalBalanceEnabled := true
-	config.Data.HistoricalBalanceEnabled = &dataHistoricalBalanceEnabled
+	dataHistoricalBalanceDisabled := false
+	config.Data.HistoricalBalanceDisabled = &dataHistoricalBalanceDisabled
 	dataEndTip := true
 	config.Data.EndConditions = &configuration.DataEndConditions{
 		Tip: &dataEndTip,
