@@ -7,7 +7,7 @@ replace github.com/tendermint/tendermint => github.com/oasisprotocol/tendermint 
 require (
 	github.com/coinbase/rosetta-cli v0.7.3
 	github.com/coinbase/rosetta-sdk-go v0.7.3
-	github.com/oasisprotocol/oasis-core/go v0.2103.9
+	github.com/oasisprotocol/oasis-core/go v0.2103.13
 	google.golang.org/grpc v1.44.0
 )
 
@@ -50,7 +50,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/neilotoole/errgroup v0.1.6 // indirect
 	github.com/nixberg/chacha-rng-go v0.1.0 // indirect
-	github.com/oasisprotocol/curve25519-voi v0.0.0-20210505121811-294cf0fbfb43 // indirect
+	github.com/oasisprotocol/curve25519-voi v0.0.0-20211219162838-e9a669f65da9 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.11.0 // indirect
