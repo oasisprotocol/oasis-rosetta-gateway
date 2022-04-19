@@ -21,6 +21,18 @@ The format is inspired by [Keep a Changelog].
 
 <!-- TOWNCRIER -->
 
+## 2.0.1 (2022-04-19)
+
+| Name         | Version |
+|:-------------|:-------:|
+| Rosetta API  | 1.4.12  |
+| Oasis Core   |  21.3   |
+
+### Features
+
+- Bump Oasis Core to 21.3.13
+  ([#330](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/330))
+
 ## 2.0.0 (2022-02-16)
 
 | Name         | Version   |
