@@ -49,9 +49,9 @@ type Client interface {
 	// at given height.
 	GetAccount(ctx context.Context, height int64, owner staking.Address) (*staking.Account, error)
 
-	// GetDelegations returns the staking active delegations where the given
-	// owner address is the delegator, as of given height.
-	GetDelegations(
+	// GetDelegationsTo returns the staking active delegations where the given
+	// owner address is the validator, as of given height.
+	GetDelegationsTo(
 		ctx context.Context, height int64, owner staking.Address,
 	) (map[staking.Address]*staking.Delegation, error)
 
@@ -246,7 +246,7 @@ func (c *grpcClient) GetAccount(ctx context.Context, height int64, owner staking
 	})
 }
 
-func (c *grpcClient) GetDelegations(
+func (c *grpcClient) GetDelegationsTo(
 	ctx context.Context,
 	height int64,
 	owner staking.Address,
@@ -256,7 +256,7 @@ func (c *grpcClient) GetDelegations(
 		return nil, err
 	}
 	client := staking.NewStakingClient(conn)
-	return client.DelegationsFor(ctx, &staking.OwnerQuery{
+	return client.DelegationsTo(ctx, &staking.OwnerQuery{
 		Height: height,
 		Owner:  owner,
 	})

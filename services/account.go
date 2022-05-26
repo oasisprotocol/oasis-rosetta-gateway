@@ -40,11 +40,11 @@ const DebondingBalanceKey = "debonding_balance"
 // the debonding escrow pool.
 const DebondingSharesKey = "debonding_shares"
 
-// DelegationsKey is the name of the key in the Metadata map inside
+// DelegationsToKey is the name of the key in the Metadata map inside
 // the response of an account balance request for an escrow account.
-// The value in the Metadata map is the response from a GetDelegations
+// The value in the Metadata map is the response from a GetDelegationsTo
 // call.
-const DelegationsKey = "delegations"
+const DelegationsToKey = "delegations_to"
 
 // DebondingDelegationsKey is the name of the key in the Metadata map inside
 // the response of an account balance request for an escrow account.
@@ -148,16 +148,16 @@ func (s *accountAPIService) AccountBalance(
 		md[DebondingBalanceKey] = act.Escrow.Debonding.Balance.String()
 		md[DebondingSharesKey] = act.Escrow.Debonding.TotalShares.String()
 
-		delegations, err := s.oasisClient.GetDelegations(ctx, height, owner)
+		delegationsTo, err := s.oasisClient.GetDelegationsTo(ctx, height, owner)
 		if err != nil {
-			loggerAcct.Error("AccountBalance: unable to get delegations",
+			loggerAcct.Error("AccountBalance: unable to get delegations to",
 				"account_id", owner.String(),
 				"height", height,
 				"err", err,
 			)
 			return nil, ErrUnableToGetAccount
 		}
-		md[DelegationsKey] = delegations
+		md[DelegationsToKey] = delegationsTo
 		debondingDelegations, err := s.oasisClient.GetDebondingDelegations(ctx, height, owner)
 		if err != nil {
 			loggerAcct.Error("AccountBalance: unable to get debonding delegations",
