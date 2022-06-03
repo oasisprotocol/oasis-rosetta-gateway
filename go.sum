@@ -212,8 +212,8 @@ github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:z
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/coinbase/kryptology v1.8.0 h1:Aoq4gdTsJhSU3lNWsD5BWmFSz2pE0GlmrljaOxepdYY=
 github.com/coinbase/kryptology v1.8.0/go.mod h1:RYXOAPdzOGUe3qlSFkMGn58i3xUA8hmxYHksuq+8ciI=
-github.com/coinbase/rosetta-cli v0.7.8 h1:pTVZVUw5HhtSz7NfMya9Z4THRSKMXepyblmHdsWnI9M=
-github.com/coinbase/rosetta-cli v0.7.8/go.mod h1:XbVn2ahHUVuOz9do4S2N+B09XYcWO1h8vc8sD/enfpU=
+github.com/coinbase/rosetta-cli v0.7.9 h1:fY48aVAJ7rLfc5GlogCe/fQEwDcztkFOAIoc9dfVdGw=
+github.com/coinbase/rosetta-cli v0.7.9/go.mod h1:XbVn2ahHUVuOz9do4S2N+B09XYcWO1h8vc8sD/enfpU=
 github.com/coinbase/rosetta-sdk-go v0.7.9 h1:lqllBjMnazTjIqYrOGv8h8jxjg9+hJazIGZr9ZvoCcA=
 github.com/coinbase/rosetta-sdk-go v0.7.9/go.mod h1:0/knutI7XGVqXmmH4OQD8OckFrbQ8yMsUZTG7FXCR2M=
 github.com/confio/ics23/go v0.6.3/go.mod h1:E45NqnlpxGnpfTWL/xauN7MRwEE28T4Dd4uraToOaKg=
