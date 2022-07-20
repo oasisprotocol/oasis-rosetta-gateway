@@ -186,8 +186,6 @@ The format is inspired by [Keep a Changelog].
   ([#198](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/198),
    [#200](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/200))
 
-  [Release Process]: docs/release-process.md
-
 ### Internal Changes
 
 - changelog: Automatically add important versions table
