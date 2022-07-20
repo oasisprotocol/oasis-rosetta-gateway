@@ -5,8 +5,8 @@ go 1.17
 replace github.com/tendermint/tendermint => github.com/oasisprotocol/tendermint v0.34.9-oasis2
 
 require (
-	github.com/coinbase/rosetta-cli v0.7.8
-	github.com/coinbase/rosetta-sdk-go v0.7.10
+	github.com/coinbase/rosetta-cli v0.8.0
+	github.com/coinbase/rosetta-sdk-go v0.7.11-0.20220629212620-136b591fb3f4
 	github.com/oasisprotocol/oasis-core/go v0.2201.8
 	google.golang.org/grpc v1.47.0
 )
@@ -31,7 +31,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/eapache/channels v1.1.0 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
-	github.com/ethereum/go-ethereum v1.10.18 // indirect
+	github.com/ethereum/go-ethereum v1.10.19 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.4.0 // indirect
