@@ -7,7 +7,7 @@ replace github.com/tendermint/tendermint => github.com/oasisprotocol/tendermint 
 require (
 	github.com/coinbase/rosetta-cli v0.8.0
 	github.com/coinbase/rosetta-sdk-go v0.7.11-0.20220629212620-136b591fb3f4
-	github.com/oasisprotocol/oasis-core/go v0.2201.8
+	github.com/oasisprotocol/oasis-core/go v0.2201.9
 	google.golang.org/grpc v1.47.0
 )
 
