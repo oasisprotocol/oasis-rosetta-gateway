@@ -211,10 +211,10 @@ github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:z
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/coinbase/kryptology v1.8.0 h1:Aoq4gdTsJhSU3lNWsD5BWmFSz2pE0GlmrljaOxepdYY=
 github.com/coinbase/kryptology v1.8.0/go.mod h1:RYXOAPdzOGUe3qlSFkMGn58i3xUA8hmxYHksuq+8ciI=
-github.com/coinbase/rosetta-cli v0.8.0 h1:hZq8JpCvZ9dbEJ3VcSOScQIlq/E++ThfcsfTs4I024I=
-github.com/coinbase/rosetta-cli v0.8.0/go.mod h1:mj/z+1Zz4NhFZaocSbK0ttL2wozNKg6w5P9n+vASysw=
-github.com/coinbase/rosetta-sdk-go v0.7.11-0.20220629212620-136b591fb3f4 h1:cHRCEzEk+4xerPtuJgO5a71qp7jIwGDKCKq+pte2VHA=
-github.com/coinbase/rosetta-sdk-go v0.7.11-0.20220629212620-136b591fb3f4/go.mod h1:HLTqSTSnOGLWHGTxoUJQO2TLuKkas1B9i/7ByerK6lM=
+github.com/coinbase/rosetta-cli v0.9.0 h1:rcO9h6n6P9m+Ouw5OwdtuCq4U9eOSdl9Ie3TnWz1SkI=
+github.com/coinbase/rosetta-cli v0.9.0/go.mod h1:Bs14/dqJsiUZyB8WkXX/6TwZ8r5hQaWjVbP77Xr7jak=
+github.com/coinbase/rosetta-sdk-go v0.7.11 h1:T7camDGstlX2ENVE0QHR1AVu3asSXED0vg1xDaF6bYE=
+github.com/coinbase/rosetta-sdk-go v0.7.11/go.mod h1:HLTqSTSnOGLWHGTxoUJQO2TLuKkas1B9i/7ByerK6lM=
 github.com/confio/ics23/go v0.6.3/go.mod h1:E45NqnlpxGnpfTWL/xauN7MRwEE28T4Dd4uraToOaKg=
 github.com/consensys/bavard v0.1.8-0.20210406032232-f3452dc9b572/go.mod h1:Bpd0/3mZuaj6Sj+PqrmIquiOKy397AKGThQPaGzNXAQ=
 github.com/consensys/bavard v0.1.8-0.20210915155054-088da2f7f54a/go.mod h1:9ItSMtA/dXMAiL7BG6bqW2m3NdSEObYWoH223nGHukI=
