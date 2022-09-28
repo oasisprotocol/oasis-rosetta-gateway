@@ -1,7 +1,7 @@
 include common.mk
 
 OASIS_RELEASE := 22.1.11
-ROSETTA_CLI_RELEASE := 0.9.0
+ROSETTA_CLI_RELEASE := 0.10.0
 
 # Check which tool to use for downloading.
 HAVE_WGET := $(shell which wget > /dev/null && echo 1)
