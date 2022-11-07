@@ -21,6 +21,80 @@ The format is inspired by [Keep a Changelog].
 
 <!-- TOWNCRIER -->
 
+## 2.3.0 (2022-11-07)
+
+| Name         | Version |
+|:-------------|:-------:|
+| Rosetta API  | 1.4.12  |
+| Oasis Core   | 22.2.1  |
+
+### Features
+
+- docker: Update mainnet genesis
+  ([#318](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/318),
+   [#325](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/325))
+
+- Bump Oasis Core to 22.2.1
+  ([#318](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/318),
+   [#336](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/336),
+   [#340](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/340),
+   [#349](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/349),
+   [#360](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/360),
+   [#369](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/369),
+   [#378](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/378),
+   [#390](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/390))
+
+- go: bump github.com/coinbase/rosetta-sdk-go from 0.7.3 to 0.8.1
+  ([#329](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/329),
+   [#334](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/334),
+   [#359](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/359),
+   [#380](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/380))
+
+### Internal Changes
+
+- go: bump github.com/coinbase/rosetta-cli from 0.7.3 to 0.10.0
+  ([#313](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/313),
+   [#335](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/335),
+   [#346](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/346),
+   [#366](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/366),
+   [#375](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/375),
+   [#381](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/381))
+
+- ci: bump actions/cache from 3.0.1 to 3.0.8
+  ([#317](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/317),
+   [#350](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/350),
+   [#363](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/363),
+   [#374](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/374))
+
+- ci: bump actions/setup-node from 3.1.0 to 3.5.0
+  ([#326](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/326),
+  [#344](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/344),
+  [#365](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/365),
+  [#382](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/382))
+
+- ci: bump actions/setup-python from 3.1.0 to 4.2.0
+  ([#327](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/327),
+  [#361](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/361),
+  [#370](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/370))
+
+- go: bump google.golang.org/grpc from 1.45.0 to 1.49.0
+  ([#332](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/332),
+  [#343](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/343),
+  [#351](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/351),
+  [#364](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/364),
+  [#376](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/376))
+
+- ci: bump docker/setup-buildx-action from 1 to 2
+  ([#338](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/338))
+
+- ci: bump docker/build-push-action from 2.10.0 to 3.1.1
+  ([#339](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/339),
+  [#367](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/367),
+  [#371](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/371))
+
+- ci: bump golangci/golangci-lint-action from 3.1.0 to 3.2.0
+  ([#341](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/341))
+
 ## 2.2.0 (2022-04-06)
 
 | Name         | Version |
