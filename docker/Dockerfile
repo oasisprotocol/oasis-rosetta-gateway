@@ -8,12 +8,12 @@
 #
 # Build stage
 #
-FROM golang:1.17-bullseye AS build
+FROM golang:1.18-bullseye AS build
 
 # Install prerequisites.
 RUN apt-get update && apt-get install -y bzip2 libseccomp-dev
 
-ARG CORE_BRANCH=v22.1.11
+ARG CORE_BRANCH=v22.2.1
 ARG CORE_GITHUB=https://github.com/oasisprotocol/oasis-core
 
 ARG GATEWAY_BRANCH=master
