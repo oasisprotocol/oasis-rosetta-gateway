@@ -5,7 +5,7 @@ go 1.18
 replace github.com/tendermint/tendermint => github.com/oasisprotocol/tendermint v0.34.9-oasis2
 
 require (
-	github.com/coinbase/rosetta-cli v0.10.0
+	github.com/coinbase/rosetta-cli v0.10.1
 	github.com/coinbase/rosetta-sdk-go v0.8.1
 	github.com/oasisprotocol/oasis-core/go v0.2202.1
 	google.golang.org/grpc v1.49.0
