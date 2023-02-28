@@ -5,7 +5,6 @@
 [![Docker status][github-docker-badge]][github-docker-link]
 [![Release status][github-release-badge]][github-release-link]
 
-<!-- markdownlint-disable line-length -->
 [github-ci-tests-badge]: https://github.com/oasisprotocol/oasis-rosetta-gateway/workflows/ci-tests/badge.svg
 [github-ci-tests-link]: https://github.com/oasisprotocol/oasis-rosetta-gateway/actions?query=workflow:ci-tests+branch:master
 [github-ci-lint-badge]: https://github.com/oasisprotocol/oasis-rosetta-gateway/workflows/ci-lint/badge.svg
@@ -14,7 +13,6 @@
 [github-docker-link]: https://github.com/oasisprotocol/oasis-rosetta-gateway/actions?query=workflow:docker
 [github-release-badge]: https://github.com/oasisprotocol/oasis-rosetta-gateway/workflows/release/badge.svg
 [github-release-link]: https://github.com/oasisprotocol/oasis-rosetta-gateway/actions?query=workflow:release
-<!-- markdownlint-enable line-length -->
 
 This repository implements the [Rosetta] server for the [Oasis Network].
 See the [Rosetta API] docs for information on how to use the API.
@@ -82,12 +80,10 @@ port that you want the gateway to listen on (default is 8080).
 
 Start the gateway simply by running the executable `oasis-rosetta-gateway`.
 
-<!-- markdownlint-disable line-length -->
 [Run a Non-validator Node]:
   https://docs.oasis.dev/general/run-a-node/set-up-your-node/run-non-validator#configuration
 [Oasis Docs]:
   https://docs.oasis.dev/
-<!-- markdownlint-enable line-length -->
 
 ## Offline Mode
 
@@ -109,12 +105,10 @@ The only supported endpoints in offline mode are:
 /construction/{combine,derive,hash,parse,payloads,preprocess}
 ```
 
-<!-- markdownlint-disable line-length -->
 [Construction API]:
   https://www.rosetta-api.org/docs/construction_api_introduction.html
 [genesis document's hash]:
   https://docs.oasis.dev/oasis-core/high-level-components/index/genesis#genesis-documents-hash
-<!-- markdownlint-enable line-length -->
 
 ## Oasis-specific Information
 
@@ -122,8 +116,9 @@ This section describes how Oasis fits into the Rosetta APIs.
 
 ### Network Identifier
 
-[Rosetta API documentation](
-    https://www.rosetta-api.org/docs/api_identifiers.html#network-identifier)
+[Rosetta API documentation][api-network-identifier]
+
+[api-network-identifier]: https://www.rosetta-api.org/docs/api_identifiers.html#network-identifier
 
 For Amber (at time of writing):
 
@@ -140,8 +135,9 @@ hex encoded SHA-512/256 hash of the CBOR encoded genesis document.
 
 ### Account Identifier
 
-[Rosetta API documentation](
-    https://www.rosetta-api.org/docs/api_identifiers.html#account-identifier)
+[Rosetta API documentation][api-account-identifier]
+
+[api-account-identifier]: https://www.rosetta-api.org/docs/api_identifiers.html#account-identifier
 
 #### General Account
 
@@ -198,8 +194,9 @@ For the fee accumulator:
 
 ### Currency
 
-[Rosetta API documentation](
-    https://www.rosetta-api.org/docs/api_objects.html#currency)
+[Rosetta API documentation][api-currency]
+
+[api-currency]: https://www.rosetta-api.org/docs/api_objects.html#currency
 
 #### ROSE
 
@@ -215,12 +212,14 @@ For ROSE:
 
 ### Transaction Intents
 
-<!-- markdownlint-disable line-length -->
-Rosetta API documentation on [/construction/preprocess](
-    https://www.rosetta-api.org/docs/ConstructionApi.html#constructionpreprocess)
-and [/construction/payloads](
-    https://www.rosetta-api.org/docs/ConstructionApi.html#constructionpayloads).
-<!-- markdownlint-enable line-length -->
+Rosetta API documentation on
+[/construction/preprocess][api-constructionpreprocess] and
+[/construction/payloads][api-constructionpayloads].
+
+[api-constructionpreprocess]:
+    https://www.rosetta-api.org/docs/ConstructionApi.html#constructionpreprocess
+[api-constructionpayloads]:
+    https://www.rosetta-api.org/docs/ConstructionApi.html#constructionpayloads
 
 The first two operations in the listings are the gas fee payment.
 For zero-fee transactions, omit them and decrease the remaining operation
@@ -643,8 +642,7 @@ limit `gas_limit` and fee `fee_bu` base units:
 
 ### Block API
 
-[Rosetta API documentation](
-    https://www.rosetta-api.org/docs/BlockApi.html#block)
+[Rosetta API documentation][api-block]
 
 In a [partial block identifier]:
 
@@ -677,6 +675,8 @@ transaction's intent:
   failed transactions.
 * The `metadata` field is absent.
 
+[api-block]:
+  https://www.rosetta-api.org/docs/BlockApi.html#block
 [partial block identifier]:
   https://www.rosetta-api.org/docs/models/PartialBlockIdentifier.html
 [block response]:
