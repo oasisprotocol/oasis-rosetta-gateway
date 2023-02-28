@@ -604,7 +604,7 @@ limit `gas_limit` and fee `fee_bu` base units:
             /* no network_index */
         },
         /* no related_operations */
-        "type": "Transfer",
+        "type": "ReclaimEscrow",
         /* no status */
         "account": {
             "address": signer_addr
@@ -621,7 +621,7 @@ limit `gas_limit` and fee `fee_bu` base units:
             /* no network_index */
         },
         /* no related_operations */
-        "type": "Transfer",
+        "type": "ReclaimEscrow",
         /* no status */
         "account": {
             "address": escrow_addr,
