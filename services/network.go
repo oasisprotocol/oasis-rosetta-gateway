@@ -132,8 +132,9 @@ func (s *networkAPIService) NetworkOptions(
 
 	return &types.NetworkOptionsResponse{
 		Version: &types.Version{
-			RosettaVersion: common.RosettaAPIVersion,
-			NodeVersion:    status.SoftwareVersion,
+			RosettaVersion:    common.RosettaAPIVersion,
+			NodeVersion:       status.SoftwareVersion,
+			MiddlewareVersion: &common.SoftwareVersion,
 		},
 		Allow: &types.Allow{
 			OperationStatuses: []*types.OperationStatus{
