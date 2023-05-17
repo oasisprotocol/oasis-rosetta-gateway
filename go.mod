@@ -1,6 +1,6 @@
 module github.com/oasisprotocol/oasis-rosetta-gateway
 
-go 1.18
+go 1.19
 
 replace github.com/tendermint/tendermint => github.com/oasisprotocol/tendermint v0.34.9-oasis2
 
@@ -8,7 +8,7 @@ require (
 	github.com/coinbase/rosetta-cli v0.10.3
 	github.com/coinbase/rosetta-sdk-go v0.8.3
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
-	github.com/oasisprotocol/oasis-core/go v0.2202.1
+	github.com/oasisprotocol/oasis-core/go v0.2202.8
 	google.golang.org/grpc v1.54.0
 )
 
