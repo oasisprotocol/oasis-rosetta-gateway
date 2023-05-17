@@ -21,6 +21,63 @@ The format is inspired by [Keep a Changelog].
 
 <!-- TOWNCRIER -->
 
+## 2.4.0 (2023-05-18)
+
+| Name         | Version |
+|:-------------|:-------:|
+| Rosetta API  | 1.4.12  |
+| Oasis Core   | 22.2.8  |
+
+### Features
+
+- Bump Oasis Core to 22.2.8
+  ([#433](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/433))
+
+- network: add gateway version as middleware_version
+  ([#438](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/438))
+
+### Documentation Improvements
+
+- fixed error on Reclaim Escrow documentation
+  ([#424](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/424))
+
+### Internal Changes
+
+- ci: bump actions/setup-node from 3.5.0 to 3.6.0
+  ([#405](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/405))
+
+- ci: bump actions/setup-python from 4.2.0 to 4.6.0
+  ([#409](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/409),
+   [#434](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/434))
+
+- ci: bump golangci/golangci-lint-action from 3.2.0 to 3.4.0
+  ([#412](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/412))
+
+- ci: bump actions/cache from 3.0.8 to 3.3.1
+  ([#413](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/413))
+
+- ci: bump docker/build-push-action from 3.1.1 to 4.0.0
+  ([#417](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/417))
+
+- go: bump github.com/coinbase/rosetta-cli from 0.10.0 to 0.10.3
+  ([#418](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/418))
+
+- ci: bump Node.js
+  ([#428](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/428))
+
+- ci: bump actions/setup-go from 3 to 4
+  ([#430](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/430))
+
+- go: bump google.golang.org/grpc from 1.49.0 to 1.55.0
+  ([#432](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/432),
+   [#437](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/437))
+
+- ci: update gitlint config
+  ([#435](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/435))
+
+- ci: Append Change Log fragments to Dependabot PRs
+  ([#436](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/436))
+
 ## 2.3.0 (2022-11-07)
 
 | Name         | Version |
