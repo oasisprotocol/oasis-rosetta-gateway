@@ -21,6 +21,35 @@ The format is inspired by [Keep a Changelog].
 
 <!-- TOWNCRIER -->
 
+## 2.5.0 (2023-08-11)
+
+| Name         | Version |
+|:-------------|:-------:|
+| Rosetta API  | 1.4.12  |
+| Oasis Core   | 22.2.11 |
+
+### Features
+
+- Bump Oasis Core to 22.2.11
+  ([#455](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/455))
+
+### Internal Changes
+
+- ci: bump golangci/golangci-lint-action from 3.4.0 to 3.6.0
+  ([#444](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/444))
+
+- ci: bump docker/build-push-action from 4.0.0 to 4.1.1
+  ([#445](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/445))
+
+- ci: bump actions/setup-node from 3.6.0 to 3.7.0
+  ([#449](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/449))
+
+- ci: bump actions/setup-python from 4.6.0 to 4.7.0
+  ([#451](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/451))
+
+- go: bump google.golang.org/grpc from 1.55.0 to 1.57.0
+  ([#452](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/452))
+
 ## 2.4.0 (2023-05-18)
 
 | Name         | Version |
