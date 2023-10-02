@@ -21,7 +21,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # Needed for correct git commit --amend.
           fetch-depth: 0
