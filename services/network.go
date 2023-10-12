@@ -70,7 +70,7 @@ func (s *networkAPIService) NetworkStatus(
 	}
 
 	peers := []*types.Peer{}
-	for _, p := range status.Consensus.NodePeers {
+	for _, p := range status.Consensus.P2P.Peers {
 		peers = append(peers, &types.Peer{
 			PeerID: p,
 		})
