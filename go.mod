@@ -10,7 +10,7 @@ require (
 	github.com/coinbase/rosetta-cli v0.10.3
 	github.com/coinbase/rosetta-sdk-go v0.8.3
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
-	github.com/oasisprotocol/oasis-core/go v0.2300.0
+	github.com/oasisprotocol/oasis-core/go v0.2300.2
 	google.golang.org/grpc v1.57.0
 )
 
