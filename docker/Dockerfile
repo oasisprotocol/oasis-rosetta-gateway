@@ -8,7 +8,7 @@
 #
 # Build stage
 #
-FROM golang:1.21-bullseye AS build
+FROM golang:1.21 AS build
 
 # Install prerequisites.
 RUN apt-get update && apt-get install -y bzip2 libseccomp-dev
@@ -79,7 +79,7 @@ RUN wget -O /usr/local/misc-gateway/genesis.json \
 #
 # Execution stage
 #
-FROM ubuntu:focal
+FROM ubuntu:jammy
 COPY --from=build /usr/bin/oasis-node /usr/bin/
 COPY --from=build /usr/bin/oasis-rosetta-gateway /usr/bin/
 RUN mkdir -m700 /data /data/etc /data/data && \
