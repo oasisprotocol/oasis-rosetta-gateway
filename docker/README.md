@@ -10,7 +10,7 @@ the [Oasis Node] and the [Oasis Rosetta gateway], as instructed by the
 [Rosetta Docker Deployment] doc.
 
 The node should be configured as described in [Run a Non-validator Node] doc
-of the general [Oasis Docs].
+of the [Run Node Oasis Docs].
 
 The `/node/data` directory in the instructions is equivalent to the `/data`
 directory of the Docker image.
@@ -53,13 +53,13 @@ build  image to save disk space.
 [Rosetta API]: https://www.rosetta-api.org/docs/welcome.html
 [Oasis Core]: https://github.com/oasisprotocol/oasis-core
 [Oasis Node]:
-  https://docs.oasis.dev/general/run-a-node/prerequisites/oasis-node
+  https://docs.oasis.io/node/run-your-node/prerequisites/oasis-node/
 [Oasis Rosetta Gateway]:
   https://github.com/oasisprotocol/oasis-rosetta-gateway
 [Rosetta Docker Deployment]:
   https://www.rosetta-api.org/docs/node_deployment.html
 [Run a Non-validator Node]:
-  https://docs.oasis.dev/general/run-a-node/set-up-your-node/run-non-validator#configuration
-[Oasis Docs]:
-  https://docs.oasis.dev/
+  https://docs.oasis.io/node/run-your-node/non-validator-node/#configuration
+[Run Node Oasis Docs]:
+  https://docs.oasis.io/node/
 <!-- markdownlint-enable line-length -->

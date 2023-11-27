@@ -21,7 +21,7 @@ Oasis-specific Rosetta API information is given in the
 [Oasis-specific Information] subsection below.
 
 [Rosetta]: https://www.rosetta-api.org/
-[Oasis Network]: https://docs.oasis.dev/general/oasis-network/overview
+[Oasis Network]: https://docs.oasis.io/general/oasis-network/
 [Rosetta API]: https://www.rosetta-api.org/docs/welcome.html
 [Oasis-specific Information]: #oasis-specific-information
 
@@ -49,7 +49,7 @@ make clean
 [Rosetta CLI], set up a test Oasis network, make some sample transactions,
 then run the gateway and validate it using `rosetta-cli`.
 
-[Oasis Node]: https://docs.oasis.dev/general/run-a-node/prerequisites/oasis-node
+[Oasis Node]: https://docs.oasis.io/node/run-your-node/prerequisites/oasis-node/
 [Rosetta CLI]: https://github.com/coinbase/rosetta-cli
 
 ## Contributing
@@ -69,8 +69,8 @@ See our [Release Process] document.
 ## Running the Gateway
 
 The gateway connects to an Oasis Node, so make sure you have a running node
-first. For more details, see the [Run a Non-validator Node] doc of the general
-[Oasis Docs].
+first. For more details, see the [Run a Non-validator Node] doc of the
+[Run Node Oasis Docs].
 
 Set the `OASIS_NODE_GRPC_ADDR` environment variable to the node's gRPC socket
 address (e.g. `unix:/path/to/node/internal.sock`).
@@ -81,9 +81,9 @@ port that you want the gateway to listen on (default is 8080).
 Start the gateway simply by running the executable `oasis-rosetta-gateway`.
 
 [Run a Non-validator Node]:
-  https://docs.oasis.dev/general/run-a-node/set-up-your-node/run-non-validator#configuration
-[Oasis Docs]:
-  https://docs.oasis.dev/
+  https://docs.oasis.io/node/run-your-node/non-validator-node/#configuration
+[Run Node Oasis Docs]:
+  https://docs.oasis.io/node/
 
 ## Offline Mode
 
@@ -108,7 +108,7 @@ The only supported endpoints in offline mode are:
 [Construction API]:
   https://www.rosetta-api.org/docs/construction_api_introduction.html
 [genesis document's hash]:
-  https://docs.oasis.dev/oasis-core/high-level-components/index/genesis#genesis-documents-hash
+  https://docs.oasis.io/core/consensus/genesis#genesis-documents-hash
 
 ## Oasis-specific Information
 
