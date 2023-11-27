@@ -12,7 +12,9 @@ the [Oasis Node] and the [Oasis Rosetta gateway], as instructed by the
 The node should be configured as described in [Run a Non-validator Node] doc
 of the general [Oasis Docs].
 
-The `/node` directory in the instructions is equivalent to the `/data`
+The `/node/data` directory in the instructions is equivalent to the `/data`
+directory of the Docker image.
+The `/node/etc` directory in the instructions is equivalent to the `/data/etc`
 directory of the Docker image.
 We recommend creating a volume mount for `/data` so that you can manage the
 directory across version upgrades.
