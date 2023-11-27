@@ -20,9 +20,9 @@ See the [Rosetta API] docs for information on how to use the API.
 Oasis-specific Rosetta API information is given in the
 [Oasis-specific Information] subsection below.
 
-[Rosetta]: https://www.rosetta-api.org/
+[Rosetta]: https://docs.cloud.coinbase.com/rosetta/docs/welcome
 [Oasis Network]: https://docs.oasis.io/general/oasis-network/
-[Rosetta API]: https://www.rosetta-api.org/docs/welcome.html
+[Rosetta API]: https://docs.cloud.coinbase.com/rosetta/docs/welcome
 [Oasis-specific Information]: #oasis-specific-information
 
 ## Building and Testing
@@ -106,7 +106,7 @@ The only supported endpoints in offline mode are:
 ```
 
 [Construction API]:
-  https://www.rosetta-api.org/docs/construction_api_introduction.html
+  https://docs.cloud.coinbase.com/rosetta/docs/construction-api-overview
 [genesis document's hash]:
   https://docs.oasis.io/core/consensus/genesis#genesis-documents-hash
 
@@ -118,7 +118,7 @@ This section describes how Oasis fits into the Rosetta APIs.
 
 [Rosetta API documentation][api-network-identifier]
 
-[api-network-identifier]: https://www.rosetta-api.org/docs/api_identifiers.html#network-identifier
+[api-network-identifier]: https://docs.cloud.coinbase.com/rosetta/docs/identifiers#network-identifier
 
 For Amber (at time of writing):
 
@@ -137,7 +137,7 @@ hex encoded SHA-512/256 hash of the CBOR encoded genesis document.
 
 [Rosetta API documentation][api-account-identifier]
 
-[api-account-identifier]: https://www.rosetta-api.org/docs/api_identifiers.html#account-identifier
+[api-account-identifier]: https://docs.cloud.coinbase.com/rosetta/docs/identifiers#account-identifier
 
 #### General Account
 
@@ -196,7 +196,7 @@ For the fee accumulator:
 
 [Rosetta API documentation][api-currency]
 
-[api-currency]: https://www.rosetta-api.org/docs/api_objects.html#currency
+[api-currency]: https://docs.cloud.coinbase.com/rosetta/docs/objects#currency
 
 #### ROSE
 
@@ -217,9 +217,9 @@ Rosetta API documentation on
 [/construction/payloads][api-constructionpayloads].
 
 [api-constructionpreprocess]:
-    https://www.rosetta-api.org/docs/ConstructionApi.html#constructionpreprocess
+  https://docs.cloud.coinbase.com/rosetta/reference/constructionpreprocess
 [api-constructionpayloads]:
-    https://www.rosetta-api.org/docs/ConstructionApi.html#constructionpayloads
+  https://docs.cloud.coinbase.com/rosetta/reference/constructionpayloads
 
 The first two operations in the listings are the gas fee payment.
 For zero-fee transactions, omit them and decrease the remaining operation
@@ -676,14 +676,14 @@ transaction's intent:
 * The `metadata` field is absent.
 
 [api-block]:
-  https://www.rosetta-api.org/docs/BlockApi.html#block
+  https://docs.cloud.coinbase.com/rosetta/reference/block
 [partial block identifier]:
-  https://www.rosetta-api.org/docs/models/PartialBlockIdentifier.html
+  https://docs.cloud.coinbase.com/rosetta/docs/full-reference#identifiers
 [block response]:
-  https://www.rosetta-api.org/docs/models/BlockResponse.html
+  https://docs.cloud.coinbase.com/rosetta/docs/full-reference#requests-and-responses
 [block]:
-  https://www.rosetta-api.org/docs/models/Block.html
+  https://docs.cloud.coinbase.com/rosetta/docs/full-reference#objects
 [transaction]:
-  https://www.rosetta-api.org/docs/models/Transaction.html
+  https://docs.cloud.coinbase.com/rosetta/docs/full-reference#objects
 [operation]:
-  https://www.rosetta-api.org/docs/models/Operation.html
+  https://docs.cloud.coinbase.com/rosetta/docs/full-reference#objects

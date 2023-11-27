@@ -308,7 +308,7 @@ The format is inspired by [Keep a Changelog].
 
   <!-- markdownlint-disable line-length -->
   The Rosetta ecosystem prefers this:
-  [Rosetta's guidance on Docker deployment](https://www.rosetta-api.org/docs/node_deployment.html#ubuntu-image-compatibility).
+  [Rosetta's guidance on Docker deployment](https://docs.cloud.coinbase.com/rosetta/docs/docker-deployment#ubuntu-image-compatibility).
   <!-- markdownlint-enable line-length -->
 
 - docker: Skip running node if offline var is set

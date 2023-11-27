@@ -50,14 +50,14 @@ build  image to save disk space.
   https://github.com/oasisprotocol/oasis-rosetta-gateway/releases/
 [Change Log for 1.1.1]:
   https://github.com/oasisprotocol/oasis-rosetta-gateway/blob/v1.1.1/CHANGELOG.md
-[Rosetta API]: https://www.rosetta-api.org/docs/welcome.html
+[Rosetta API]: https://docs.cloud.coinbase.com/rosetta/docs/welcome
 [Oasis Core]: https://github.com/oasisprotocol/oasis-core
 [Oasis Node]:
   https://docs.oasis.io/node/run-your-node/prerequisites/oasis-node/
 [Oasis Rosetta Gateway]:
   https://github.com/oasisprotocol/oasis-rosetta-gateway
 [Rosetta Docker Deployment]:
-  https://www.rosetta-api.org/docs/node_deployment.html
+  https://docs.cloud.coinbase.com/rosetta/docs/docker-deployment
 [Run a Non-validator Node]:
   https://docs.oasis.io/node/run-your-node/non-validator-node/#configuration
 [Run Node Oasis Docs]:
