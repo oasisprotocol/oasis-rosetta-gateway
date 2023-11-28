@@ -1,4 +1,4 @@
-// https://www.rosetta-api.org/docs/construction_api_introduction.html
+// https://docs.cloud.coinbase.com/rosetta/docs/construction-api-overview
 package services
 
 import (
