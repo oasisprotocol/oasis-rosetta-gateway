@@ -53,8 +53,8 @@ tests/rosetta-cli.tar.gz:
 tests/rosetta-cli: tests/rosetta-cli.tar.gz
 	@$(ECHO) "$(MAGENTA)*** Building rosetta-cli...$(OFF)"
 	@tar -xf $< -C tests
-	@cd tests/rosetta-cli-$(ROSETTA_CLI_RELEASE) && $(GO) build
-	@cp tests/rosetta-cli-$(ROSETTA_CLI_RELEASE)/rosetta-cli tests/.
+	@cd tests/mesh-cli-$(ROSETTA_CLI_RELEASE) && $(GO) build
+	@cp tests/mesh-cli-$(ROSETTA_CLI_RELEASE)/rosetta-cli tests/.
 
 test: build build-tests tests/oasis-net-runner tests/oasis-node tests/rosetta-cli
 	@$(ECHO) "$(CYAN)*** Running tests...$(OFF)"
