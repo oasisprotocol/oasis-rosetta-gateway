@@ -678,12 +678,12 @@ transaction's intent:
 [api-block]:
   https://docs.cloud.coinbase.com/rosetta/reference/block
 [partial block identifier]:
-  https://docs.cloud.coinbase.com/rosetta/docs/full-reference#identifiers
+  https://docs.cloud.coinbase.com/rosetta/docs/models#partialblockidentifier
 [block response]:
-  https://docs.cloud.coinbase.com/rosetta/docs/full-reference#requests-and-responses
+  https://docs.cloud.coinbase.com/rosetta/docs/models#blockresponse
 [block]:
-  https://docs.cloud.coinbase.com/rosetta/docs/full-reference#objects
+  https://docs.cloud.coinbase.com/rosetta/docs/models#block
 [transaction]:
-  https://docs.cloud.coinbase.com/rosetta/docs/full-reference#objects
+  https://docs.cloud.coinbase.com/rosetta/docs/models#transaction
 [operation]:
-  https://docs.cloud.coinbase.com/rosetta/docs/full-reference#objects
+  https://docs.cloud.coinbase.com/rosetta/docs/models#operation
