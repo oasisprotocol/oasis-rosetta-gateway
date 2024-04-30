@@ -33,8 +33,13 @@ jobs:
         run: |
           echo "FILE_NAME=.changelog/${{ github.event.pull_request.number }}.internal.md" >> $GITHUB_OUTPUT
       - name: Create Change Log file
+        env:
+          # There's no support for escaping this for use in a shell command.
+          # GitHub's recommendation is to pass it through the environment.
+          # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
+          TITLE: ${{ github.event.pull_request.title }}
         run: |
-          echo ${{ github.event.pull_request.title }} > ${{ steps.vars.outputs.FILE_NAME }}
+          echo "$TITLE" > ${{ steps.vars.outputs.FILE_NAME }}
       - name: Commit Change Log file
         run: |
           # Set git user email and name to match author of the last commit.
