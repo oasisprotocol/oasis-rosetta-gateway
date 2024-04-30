@@ -57,10 +57,8 @@ jobs:
         # is able to compare the current branch with the base branch.
         # Source: https://github.com/actions/checkout/#fetch-all-branches.
         run: |
-          git fetch --no-tags origin +refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}
-          towncrier check --compare-with origin/${BASE_BRANCH}
-        env:
-          BASE_BRANCH: ${{ github.base_ref }}
+          git fetch --no-tags origin "+refs/heads/${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}"
+          towncrier check --compare-with "origin/${GITHUB_BASE_REF}"
         if: github.event_name == 'pull_request'
       - name: Lint git commits
         run: |
