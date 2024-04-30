@@ -49,4 +49,4 @@ jobs:
           git commit --amend --no-edit
       - name: Push changes back to branch
         run: |
-          git push --force-with-lease origin HEAD:refs/heads/${{ github.head_ref }}
+          git push --force-with-lease origin "HEAD:refs/heads/$GITHUB_HEAD_REF"
