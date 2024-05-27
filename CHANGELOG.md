@@ -21,6 +21,58 @@ The format is inspired by [Keep a Changelog].
 
 <!-- TOWNCRIER -->
 
+## 2.7.0 (2024-05-27)
+
+| Name         | Version |
+|:-------------|:-------:|
+| Rosetta API  | 1.4.12  |
+| Oasis Core   |  24.0   |
+
+### Features
+
+- Bump oasis-core to 24.0 and go to 1.22.3
+  ([#531](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/531))
+
+- docker: testnet genesis and other updates
+  ([#486](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/486))
+
+- docker: migrate mainnet config
+  ([#488](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/488))
+
+- docker: update mainnet genesis
+  ([#491](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/491))
+
+### Documentation Improvements
+
+- docs: change suggested backport branch names
+  ([#328](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/328))
+
+- docs: update links and node directories
+  ([#487](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/487))
+
+- docs: restore specific model refrence links
+  ([#524](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/524))
+
+### Internal Changes
+
+- ci: bump actions/setup-node from 3.8.1 to 4.0.0
+  ([#478](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/478))
+
+- Install setuptools to make Towncrier fork work with Python 3.12
+  ([#480](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/480))
+
+- ci: bump docker/build-push-action from 5.0.0 to 5.1.0
+  ([#484](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/484))
+
+- Update gitlint and markdownlint configs
+  ([#506](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/506))
+
+- tests: rosetta -> mesh
+  ([#507](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/507))
+
+- CI: fix command injection plus other changes
+  ([#527](https://github.com/oasisprotocol/oasis-rosetta-gateway/issues/527))
+
 ## 2.6.0 (2023-10-11)
 
 | Name         | Version |
