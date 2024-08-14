@@ -27,25 +27,23 @@ jobs:
           fetch-depth: 0
           # Checkout pull request HEAD commit instead of merge commit.
           ref: ${{ github.event.pull_request.head.sha }}
-      - name: Set workflow variables
-        # Id is needed to access output in a next step.
-        id: vars
-        run: |
-          echo "FILE_NAME=.changelog/${{ github.event.pull_request.number }}.internal.md" >> $GITHUB_OUTPUT
       - name: Create Change Log file
         env:
           # There's no support for escaping this for use in a shell command.
           # GitHub's recommendation is to pass it through the environment.
           # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
           TITLE: ${{ github.event.pull_request.title }}
+          FILE_NAME: .changelog/${{ github.event.pull_request.number }}.internal.md
         run: |
-          echo "$TITLE" > ${{ steps.vars.outputs.FILE_NAME }}
+          echo "$TITLE" > "$FILE_NAME"
       - name: Commit Change Log file
+        env:
+          FILE_NAME: .changelog/${{ github.event.pull_request.number }}.internal.md
         run: |
           # Set git user email and name to match author of the last commit.
           git config --local user.email "$(git log --pretty='%ae' -1)"
           git config --local user.name "$(git log --pretty=format:'%an' -1)"
-          git add ${{ steps.vars.outputs.FILE_NAME }}
+          git add "$FILE_NAME"
           git commit --amend --no-edit
       - name: Push changes back to branch
         run: |
