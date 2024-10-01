@@ -8,7 +8,7 @@ require (
 	github.com/coinbase/rosetta-cli v0.10.3
 	github.com/coinbase/rosetta-sdk-go v0.8.3
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
-	github.com/oasisprotocol/oasis-core/go v0.2400.0
+	github.com/oasisprotocol/oasis-core/go v0.2402.0
 	google.golang.org/grpc v1.62.1
 )
 
@@ -26,7 +26,7 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/coinbase/kryptology v1.8.0 // indirect
-	github.com/cometbft/cometbft v0.37.6 // indirect
+	github.com/cometbft/cometbft v0.37.9 // indirect
 	github.com/consensys/gnark-crypto v0.5.3 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
