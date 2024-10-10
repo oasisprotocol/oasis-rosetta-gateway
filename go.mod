@@ -18,7 +18,6 @@ require (
 	github.com/Zilliqa/gozilliqa-sdk v1.2.1-0.20201201074141-dd0ecada1be6 // indirect
 	github.com/a8m/envsubst v1.4.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/btcsuite/btcd v0.22.1 // indirect
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce // indirect
 	github.com/bwesterb/go-ristretto v1.2.0 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
@@ -87,6 +86,7 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.18.2 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/tidwall/gjson v1.14.1 // indirect
